@@ -55,6 +55,10 @@ typedef struct Operating_Parameters
 #define TIME_LEGAL_MIN						20
 #define TIME_LEGAL_MAX						6000
 
+#define	MOTOR_RPM_NUMBER_OF_POLES								5		//电机级数 默认值
+#define	MOTOR_RPM_MIX_OF_POLES									1		//电机级数 合法最小值
+#define	MOTOR_RPM_MAX_OF_POLES									8		//电机级数 合法最大值
+
 /* Exported functions prototypes ---------------------------------------------*/
 
 extern void Check_Data_Init(void);
@@ -110,9 +114,18 @@ extern Operating_Parameters* p_OP_Timing_Mode;
 
 extern Operating_Parameters (*p_OP_PMode)[TRAINING_MODE_PERIOD_MAX];
 
-extern uint16_t* p_System_Fault_Static;
+extern uint16_t* p_System_Fault_Static;			//故障状态
+extern uint16_t* p_Motor_Fault_Static;				//故障状态
+extern uint16_t* p_Mos_Temperature;					//mos 温度
+extern uint16_t* p_Motor_Temperature;				//电机 温度
+extern uint32_t* p_Motor_Current;						//电机 电流
+extern uint32_t* p_Motor_Reality_Speed;			//电机 实际 转速
+extern uint16_t* p_Motor_Bus_Voltage;				//母线 电压
 
-
+extern uint16_t* p_Modbus_Node_Addr;
+extern uint16_t* p_Modbus_Baud_Rate;
+extern uint16_t* p_Support_Control_Methods;
+extern uint16_t* p_Motor_Pole_Number;
 
 #ifdef __cplusplus
 }

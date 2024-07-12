@@ -36,11 +36,11 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 
-#define MOTOR_THREAD_LIFECYCLE								50				// 任务生命周期 50ms
+#define MOTOR_THREAD_LIFECYCLE								5				// 任务生命周期 50ms
 
 #define	MOTOR_MODULE_HUART				DRIVER_USART		//
 
-#define	MOTOR_RPM_CONVERSION_COEFFICIENT				21		//百分比 转 转速 转换系数
+#define	MOTOR_RPM_CONVERSION_COEFFICIENT				(21)		//百分比 转 转速 转换系数
 
 #define	MOTOR_PROTOCOL_HEADER_OFFSET						3		// 协议表头 偏移地址
 /*------------------- IO define ----------------------------------------------*/
@@ -54,7 +54,6 @@ extern "C" {
 
 #define MOTOR_RS485_TX_BUFF_SIZE			16
 #define MOTOR_RS485_RX_BUFF_SIZE			128
-
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Metering_Receive_Init(void);

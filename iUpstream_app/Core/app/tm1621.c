@@ -64,33 +64,49 @@ uint8_t Lcd_Number_table_1[10]={0x5F,0x06,0x6B,0x2F,0x36,0x3D,0x7D,0x07,0x7F,0x3
 uint8_t Lcd_Number_table_2[10]={0xF5,0x60,0xD3,0xF2,0x66,0xB6,0xB7,0xE0,0xF7,0xF6};
 
 // 字母显示 1-4
-uint8_t Lcd_Letter_table_1[11] = {
-	0x00, // A
-	0x00, // C
-	0x00, // E
-	0x00, // F
-	0x00, // H
-	0x00, // I
-	0x00, // L
-	0x00, // O
-	0x73, // P
-	0x00, // S
-	0x00  // U
+uint8_t Lcd_Letter_table_1[TM1621_LETTER_MAX][2] = {
+	{0x77,'A'}, // A
+	{0x59,'C'}, // C
+	{0x79,'E'}, // E
+	{0x71,'F'}, // F
+	{0x76,'H'}, // H
+	{0x58,'L'}, // L
+	{0x5F,'O'}, // O
+	{0x73,'P'}, // P
+	{0x3D,'S'}, // S
+	{0x5E,'U'}, // U
+	{0x7C,'b'}, // b
+	{0x68,'c'}, // c
+	{0x6E,'d'}, // d
+	{0x74,'h'}, // h
+	{0x40,'i'}, // i
+	{0x64,'n'}, // n
+	{0x6C,'o'}, // o
+	{0x60,'r'}, // r
+	{0x4C,'u'}, // u
 };
 
 // 字母显示 5-8
-uint8_t Lcd_Letter_table_2[11] = {
-	0x00, // A
-	0x00, // C
-	0x00, // E
-	0x00, // F
-	0x00, // H
-	0x00, // I
-	0x00, // L
-	0x00, // O
-	0xE3, // P
-	0x00, // S
-	0x00  // U
+uint8_t Lcd_Letter_table_2[TM1621_LETTER_MAX][2] = {
+	{0xE7,'A'},
+	{0x95,'C'}, // C
+	{0x97,'E'}, // E
+	{0x87,'F'}, // F
+	{0x67,'H'}, // H
+	{0x15,'L'}, // L
+	{0xF5,'O'}, // O
+	{0xE3,'P'}, // P
+	{0xB6,'S'}, // S
+	{0x75,'U'}, // U
+	{0x37,'b'}, // b
+	{0x13,'c'}, // c
+	{0x73,'d'}, // d
+	{0x27,'h'}, // h
+	{0x01,'i'}, // i
+	{0x23,'n'}, // n
+	{0x33,'o'}, // o
+	{0x03,'r'}, // r
+	{0x31,'u'} // u
 };
 
 void Delay_us(uint16_t us)
@@ -195,66 +211,65 @@ TM1621_display_number
 void TM1621_display_number(uint8_t coordinate, uint8_t value)
 {
 	uint8_t symbol;
-	//uint8_t ram;
+	uint8_t* p_number_table;
 	
 	if(coordinate < 4)
 	{
+		p_number_table = Lcd_Number_table_2;
 		symbol = Lcd_ram[coordinate] & 0x08;
-		if(value == 0xFF)// 不显示
-			Lcd_ram[coordinate] = 0;
-		else
-			Lcd_ram[coordinate] = Lcd_Number_table_2[value];
-		
-		Lcd_ram[coordinate] |= symbol;
-		
 	}
 	else
 	{
+		p_number_table = Lcd_Number_table_1;
 		symbol = Lcd_ram[coordinate] & 0x80;
-		if(value == 0xFF)// 不显示
-			Lcd_ram[coordinate] = 0;
-		else
-			Lcd_ram[coordinate] = Lcd_Number_table_1[value];
-		
-		Lcd_ram[coordinate] |= symbol;
 	}
-		
+	
+	if(value == 0xFF)// 不显示
+		Lcd_ram[coordinate] = 0;
+	else
+		Lcd_ram[coordinate] = p_number_table[value];
+	
+	Lcd_ram[coordinate] |= symbol;
+	
 }
 
 /*
 ******************************************************************************
 TM1621_display_Letter	
 
-显示 字母
+显示 字母 value:字母的ascii码
 ******************************************************************************
 */  
 void TM1621_display_Letter(uint8_t coordinate, uint8_t value)
 {
 	uint8_t symbol;
-	//uint8_t ram;
+	uint8_t i;
+	
+	uint8_t(* p_letter_table)[2];
 	
 	if(coordinate < 4)
 	{
+		p_letter_table = Lcd_Letter_table_2;
 		symbol = Lcd_ram[coordinate] & 0x08;
-		if(value == 0xFF)// 不显示
-			Lcd_ram[coordinate] = 0;
-		else
-			Lcd_ram[coordinate] = Lcd_Letter_table_2[value];
-		
-		Lcd_ram[coordinate] |= symbol;
-		
 	}
 	else
 	{
+		p_letter_table = Lcd_Letter_table_1;
 		symbol = Lcd_ram[coordinate] & 0x80;
-		if(value == 0xFF)// 不显示
-			Lcd_ram[coordinate] = 0;
-		else
-			Lcd_ram[coordinate] = Lcd_Letter_table_1[value];
-		
-		Lcd_ram[coordinate] |= symbol;
 	}
-		
+	
+	if(value == 0xFF)// 不显示
+		Lcd_ram[coordinate] = 0;
+	else
+	{
+		for(i=0; i<TM1621_LETTER_MAX; i++)
+		{
+			if(p_letter_table[i][1] == value)
+				Lcd_ram[coordinate] = p_letter_table[i][0];
+		}
+	}
+	Lcd_ram[coordinate] |= symbol;
+
 }
 /*
 ******************************************************************************
@@ -368,7 +383,7 @@ void TM1621_Buzzer_Init(void)
 {
 	Delay_us(1);
 	//蜂鸣器
-	TM1621_Write_CMD(TONE_4K);
+	TM1621_Write_CMD(TONE_2K);
 	TM1621_Write_CMD(TONEOFF);
 }
 /*

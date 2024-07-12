@@ -43,9 +43,13 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_SLAVE_BAUD_RATE             			( 0x01 )	//	波特率
 #define MB_SUPPORT_CONTROL_METHODS          ( 0x02 )	//	0:可控;1：屏蔽  // 1bit：蓝牙; 2bit：Modbus-RS485; 3bit：wifi;
 #define MB_DISTRIBUTION_NETWORK_CONTROL  		( 0x03 )	//	配网控制 遥控 & wifi
-#define MB_SYSTEM_WORKING_MODE     					( 0x04 )	//	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
-#define MB_SYSTEM_WORKING_STATUS      			( 0x05 )	//	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
-#define MB_SYSTEM_POWER_ON				        	( 0x06 )	//	系统开机 0：关机  1：开机
+#define MB_MOTOR_POLE_NUMBER  							( 0x04 )	//	电机磁极数
+// ----------------------------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------------------------
+#define MB_SYSTEM_WORKING_MODE     					( 0x61 )	//	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
+#define MB_SYSTEM_WORKING_STATUS      			( 0x62 )	//	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
+#define MB_SYSTEM_POWER_ON				        	( 0x63 )	//	系统开机 0：关机  1：开机
 // ----------------------------------------------------------------------------------------------
 #define MB_MOTOR_CURRENT_SPEED		        	( 0x70 )	//	当前转速 (临时有效)
 #define MB_MOTOR_CURRENT_TIME        				( 0x71 )	//	当前时间
@@ -96,6 +100,12 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_DRIVER_HARDWARE_VERSION             		( 0x06 )	//	驱动板 硬件版本
 #define MB_SYSTEM_FAULT_STATUS					          ( 0x08 )	//	系统故障状态
 
+#define MB_MOTOR_FAULT_STATUS					          	( 0x09 )	// 	电机 	故障状态
+#define MB_MOS_TEMPERATURE					          		( 0x0A )	//	mos 	温度
+#define MB_MOTOR_TEMPERATURE					          	( 0x0B )	//	电机	温度
+#define MB_MOTOR_CURRENT					          			( 0x0C )	// 	电机 	电流
+#define MB_MOTOR_REALITY_SPEED					          ( 0x0E )	//	电机 	实际 转速
+#define MB_MOTOR_BUS_VOLTAGE					          	( 0x10 )	//	母线 	电压
 
 /*
 #define MB_DEFAULT_FREE_MODE_SPEED		        		( 0x11 )	//	默认 自由模式 	转速

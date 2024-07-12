@@ -47,11 +47,22 @@ extern "C" {
 #define TM1621_WR_LOW()			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET)
 
 
+// 快速计算
+#define GET_NUMBER_HUNDRED_DIGIT(n)						((n>=100)?1:0)
+#define GET_NUMBER_TEN_DIGIT(n)								((n/10)%10)
+#define GET_NUMBER_ONE_DIGIT(n)								(n%10)
+
+#define GET_TIME_MINUTE_DIGIT(n)							((n/60)%100)
+#define GET_TIME_SECOND_DIGIT(n)							(n%60)
+
+#define GET_LETTER_HIGH_DIGIT(n)							((n&0xF0)>>4)
+#define GET_LETTER_LOW_DIGIT(n)								(n&0x0F)
 
 /* 屏幕 参数  ------------------------------------------------------------*/
 
-#define SCREEN_NUMBER_MAX			8
+#define SCREEN_NUMBER_MAX			8		// 屏幕数字单元数量
 
+#define TM1621_LETTER_MAX			19	//字母表长度
 
 #define TM1621_DIGITAL_NUMBER_1			7
 #define TM1621_DIGITAL_NUMBER_2			6
@@ -85,7 +96,7 @@ extern "C" {
 #define TM1621_COORDINATE_DECIMAL_POINT			TM1621_SYMBOL_S5
 #define TM1621_COORDINATE_BLUETOOTH					TM1621_SYMBOL_S2
 #define TM1621_COORDINATE_PERCENTAGE				TM1621_SYMBOL_S3
-#define TM1621_COORDINATE_WIFI							TM1621_SYMBOL_S4
+#define TM1621_COORDINATE_WIFI							TM1621_SYMBOL_S6
 
 
 

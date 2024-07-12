@@ -24,7 +24,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 
-#define LIGHT_BRIGHTNESS_MAX				800			// 最大亮度  0~1000
+#define LIGHT_BRIGHTNESS_MAX				0			// 最大亮度  0~500
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -71,7 +71,7 @@ void App_Breath_light_Handler(void)
 			if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)
 				Light_Brightness += (LIGHT_BRIGHTNESS_MAX/BREATH_LIGHT_GEAR_POSITION);
 			else
-				Breath_light_direction = 0;
+				Breath_light_direction = 1;
 		}
 		else
 		{
@@ -137,7 +137,7 @@ void App_Breath_light_Handler(void)
 void Breath_light_PwmOut(uint16_t pul)
 {
 	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 1);//pul
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, pul);//pul
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 }
 

@@ -32,7 +32,7 @@ uint32_t Modbus_BaudRate_Table[] = 	{2400,4800,9600,19200,115200};
 
 uint32_t Dev_BaudRate_Get(uint8_t usart_num)
 {
-	uint32_t all_usart_baudrate_table[SYSTEM_USER_USART_MAX] = {115200,9600,115200,115200,115200};//U1 ~ U5 默认波特率
+	uint32_t all_usart_baudrate_table[SYSTEM_USER_USART_MAX] = {115200,115200,115200,115200,115200};//U1 ~ U5 默认波特率
 	
 	if(usart_num == DEBUG_USART)	// 调试串口
 	{
@@ -77,11 +77,7 @@ void Dev_Information_Init(void)
 	
 	p_Software_Version_high = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_DISPLAY_SOFTWARE_VERSION);//	软件版本
 	p_Software_Version_low = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_DISPLAY_SOFTWARE_VERSION+1);
-	
-	// 故障 菜单
-	App_Fault_Init();
-	// 操作 菜单
-	App_Operation_Init();
+
 }
 
 

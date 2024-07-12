@@ -103,6 +103,7 @@ void To_Debug_Protocol_Analysis(uint8_t len)
 {
 #ifdef DEBUG_USART
 
+	UART_Send_Debug(Debug_Read_Buffer, len);
 	
 	memset(Debug_Read_Buffer,0,DEBUG_PROTOCOL_RX_MAX);    				//清空缓存区
 	__HAL_UART_CLEAR_IDLEFLAG(p_huart_debug);               //清除标志位
@@ -113,5 +114,12 @@ void To_Debug_Protocol_Analysis(uint8_t len)
 }
 
 
-
+// 初始化
+void Debug_Protocol_Init(void)
+{
+	__HAL_UART_ENABLE_IT(p_huart_debug, UART_IT_IDLE);//使能idle中断
+	__HAL_UART_ENABLE_IT(p_huart_debug, UART_IT_ERR);//
+	
+  HAL_UART_Receive_DMA(p_huart_debug,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);//打开串口DMA接收
+}
 

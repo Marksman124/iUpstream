@@ -13,6 +13,7 @@
 #include "timing.h"
 #include "wifi.h"
 #include "tm1621.h"
+#include "motor.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -51,8 +52,23 @@ void Clean_Timing_Timer_Cnt(void)
 	Timing_Timer_Cnt = 0;
 }
 
-
-
+void Speed_Save_Flash(Operating_Parameters op_node,uint8_t system_state)
+{
+	if(system_state == TIMING_MODE_INITIAL)
+	{
+		p_OP_Timing_Mode->speed = op_node.speed;
+		p_OP_Timing_Mode->time = op_node.time;
+		MB_Flash_Buffer_Write();
+		//STMFLASH_Write(FLASH_APP_PARAM_ADDR+(MB_USER_TIME_MODE_SPEED*2), (uint16_t *)p_OP_Timing_Mode, 2 );// REG_HOLDING_NREGS
+	}
+	else if(system_state == FREE_MODE_INITIAL)
+	{
+		p_OP_Free_Mode->speed = op_node.speed;
+		p_OP_Free_Mode->time = op_node.time;
+		MB_Flash_Buffer_Write();
+		//STMFLASH_Write(FLASH_APP_PARAM_ADDR+(MB_USER_FREE_MODE_SPEED*2), (uint16_t *)p_OP_Free_Mode, 2 );// REG_HOLDING_NREGS
+	}
+}
 
 // 定时任务主线程
 void App_Timing_Handler(void)
@@ -123,11 +139,11 @@ void App_Timing_Handler(void)
 				
 				Timing_Timer_Cnt++;
 				// 3秒 闪烁
-				if(Timing_Timer_Cnt > 2)//第一秒不动
+				//if(Timing_Timer_Cnt > 2)//第一秒不动
 				{
-					if(Timing_Timer_Cnt < 7)
+					if(Timing_Timer_Cnt < 6)
 					{
-						if( (Timing_Timer_Cnt % 2) == 1)
+						if(( (Timing_Timer_Cnt % 2) == 1)&&(Timing_Timer_Cnt > 1))
 							Lcd_Speed_Off();
 						else
 							Lcd_Show();
@@ -135,14 +151,20 @@ void App_Timing_Handler(void)
 					else
 					{
 						Update_OP_Data();	// 保存最新转速
+						Speed_Save_Flash(OP_ShowNow,System_State_Machine);
 						if(System_State_Machine == TIMING_MODE_INITIAL)
+						{
 							p_OP_ShowLater->time = OP_ShowNow.time;
+						}
+						
 						if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))	//跳过 软启动
 						{
 							//Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING); //底层转速同步后再删除
 							p_OP_ShowLater->speed = OP_ShowNow.speed;
 							
 							Motor_Speed_Target = OP_ShowNow.speed;
+							//保存
+							
 							Lcd_Show();
 							Arbitrarily_To_Running();
 						}
@@ -214,9 +236,9 @@ void App_Timing_Handler(void)
 					Lcd_Show();
 				}
 				
-//				if(Motor_Speed_Is_Reach())
-//					if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
-//						Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
+				if(Motor_Speed_Is_Reach())
+					if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
+						Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
 			}
 			else if(System_is_Pause())//暂停
 			{

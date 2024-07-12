@@ -19,7 +19,7 @@
 
 // 04
 #define REG_INPUT_START 								( MB_DISPLAY_SOFTWARE_VERSION )
-#define REG_INPUT_NREGS 								( MB_SYSTEM_FAULT_STATUS )
+#define REG_INPUT_NREGS 								( MB_MOTOR_BUS_VOLTAGE )
 
 // 21
 #define REG_FILE_NUMBER_MAX 								( 0x270F )
@@ -376,15 +376,18 @@ void Modbus_Buffer_Init(void)
 	STMFLASH_Read(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
 	
 	// 默认波特率  测试用
-	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_BAUD_RATE,3);
-	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_NODE_ADDRESS,3);
+	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_BAUD_RATE,4);
+	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_NODE_ADDRESS,21);
 	
 }
 
 void MB_Flash_Buffer_Write(void)
 {
-//扇区是2048， 整个 usRegHoldingBuf 一起写
-	//STMFLASH_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
+	//扇区是2048， 整个 usRegHoldingBuf 一起写
+	STMFLASH_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
+	
+	//Eeprom_I2C_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
+
 }
 
 
@@ -457,16 +460,42 @@ void Set_DataValue_U32(UCHAR ucFunctionCode, USHORT addr, uint32_t value)
 }
 
 
-
 void Get_Mapping_Register(void)
 {
 	p_OP_ShowLater = 		(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_MOTOR_CURRENT_SPEED);
 	p_OP_Free_Mode = 		(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_USER_FREE_MODE_SPEED);
 	p_OP_Timing_Mode = 	(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_USER_TIME_MODE_SPEED);
 	p_OP_PMode =				(Operating_Parameters(*)[TRAINING_MODE_PERIOD_MAX])Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_USER_TRAIN_MODE_SPEED_P1_1);
+	
+	
+	p_Modbus_Node_Addr = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_NODE_ADDRESS);
+	p_Modbus_Baud_Rate = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_BAUD_RATE);
+	p_Support_Control_Methods = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_SUPPORT_CONTROL_METHODS);
+	//p_Motor_Pole_Number = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_DISTRIBUTION_NETWORK_CONTROL);
+	p_Motor_Pole_Number = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_MOTOR_POLE_NUMBER);
+	
+	
+	//系统 故障状态
 	p_System_Fault_Static = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER , MB_SYSTEM_FAULT_STATUS);
+	//电机 故障状态
+	p_Motor_Fault_Static = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_FAULT_STATUS);
+	//mos 温度
+	p_Mos_Temperature = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOS_TEMPERATURE);
+	//电机 温度
+	p_Motor_Temperature = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_TEMPERATURE);
+	//电机 电流
+	p_Motor_Current = (uint32_t*)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_CURRENT);
+	//电机 实际 转速
+	p_Motor_Reality_Speed = (uint32_t*)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_REALITY_SPEED);
+//母线 电压
+	p_Motor_Bus_Voltage = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_BUS_VOLTAGE);
+
+	
 	
 }
+
+
+
 
 
 

@@ -27,7 +27,7 @@ extern "C" {
 /* Exported functions prototypes ---------------------------------------------*/
 void UART_Send_Debug(uint8_t * p_buff, uint8_t len);
 void To_Debug_Protocol_Analysis(uint8_t len);
-
+void Debug_Protocol_Init(void);
 
 #ifdef __cplusplus
 }

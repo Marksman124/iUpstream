@@ -66,8 +66,8 @@ void STMFLASH_Write(uint32_t WriteAddr,uint16_t  *pBuffer,uint16_t  NumToWrite)
     {
         return;                                                                                                    // 非法地址
     }
-    HAL_FLASH_Unlock();                                                                                                // 解锁
- 
+    HAL_FLASH_Unlock();     // 解锁
+		
     ShiftingAddr  = WriteAddr - STM32_FLASH_BASE;                                                                  // 实际偏移地址.要写入数据起始地址的位置
     PageAddr      =  ShiftingAddr / FLASH_PAGE_SIZE;                                                               // 要写入的地址所在的Flash页（0~256）
     WordAddr      = (ShiftingAddr % FLASH_PAGE_SIZE) / 2;                                                          // 在Flash页内的偏移(2个字节为基本单位.)

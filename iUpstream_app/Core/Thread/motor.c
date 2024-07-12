@@ -61,18 +61,22 @@ void Metering_Receive_Init(void)
 void App_Motor_Handler(void)
 {
 	//读状态  2s
-	if((Motor_Timer_Cnt % 40)==0)
+	if((Motor_Timer_Cnt % 10)==0)
 	{
 		Motor_Read_Register();
 	}
-	else
+	if((Motor_Timer_Cnt % 10)==6)
 	{
-		if(Motor_Speed_Update() == 0)
-		{
-			//心跳 50ms
-			Motor_Heartbeat_Send();
-		}
+		//心跳 100ms
+		Motor_Heartbeat_Send();
 	}
+	if((Motor_Timer_Cnt % 10)==5)
+	{
+		//设置转速 100ms
+		Motor_Speed_Update();
+	}
+	
+	
 	if(Motor_Timer_Cnt < 10000)
 		Motor_Timer_Cnt ++;
 	else
@@ -81,21 +85,30 @@ void App_Motor_Handler(void)
 
 
 //------------------- 同步电机转速 ----------------------------
+// 持续发
 uint8_t Motor_Speed_Update(void)
 {
-	if( Motor_Speed_Now == Motor_Speed_Target )
-	{
-		return 0;
-	}
+	uint8_t result;
 	
 	if( Motor_Speed_Now > Motor_Speed_Target )
+	{
 		Motor_Speed_Now --;
+		result = 1;
+	}
 	else if( Motor_Speed_Now < Motor_Speed_Target )
+	{
 		Motor_Speed_Now ++;
+		result = 1;
+	}
+	else
+	{
+		result = 0;
+	}
 	
 	//发送
 	Motor_Speed_Send(Motor_Speed_To_Rpm(Motor_Speed_Now));
-	return 1;
+	//Motor_Speed_Send(5);
+	return result;
 }
 
 //------------------- 电机转速是否达到目标值 ----------------------------
@@ -111,11 +124,22 @@ uint8_t Motor_Speed_Is_Reach(void)
 // 100% -->  2100 rpm
 uint32_t Motor_Speed_To_Rpm(uint8_t speed)
 {
-	uint32_t speed_rpm = speed*MOTOR_RPM_CONVERSION_COEFFICIENT;
+	
+	uint32_t speed_rpm = speed*MOTOR_RPM_CONVERSION_COEFFICIENT*(*p_Motor_Pole_Number);
 	
 	return speed_rpm;
 }
 
+//------------------- 故障类型转换 ----------------------------
+uint8_t Change_Faule_To_Upper(uint8_t type)
+{
+	uint8_t result=0;
+	
+	return  type;
+	
+//	if(type = 4)
+//		result |= 
+}
 
 /*-------------------- 收发处理 ----------------------------------------------*/
 uint16_t CRC16_XMODEM_T(uint8_t *ptr, uint16_t len)
@@ -176,6 +200,11 @@ void Motor_UART_Send(uint8_t* p_buff, uint8_t len)
 //-------------------- 接收 ----------------------------
 void Motor_RxData(uint8_t len)
 {
+	static uint32_t Rx_cnt= 0;
+	
+	if(Rx_cnt ++ > 20)
+	{
+		Rx_cnt=0;
 	//
 	uint8_t debug_send_buffer[DEBUG_PROTOCOL_TX_MAX]={0};
 	// 滤波后的mosfet温度
@@ -194,7 +223,9 @@ void Motor_RxData(uint8_t len)
 	uint16_t ntc_tmp[3] = {Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+58]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+59],Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+60]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+61],Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+62]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+63]};
 	
 	if(motor_fault)
-		*p_System_Fault_Static |= 0x08;
+	{
+		*p_System_Fault_Static |= Change_Faule_To_Upper(motor_fault);
+	}
 	
 	sprintf((char*)debug_send_buffer,"\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t%d\n母线电压:\t%d.%d\n电机故障:\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
 	
@@ -205,7 +236,7 @@ void Motor_RxData(uint8_t len)
 	
 	UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
 	
-	
+}
 	
 	memset(Motor_DMABuff,0,MOTOR_RS485_RX_BUFF_SIZE);    				//清空缓存区
 	__HAL_UART_CLEAR_IDLEFLAG(p_huart_motor);               //清除标志位

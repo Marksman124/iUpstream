@@ -41,6 +41,15 @@ typedef enum
 
 
 /* Exported macro ------------------------------------------------------------*/
+#define FAULT_BUS_VOLTAGE_ABNORMAL			0x1
+#define FAULT_BUS_CURRENT_ABNORMAL			0x2
+#define FAULT_BUS_CURRENT_BIAS					0x4
+#define FAULT_TEMPERATURE_MOS						0x8
+#define FAULT_TEMPERATURE_AMBIENT				0x10
+#define FAULT_TEMPERATURE_SENSOR				0x20
+#define FAULT_MOTOR_DRIVER							0x40
+#define FAULT_MOTOR_LOSS								0x80
+
 
 //-------------- 按键组合响应 总数 -------------------
 #define CALL_OUT_NUMBER_MAX						8
@@ -66,7 +75,7 @@ extern void To_Fault_Menu(void);
 // 清除故障状态
 extern void Clean_Fault_State(void);
 // 故障 显示
-extern void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint8_t type);
+extern void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint16_t type);
 
 /* Private defines -----------------------------------------------------------*/
 

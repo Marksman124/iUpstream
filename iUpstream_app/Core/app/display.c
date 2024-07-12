@@ -24,15 +24,6 @@ UART_HandleTypeDef* p_huart_display = &huart3;		 //调试串口 UART句柄
 
 /* Private macro -------------------------------------------------------------*/
 
-#define GET_NUMBER_HUNDRED_DIGIT(n)						((n>=100)?1:0)
-#define GET_NUMBER_TEN_DIGIT(n)								((n/10)%10)
-#define GET_NUMBER_ONE_DIGIT(n)								(n%10)
-
-#define GET_TIME_MINUTE_DIGIT(n)							((n/60)%100)
-#define GET_TIME_SECOND_DIGIT(n)							(n%60)
-
-#define GET_LETTER_HIGH_DIGIT(n)							((n&0xF0)>>4)
-#define GET_LETTER_LOW_DIGIT(n)								(n&0x0F)
 /* Private variables ---------------------------------------------------------*/
 
 // 显示图标
@@ -115,7 +106,7 @@ Display_Show_Mode
 void Display_Show_Mode(uint8_t mode)
 {
 	//字母 p
-	TM1621_display_Letter(TM1621_COORDINATE_MODE_HIGH,  0x08);
+	TM1621_display_Letter(TM1621_COORDINATE_MODE_HIGH,  'P');
 	
 	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  GET_NUMBER_ONE_DIGIT(mode));
 	
@@ -242,23 +233,57 @@ void Lcd_No_Speed(Operating_Parameters op_para, uint8_t status_para, uint8_t mod
 }
 
 //------------------- 外部接口  ----------------------------
-//显示
+/***********************************************************************
+*		显示 函数总入口
+*
+*
+***********************************************************************/
 void Lcd_Show(void)
 {
-	//背光
-	TM1621_BLACK_ON()
+	
+	if(System_is_Operation() || System_is_Error())
+	{
+			return ;
+	}
+	taskENTER_CRITICAL();
 	//
 	Lcd_Display(OP_ShowNow, LCD_Show_Bit,PMode_Now);
 	
 	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 }
 
+// 机型码 & 拨码
+void Lcd_System_Information(void)
+{
+	uint8_t dial_switch;
+	//speed
+	Display_Hide_Speed(0xFF);
+	// time
+	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH, (SYSTEM_PRODUCT_MODEL_CODE/1000)%10);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  (SYSTEM_PRODUCT_MODEL_CODE/100)%10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  (SYSTEM_PRODUCT_MODEL_CODE/10)%10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  (SYSTEM_PRODUCT_MODEL_CODE)%10);
+	//
+	dial_switch = Gpio_Get_Dial_Switch();
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  GET_NUMBER_TEN_DIGIT(dial_switch));
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  GET_NUMBER_ONE_DIGIT(dial_switch));
+	
+	Lcd_Display_Symbol(0);
+	
+	TM1621_LCD_Redraw();
+}
+
+// 速度 熄灭
 void Lcd_Speed_Off(void)
 {
 	//背光 关
 	//TM1621_BLACK_OFF()
 	//
+	taskENTER_CRITICAL();
 	Lcd_No_Speed(OP_ShowNow, LCD_Show_Bit,PMode_Now);
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 }
 
 //------------------- 切换模式  ----------------------------
@@ -294,8 +319,6 @@ void To_Power_Off(void)
 // 自由模式
 void To_Free_Mode(uint8_t mode)
 {
-	PMode_Now = 0;
-		
 	if(mode == 0)
 		Special_Status_Delete(SPECIAL_BIT_SKIP_INITIAL);
 	else
@@ -307,8 +330,8 @@ void To_Free_Mode(uint8_t mode)
 	*p_OP_ShowLater = *p_OP_Free_Mode;
 	OP_ShowNow = *p_OP_ShowLater;
 	
-	LCD_Show_Bit = STATUS_BIT_PERCENTAGE | STATUS_BIT_WIFI;
-	
+	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
+	PMode_Now = 0;
 	Lcd_Show();
 }
 
@@ -321,8 +344,8 @@ void To_Timing_Mode(void)
 	*p_OP_ShowLater = *p_OP_Timing_Mode;
 	OP_ShowNow = *p_OP_ShowLater;
 	
-	LCD_Show_Bit = STATUS_BIT_PERCENTAGE | STATUS_BIT_WIFI;
-	
+	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
+	PMode_Now = 0;
 	Lcd_Show();
 }
 
@@ -343,7 +366,7 @@ void To_Train_Mode(uint8_t num)
 	OP_ShowNow.speed = p_OP_PMode[num-1][0].speed;
 	OP_ShowNow.time = p_OP_PMode[num-1][TRAINING_MODE_PERIOD_MAX-1].time;
 	
-	LCD_Show_Bit = STATUS_BIT_PERCENTAGE | STATUS_BIT_WIFI;
+	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
 	
 	
 	Lcd_Show();

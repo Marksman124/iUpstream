@@ -35,6 +35,7 @@ typedef enum
 	OPERATION_ADDR_SET=1,					//	地址设置
 	OPERATION_BAUD_RATE,					//	波特率
 	OPERATION_SHIELD_MENU,				//	屏蔽控制方式
+	OPERATION_MOTOR_POLES,				//	电机极数
 	OPERATION_DISPLAY_VERSION,		//	显示板 版本号
 	OPERATION_DRIVER_VERSION,			//	驱动板 版本号
 	OPERATION_STATE_END,					//	结束
@@ -52,7 +53,10 @@ typedef enum
 
 #define OPERATION_BAUD_MAX						4
 #define OPERATION_SHIELD_MAX					7
+#define OPERATION_POLES_MAX						MOTOR_RPM_MAX_OF_POLES
 
+
+#define OPERATION_POLES_MIX						MOTOR_RPM_MIX_OF_POLES
 /* Exported functions prototypes ---------------------------------------------*/
 
 extern void App_Operation_Init(void);

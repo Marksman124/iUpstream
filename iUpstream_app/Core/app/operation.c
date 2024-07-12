@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "operation.h"
-
+#include "tm1621.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -65,10 +65,10 @@ static uint8_t Operation_State_Machine = 0;		//	状态机
 static uint8_t Operation_Menu_Value = 0;		//	菜单值	
 
 
-static uint8_t Operation_Addr_Value = 0;		//	地址	
-static uint8_t Operation_Baud_Rate = 0;			//	波特率	
-static uint8_t Operation_Shield_Value = 0;		//	控制方式	
-
+static uint16_t Operation_Addr_Value = 0;		//	地址	
+static uint16_t Operation_Baud_Rate = 0;			//	波特率	
+static uint16_t Operation_Shield_Value = 0;		//	控制方式	
+static uint16_t Operation_Motor_Poles = 0;		//	控制方式	
 
 // 发送缓冲区
 uint8_t operation_send_buffer[24] = {0};
@@ -106,82 +106,93 @@ void App_Operation_Init(void)
 
 	Operation_Shield_Value = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS );
 		
+	Operation_Motor_Poles = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER );
 }
 
-static void _Delay(uint32_t mdelay)
+//static void _Delay(uint32_t mdelay)
+//{
+//	__HAL_TIM_SET_COUNTER(&htim1,0);
+//	while(__HAL_TIM_GET_COUNTER(&htim1) < mdelay);
+//}
+
+//------------------- 显示屏 & 接口 ----------------------------
+/*
+******************************************************************************
+Display_Show_Number	
+
+显示当前故障编号， 0-100
+******************************************************************************
+*/  
+void Display_Oper_Number(uint8_t no)
 {
-	__HAL_TIM_SET_COUNTER(&htim1,0);
-	while(__HAL_TIM_GET_COUNTER(&htim1) < mdelay);
+	if(no > 100)
+		no = 100;
+	
+	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, GET_NUMBER_HUNDRED_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, GET_NUMBER_TEN_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, GET_NUMBER_ONE_DIGIT(no));
+	
+	
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_FaultCode
+
+显示参数值
+******************************************************************************
+*/  
+void Display_Oper_value(uint16_t value)
+{
+	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH,  (value / 1000)%10);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	(value / 100)%10);
+	
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(value / 10)&10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  	(value % 10));
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_Sum
+
+显示故障总数
+******************************************************************************
+*/  
+void Display_Mode_Hide(void)
+{
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  0xFF);
+	
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  0xFF);
+	
+	//TM1621_LCD_Redraw();
 }
 
-
-// 刷新 屏幕
-void Lcd_Show_Operation(uint8_t type, uint8_t num)
+/***********************************************************************
+*		显示 函数总入口
+*
+*
+***********************************************************************/
+void Lcd_Show_Operation(uint8_t type, uint16_t num)
 {
-	uint8_t i;
-	
-	// ===============
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// *                            *
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	//speed
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	
-	operation_send_buffer[6] = (type / 10) + 0x30;
-	operation_send_buffer[7] = (type % 10) + 0x30;
-	
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
+	if(System_is_Operation() == 0)
+	{
+			return ;
+	}
+	taskENTER_CRITICAL();
+	// sum
+	Display_Oper_Number(type);
+	Display_Oper_value(num);
+	Display_Mode_Hide();
 	
 	
-	// time
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
+	//版本号显示小数点
+	if((type == OPERATION_DISPLAY_VERSION) ||( type == OPERATION_DRIVER_VERSION))
+		Lcd_Display_Symbol(STATUS_BIT_POINT);
+	else
+		Lcd_Display_Symbol(0);
 	
-	operation_send_buffer[5] = (num / 100) + 0x30;
-	operation_send_buffer[7] = ((num % 100) / 10) + 0x30;
-	operation_send_buffer[8] = (num % 10) + 0x30;	
-
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// *                            *
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// ===============
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	operation_send_buffer[21] = 0x0A;
-	operation_send_buffer[22] = 0x0A;
-	operation_send_buffer[23] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 24,0xFFFF);
-
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 	return;
 }
 
@@ -193,6 +204,9 @@ void Lcd_Show_Operation(uint8_t type, uint8_t num)
 // 进入操作菜单
 void To_Operation_Menu(void)
 {
+	// 操作 菜单
+	App_Operation_Init();
+	
 	//功能暂停, 电机关闭
 	Set_System_State_Machine(OPERATION_MENU_STATUS);
 
@@ -241,6 +255,15 @@ static void on_Button_1_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 	}
+	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
+	{
+		if(Operation_Motor_Poles < OPERATION_POLES_MAX)
+			(Operation_Motor_Poles)++;
+		else
+			Operation_Motor_Poles = OPERATION_POLES_MIX;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
+	}
 }
 
 // ② 时间键
@@ -274,41 +297,53 @@ static void on_Button_2_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 	}
+	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
+	{
+		if(Operation_Motor_Poles > OPERATION_POLES_MIX)
+			(Operation_Motor_Poles)--;
+		else
+			Operation_Motor_Poles = OPERATION_POLES_MAX;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
+	}
 }
 
 // ③ 模式键
 static void on_Button_3_clicked(void)
 {
 	button_cnt = 0;
-	if(Operation_State_Machine == OPERATION_ADDR_SET)
+	switch(Operation_State_Machine)
 	{
-		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
-		Operation_State_Machine = OPERATION_BAUD_RATE;
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
-	}
-	else if(Operation_State_Machine == OPERATION_BAUD_RATE)
-	{
-		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate );
-		Operation_State_Machine = OPERATION_SHIELD_MENU;
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
-	}
-	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
-	{
-		//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
-		Operation_State_Machine = OPERATION_DISPLAY_VERSION;
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
-	}
-	else if(Operation_State_Machine == OPERATION_DISPLAY_VERSION)
-	{
-		//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
-		Operation_State_Machine = OPERATION_DRIVER_VERSION;
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
-	}
-	else //if(Operation_State_Machine == OPERATION_DRIVER_VERSION)
-	{
-		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
-		Operation_State_Machine = OPERATION_ADDR_SET;
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
+		case OPERATION_ADDR_SET:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
+			Operation_State_Machine = OPERATION_BAUD_RATE;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
+		break;
+		case OPERATION_BAUD_RATE:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate );
+			Operation_State_Machine = OPERATION_SHIELD_MENU;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
+		break;
+		case OPERATION_SHIELD_MENU:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_DISTRIBUTION_NETWORK_CONTROL, Operation_Shield_Value );
+			Operation_State_Machine = OPERATION_MOTOR_POLES;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
+		break;
+		case OPERATION_MOTOR_POLES:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
+			Operation_State_Machine = OPERATION_DISPLAY_VERSION;
+			Lcd_Show_Operation( Operation_State_Machine, (SOFTWARE_VERSION_HIGH*100 + SOFTWARE_VERSION_LOW));
+		break;
+		case OPERATION_DISPLAY_VERSION:
+			//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+			Operation_State_Machine = OPERATION_DRIVER_VERSION;
+			Lcd_Show_Operation( Operation_State_Machine, (SOFTWARE_VERSION_HIGH*100 + SOFTWARE_VERSION_LOW));
+		break;
+		default:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+			Operation_State_Machine = OPERATION_ADDR_SET;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
+		break;
 	}
 }
 
