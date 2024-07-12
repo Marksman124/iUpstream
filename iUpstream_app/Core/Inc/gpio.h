@@ -50,7 +50,7 @@ extern void led_on(void);
 extern void led_off(void);
 	
 extern void StartUp_Pump(uint8_t num, uint16_t para);
-
+extern uint8_t Gpio_Get_Dial_Switch(void);
 extern void IO_Hardware_Ctrl_All(uint16_t para);
 extern void IO_Hardware_Ctrl_One(uint8_t num, uint8_t value);
 

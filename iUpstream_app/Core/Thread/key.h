@@ -49,10 +49,10 @@ typedef struct IO_Hardware_Pin
 
 /* Exported macro ------------------------------------------------------------*/
 
-#define KEY_THREAD_LIFECYCLE								200				// 任务生命周期 200ms
+#define KEY_THREAD_LIFECYCLE								20				// 任务生命周期 200ms
 
-#define KEY_LONG_PRESS_TIME									15				//长按等待时间  15 * 200 = 3s
-#define KEY_LONG_PRESS_TIME_SHORT						5					//短一点的 长按等待时间  5 * 200 = 1s
+#define KEY_LONG_PRESS_TIME									(3000/KEY_THREAD_LIFECYCLE)			//长按时间 3s
+#define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
 
 
 //-------------- 按键组合响应 总数 -------------------
@@ -111,6 +111,8 @@ extern uint8_t Key_Get_IO_Input(void);
 extern void System_Power_On(void);
 //	关机
 extern void System_Power_Off(void);
+//	开机画面
+extern void System_Boot_Screens(void);
 //	恢复出厂设置
 extern void Restore_Factory_Settings(void);
 

@@ -69,9 +69,14 @@ extern "C" {
 #define	THREAD_PERIOD_KEY_BUTTON_TASK						KEY_THREAD_LIFECYCLE
 #define	THREAD_PERIOD_MOTOR_TASK								MOTOR_THREAD_LIFECYCLE
 
+
+#define POWER_ON_WAITE_TIME_TASK								(6000)///30000
+
+// 产品机型码
+#define	SYSTEM_PRODUCT_MODEL_CODE								0x0001		//
+
 // 软件版本
 #define	SOFTWARE_VERSION_UINT32								0x00010000		//1.0.0
-
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

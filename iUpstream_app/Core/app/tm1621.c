@@ -66,8 +66,8 @@ uint8_t Lcd_Number_table_2[10]={0xF5,0x60,0xD3,0xF2,0x66,0xB6,0xB7,0xE0,0xF7,0xF
 // ×ÖÄ¸ÏÔÊ¾ 1-4
 uint8_t Lcd_Letter_table_1[11] = {
 	0x00, // A
-	0x00, // C
-	0x00, // E
+	0x59, // C
+	0x79, // E
 	0x00, // F
 	0x00, // H
 	0x00, // I
@@ -81,8 +81,8 @@ uint8_t Lcd_Letter_table_1[11] = {
 // ×ÖÄ¸ÏÔÊ¾ 5-8
 uint8_t Lcd_Letter_table_2[11] = {
 	0x00, // A
-	0x00, // C
-	0x00, // E
+	0x95, // C
+	0x97, // E
 	0x00, // F
 	0x00, // H
 	0x00, // I
@@ -368,7 +368,7 @@ void TM1621_Buzzer_Init(void)
 {
 	Delay_us(1);
 	//·äÃùÆ÷
-	TM1621_Write_CMD(TONE_4K);
+	TM1621_Write_CMD(TONE_2K);
 	TM1621_Write_CMD(TONEOFF);
 }
 /*

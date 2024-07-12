@@ -172,7 +172,6 @@ void Breath_Light_Handler(void const * argument)
   /* USER CODE BEGIN Breath_Light_Handler */
 	
 	App_Breath_light_Init();
-	
   /* Infinite loop */
   while(1)
   {
@@ -197,7 +196,7 @@ void Rs485_Modbus_Handler(void const * argument)
   /* USER CODE BEGIN Rs485_Modbus_Handler */
 	Modbus_Init();
 	App_Data_Init();
-	System_Power_Off();
+	//osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */
   while(1)
   {
@@ -221,7 +220,7 @@ void Main_Handler(void const * argument)
 	
 	Set_Software_Version(SOFTWARE_VERSION_UINT32);
 	App_Timing_Init();
-	
+	osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */
   while(1)
   {
@@ -245,7 +244,8 @@ void Key_Button_Handler(void const * argument)
 {
   /* USER CODE BEGIN Key_Button_Handler */
 	App_Key_Init();
-	
+	System_Boot_Screens();
+	System_Power_Off();
   /* Infinite loop */
   while(1)
   {
@@ -267,6 +267,7 @@ void Motor_Handler(void const * argument)
 {
   /* USER CODE BEGIN Motor_Handler */
 	Metering_Receive_Init();
+	//osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */
   for(;;)
   {

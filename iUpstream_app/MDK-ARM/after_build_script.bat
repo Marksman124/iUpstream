@@ -2,8 +2,8 @@
 setlocal EnableDelayedExpansion
 
 ::SET COMPILER_PATH="C:\Keil_v5\ARM\ARMCC\include\..\bin" 
-::SET AXF_FILE="E:\My_Project\temp_project\center_control_app\MDK-ARM\center_control_app\center_control_app.axf" 
-::SET BIN_FILE="E:\My_Project\temp_project\center_control_app\MDK-ARM\Output\center_control_app.bin"
+::SET AXF_FILE="E:\My_Project\temp_project\iUpstream_app\MDK-ARM\iUpstream_app\iUpstream_app.axf" 
+::SET BIN_FILE="E:\My_Project\temp_project\iUpstream_app\MDK-ARM\Output\iUpstream_app.bin"
 SET COMPILER_PATH=%1
 SET AXF_FILE=%2
 SET BIN_FILE=%3

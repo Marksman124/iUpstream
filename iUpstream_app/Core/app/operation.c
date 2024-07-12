@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "operation.h"
-
+#include "tm1621.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -114,74 +114,82 @@ static void _Delay(uint32_t mdelay)
 	while(__HAL_TIM_GET_COUNTER(&htim1) < mdelay);
 }
 
+//------------------- 显示屏 & 接口 ----------------------------
+/*
+******************************************************************************
+Display_Show_Number	
 
-// 刷新 屏幕
+显示当前故障编号， 0-100
+******************************************************************************
+*/  
+void Display_Oper_Number(uint8_t no)
+{
+	if(no > 100)
+		no = 100;
+	
+	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, GET_NUMBER_HUNDRED_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, GET_NUMBER_TEN_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, GET_NUMBER_ONE_DIGIT(no));
+	
+	
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_FaultCode
+
+显示故障代码， E001 - E205
+******************************************************************************
+*/  
+void Display_Oper_value(uint8_t value)
+{
+	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH,  0);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	(value / 100)%10);
+	
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(value / 10)&10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  	(value % 10));
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_Sum
+
+显示故障总数
+******************************************************************************
+*/  
+void Display_Mode_Hide(void)
+{
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  0xFF);
+	
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  0xFF);
+	
+	//TM1621_LCD_Redraw();
+}
+
+/***********************************************************************
+*		显示 函数总入口
+*
+*
+***********************************************************************/
 void Lcd_Show_Operation(uint8_t type, uint8_t num)
 {
-	uint8_t i;
+	if(System_is_Operation() == 0)
+	{
+			return ;
+	}
+	taskENTER_CRITICAL();
+	// sum
+	Display_Oper_Number(type);
+	Display_Oper_value(num);
+	Display_Mode_Hide();
 	
-	// ===============
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
+	if(type == 3)
+		Lcd_Display_Symbol(STATUS_BIT_POINT);
+	else
+		Lcd_Display_Symbol(0);
 	
-	// *                            *
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	//speed
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	
-	operation_send_buffer[6] = (type / 10) + 0x30;
-	operation_send_buffer[7] = (type % 10) + 0x30;
-	
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	
-	// time
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	
-	operation_send_buffer[5] = (num / 100) + 0x30;
-	operation_send_buffer[7] = ((num % 100) / 10) + 0x30;
-	operation_send_buffer[8] = (num % 10) + 0x30;	
-
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// *                            *
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x20;
-	operation_send_buffer[0] = 0x2A;
-	operation_send_buffer[19] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// ===============
-	for(i=0; i<20; i++)
-		operation_send_buffer[i] = 0x2A;
-	operation_send_buffer[20] = 0x0A;
-	operation_send_buffer[21] = 0x0A;
-	operation_send_buffer[22] = 0x0A;
-	operation_send_buffer[23] = 0x0A;
-	HAL_UART_Transmit(p_huart_operation, operation_send_buffer, 24,0xFFFF);
-
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 	return;
 }
 

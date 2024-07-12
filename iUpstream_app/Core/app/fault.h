@@ -66,7 +66,7 @@ extern void To_Fault_Menu(void);
 // Çå³ı¹ÊÕÏ×´Ì¬
 extern void Clean_Fault_State(void);
 // ¹ÊÕÏ ÏÔÊ¾
-extern void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint8_t type);
+extern void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint16_t type);
 
 /* Private defines -----------------------------------------------------------*/
 

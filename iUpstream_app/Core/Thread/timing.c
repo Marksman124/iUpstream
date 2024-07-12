@@ -13,6 +13,7 @@
 #include "timing.h"
 #include "wifi.h"
 #include "tm1621.h"
+#include "motor.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -123,11 +124,11 @@ void App_Timing_Handler(void)
 				
 				Timing_Timer_Cnt++;
 				// 3秒 闪烁
-				if(Timing_Timer_Cnt > 2)//第一秒不动
+				//if(Timing_Timer_Cnt > 2)//第一秒不动
 				{
-					if(Timing_Timer_Cnt < 7)
+					if(Timing_Timer_Cnt < 6)
 					{
-						if( (Timing_Timer_Cnt % 2) == 1)
+						if(( (Timing_Timer_Cnt % 2) == 1)&&(Timing_Timer_Cnt > 1))
 							Lcd_Speed_Off();
 						else
 							Lcd_Show();
@@ -214,9 +215,9 @@ void App_Timing_Handler(void)
 					Lcd_Show();
 				}
 				
-//				if(Motor_Speed_Is_Reach())
-//					if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
-//						Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
+				if(Motor_Speed_Is_Reach())
+					if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
+						Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
 			}
 			else if(System_is_Pause())//暂停
 			{

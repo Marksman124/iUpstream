@@ -110,6 +110,8 @@ extern void Lcd_No_Speed(Operating_Parameters op_para, uint8_t status_para, uint
 //------------------- 外部接口  ----------------------------
 //显示
 extern void Lcd_Show(void);
+// 机型码 & 拨码
+extern void Lcd_System_Information(void);
 extern void Lcd_Speed_Off(void);
 //------------------- 切换模式  ----------------------------
 // 切换模式

@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "fault.h"
-
+#include "tm1621.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -53,10 +53,9 @@ void on_Fault_Button_2_4_Long_Press(void);
 
 /* Private define ------------------------------------------------------------*/
 
-UART_HandleTypeDef* p_huart_fault = &huart3;		 //调试串口 UART句柄
-
 /* Private macro -------------------------------------------------------------*/
 
+#define LCD_SYMBOL_FOT_FAULT								(STATUS_BIT_BLUETOOTH & STATUS_BIT_WIFI)
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -85,15 +84,6 @@ void (*p_Fault_Long_Press[CALL_OUT_NUMBER_MAX])(void) = {
 
 
 /* Private user code ---------------------------------------------------------*/
-
-
-//测试用
-extern TIM_HandleTypeDef htim1;
-static void _Delay(uint32_t mdelay)
-{
-	__HAL_TIM_SET_COUNTER(&htim1,0);
-	while(__HAL_TIM_GET_COUNTER(&htim1) < mdelay);
-}
 
 
 // 初始化
@@ -161,9 +151,10 @@ uint8_t Get_Fault_Number_Now(uint16_t para, uint8_t num)
 	return 0;
 }
 
-// 进入操作菜单
+// 进入故障界面
 void To_Fault_Menu(void)
 {
+	
 	//功能暂停, 电机关闭
 	Set_System_State_Machine(ERROR_DISPLAY_STATUS);
 
@@ -188,78 +179,84 @@ void Clean_Fault_State(void)
 }
 /* Private function prototypes -----------------------------------------------*/
 
-// 故障 显示
-void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint8_t type)
+//------------------- 显示屏 & 接口 ----------------------------
+/*
+******************************************************************************
+Display_Show_Number	
+
+显示当前故障编号， 0-100
+******************************************************************************
+*/  
+void Display_Show_Number(uint8_t no)
 {
-	uint8_t i;
+	if(no > 100)
+		no = 100;
 	
-	// ===============
-	for(i=0; i<20; i++)
-		fault_send_buffer[i] = 0x2A;
-	fault_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_fault, fault_send_buffer, 21,0xFFFF);
-	_Delay(20);
+	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, GET_NUMBER_HUNDRED_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, GET_NUMBER_TEN_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, GET_NUMBER_ONE_DIGIT(no));
 	
-	// *                            *
-	for(i=0; i<20; i++)
-		fault_send_buffer[i] = 0x20;
-	fault_send_buffer[0] = 0x2A;
-	fault_send_buffer[19] = 0x2A;
-	fault_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_fault, fault_send_buffer, 21,0xFFFF);
-	_Delay(20);
 	
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_FaultCode
+
+显示故障代码， E001 - E205
+******************************************************************************
+*/  
+void Display_Show_FaultCode(uint16_t code)
+{
+	//字母 E
+	TM1621_display_Letter(TM1621_COORDINATE_MIN_HIGH,  0x02);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	(code & 0x0F00)>>8);
+	
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(code & 0x00F0)>>4);
+	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  	(code & 0x000F));
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_Sum
+
+显示故障总数
+******************************************************************************
+*/  
+void Display_Show_Sum(uint8_t sum)
+{
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  GET_NUMBER_TEN_DIGIT(sum));
+	
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  GET_NUMBER_ONE_DIGIT(sum));
+	
+	//TM1621_LCD_Redraw();
+}
+
+/***********************************************************************
+*		显示 函数总入口
+*
+*
+***********************************************************************/
+void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint16_t type)
+{
+	uint16_t fault_label[16] = {0x001,0x002,0x003,
+															0x101,0x102,0x103,0x104,0x105,
+															0x201,0x202,0x203,
+															0x301,0x302,0x303,0x304,0x305};
+	if(System_is_Error() == 0)
+	{
+			return ;
+	}
+	taskENTER_CRITICAL();
 	// sum
-	for(i=0; i<20; i++)
-		fault_send_buffer[i] = 0x20;
-	fault_send_buffer[0] = 0x2A;
-	fault_send_buffer[19] = 0x2A;
-	fault_send_buffer[20] = 0x0A;
+	Display_Show_Sum(sum);
+	Display_Show_Number(now);
+	Display_Show_FaultCode(fault_label[type-1]);
 	
-	fault_send_buffer[6] = (sum / 10) + 0x30;
-	fault_send_buffer[7] = (sum % 10) + 0x30;
+	Lcd_Display_Symbol( LCD_Show_Bit & LCD_SYMBOL_FOT_FAULT);
 	
-	fault_send_buffer[12] = (now / 10) + 0x30;
-	fault_send_buffer[13] = (now % 10) + 0x30;
-	
-	HAL_UART_Transmit(p_huart_fault, fault_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	
-	// time
-	for(i=0; i<20; i++)
-		fault_send_buffer[i] = 0x20;
-	fault_send_buffer[0] = 0x2A;
-	fault_send_buffer[19] = 0x2A;
-	fault_send_buffer[20] = 0x0A;
-	
-	fault_send_buffer[4] = 0x45;	//	E
-	fault_send_buffer[5] = 0x72;	//	r
-	
-	fault_send_buffer[7] = (type / 10) + 0x30;
-	fault_send_buffer[8] = (type % 10) + 0x30;
-
-	HAL_UART_Transmit(p_huart_fault, fault_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// *                            *
-	for(i=0; i<20; i++)
-		fault_send_buffer[i] = 0x20;
-	fault_send_buffer[0] = 0x2A;
-	fault_send_buffer[19] = 0x2A;
-	fault_send_buffer[20] = 0x0A;
-	HAL_UART_Transmit(p_huart_fault, fault_send_buffer, 21,0xFFFF);
-	_Delay(20);
-	
-	// ===============
-	for(i=0; i<20; i++)
-		fault_send_buffer[i] = 0x2A;
-	fault_send_buffer[20] = 0x0A;
-	fault_send_buffer[21] = 0x0A;
-	fault_send_buffer[22] = 0x0A;
-	fault_send_buffer[23] = 0x0A;
-	HAL_UART_Transmit(p_huart_fault, fault_send_buffer, 24,0xFFFF);
-
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 	return;
 }
 
@@ -353,10 +350,11 @@ static void on_Fault_Button_1_3_Long_Press(void)
 {
 }
 
-// 恢复出厂设置
+// 复位
 static void on_Fault_Button_2_3_Long_Press(void)
 {
-
+	Set_Fault_Data(0);
+	To_Free_Mode(0);				// ui
 }
 
 //

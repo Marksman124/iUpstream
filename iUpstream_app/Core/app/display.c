@@ -24,15 +24,6 @@ UART_HandleTypeDef* p_huart_display = &huart3;		 //调试串口 UART句柄
 
 /* Private macro -------------------------------------------------------------*/
 
-#define GET_NUMBER_HUNDRED_DIGIT(n)						((n>=100)?1:0)
-#define GET_NUMBER_TEN_DIGIT(n)								((n/10)%10)
-#define GET_NUMBER_ONE_DIGIT(n)								(n%10)
-
-#define GET_TIME_MINUTE_DIGIT(n)							((n/60)%100)
-#define GET_TIME_SECOND_DIGIT(n)							(n%60)
-
-#define GET_LETTER_HIGH_DIGIT(n)							((n&0xF0)>>4)
-#define GET_LETTER_LOW_DIGIT(n)								(n&0x0F)
 /* Private variables ---------------------------------------------------------*/
 
 // 显示图标
@@ -242,23 +233,59 @@ void Lcd_No_Speed(Operating_Parameters op_para, uint8_t status_para, uint8_t mod
 }
 
 //------------------- 外部接口  ----------------------------
-//显示
+/***********************************************************************
+*		显示 函数总入口
+*
+*
+***********************************************************************/
 void Lcd_Show(void)
 {
+	
+	if(System_is_Operation() || System_is_Error())
+	{
+			return ;
+	}
+	taskENTER_CRITICAL();
 	//背光
 	TM1621_BLACK_ON()
 	//
 	Lcd_Display(OP_ShowNow, LCD_Show_Bit,PMode_Now);
 	
 	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 }
 
+// 机型码 & 拨码
+void Lcd_System_Information(void)
+{
+	uint8_t dial_switch;
+	//speed
+	Display_Hide_Speed(0xFF);
+	// time
+	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH, (SYSTEM_PRODUCT_MODEL_CODE/1000)%10);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  (SYSTEM_PRODUCT_MODEL_CODE/100)%10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  (SYSTEM_PRODUCT_MODEL_CODE/10)%10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  (SYSTEM_PRODUCT_MODEL_CODE)%10);
+	//
+	dial_switch = Gpio_Get_Dial_Switch();
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  GET_NUMBER_TEN_DIGIT(dial_switch));
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  GET_NUMBER_ONE_DIGIT(dial_switch));
+	
+	Lcd_Display_Symbol(0);
+	
+	TM1621_LCD_Redraw();
+}
+
+// 速度 熄灭
 void Lcd_Speed_Off(void)
 {
 	//背光 关
 	//TM1621_BLACK_OFF()
 	//
+	taskENTER_CRITICAL();
 	Lcd_No_Speed(OP_ShowNow, LCD_Show_Bit,PMode_Now);
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
 }
 
 //------------------- 切换模式  ----------------------------

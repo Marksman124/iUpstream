@@ -24,6 +24,8 @@
 /* USER CODE BEGIN 0 */
 #define GEAR_MAX		4
 
+#define DIAL_SWITCH_NUMBER		2
+
 IO_Hardware_Info IO_LED	= {GPIOB,GPIO_PIN_5};	//  PB5
 
 IO_Hardware_Info IO_Pump[2][4] = {
@@ -33,11 +35,13 @@ IO_Hardware_Info IO_Pump[2][4] = {
 {	{GPIOC,GPIO_PIN_6},{GPIOC,GPIO_PIN_7},{GPIOC,GPIO_PIN_8},{GPIOC,GPIO_PIN_9}}
 };
 
-IO_Hardware_Info IO_Extend[6] = {	// PA6, PA7, PC4, PC5, PB0, PB1,
-{GPIOA,GPIO_PIN_6},{GPIOA,GPIO_PIN_7},
-{GPIOC,GPIO_PIN_4},{GPIOC,GPIO_PIN_5},
-{GPIOB,GPIO_PIN_0},{GPIOB,GPIO_PIN_1}
-};
+//IO_Hardware_Info IO_Extend[6] = {	// PA6, PA7, PC4, PC5, PB0, PB1,
+//{GPIOA,GPIO_PIN_6},{GPIOA,GPIO_PIN_7},
+//{GPIOC,GPIO_PIN_4},{GPIOC,GPIO_PIN_5},
+//{GPIOB,GPIO_PIN_0},{GPIOB,GPIO_PIN_1}
+//};
+
+IO_Hardware_Info IO_Dial_Switch[DIAL_SWITCH_NUMBER]	= {{GPIOC,GPIO_PIN_4},{GPIOC,GPIO_PIN_5}};	//  PB5
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -197,30 +201,44 @@ void StartUp_Pump(uint8_t num, uint16_t para)
 	}
 }
 
+uint8_t Gpio_Get_Dial_Switch(void)
+{
+	uint8_t rulse=0;
+	uint8_t i;
+	uint8_t read_io;
+	
+	for(i=0; i<DIAL_SWITCH_NUMBER; i++)
+	{
+		read_io = HAL_GPIO_ReadPin(IO_Dial_Switch[i].io_type, IO_Dial_Switch[i].io_pin);
+		rulse |= read_io<<i;
+	}
+	
+	return rulse;
+}
 
 void IO_Hardware_Ctrl_All(uint16_t para)
 {
-	uint8_t i;
+//	uint8_t i;
 
-	for(i=0; i<6; i++)
-	{
-		if(para & 1<<i)
-			HAL_GPIO_WritePin(IO_Extend[i].io_type, IO_Extend[i].io_pin, GPIO_PIN_RESET);
-		else
-			HAL_GPIO_WritePin(IO_Extend[i].io_type, IO_Extend[i].io_pin, GPIO_PIN_SET);
-	}
+//	for(i=0; i<6; i++)
+//	{
+//		if(para & 1<<i)
+//			HAL_GPIO_WritePin(IO_Extend[i].io_type, IO_Extend[i].io_pin, GPIO_PIN_RESET);
+//		else
+//			HAL_GPIO_WritePin(IO_Extend[i].io_type, IO_Extend[i].io_pin, GPIO_PIN_SET);
+//	}
 }
 
 
 void IO_Hardware_Ctrl_One(uint8_t num, uint8_t value)
 {
-	if(num > 5)
-		return;
-	
-	if(value == 0)
-		HAL_GPIO_WritePin(IO_Extend[num].io_type, IO_Extend[num].io_pin, GPIO_PIN_RESET);
-	else
-		HAL_GPIO_WritePin(IO_Extend[num].io_type, IO_Extend[num].io_pin, GPIO_PIN_SET);
+//	if(num > 5)
+//		return;
+//	
+//	if(value == 0)
+//		HAL_GPIO_WritePin(IO_Extend[num].io_type, IO_Extend[num].io_pin, GPIO_PIN_RESET);
+//	else
+//		HAL_GPIO_WritePin(IO_Extend[num].io_type, IO_Extend[num].io_pin, GPIO_PIN_SET);
 }
 
 /* USER CODE END 2 */
