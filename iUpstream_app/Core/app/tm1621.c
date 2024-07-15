@@ -394,7 +394,7 @@ void TM1621_Buzzer_Init(void)
 {
 	Tm1621_Delay(10);
 	//·äÃùÆ÷
-	TM1621_Write_CMD(TONE_2K);
+	TM1621_Write_CMD(TONE_4K);
 	TM1621_Write_CMD(TONEOFF);
 }
 /*

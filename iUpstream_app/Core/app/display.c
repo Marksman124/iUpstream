@@ -61,7 +61,10 @@ void Display_Show_Speed(uint8_t speed)
 		speed = 100;
 	
 	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, GET_NUMBER_HUNDRED_DIGIT(speed));
-	TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, GET_NUMBER_TEN_DIGIT(speed));
+	if(speed <10)
+		TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, 0xFF);
+	else	
+		TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, GET_NUMBER_TEN_DIGIT(speed));
 	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, GET_NUMBER_ONE_DIGIT(speed));
 	
 	
@@ -217,6 +220,9 @@ void Lcd_Display(Operating_Parameters op_para, uint8_t status_para, uint8_t mode
 // Ï¢ÆÁ
 void Lcd_Off(void)
 {
+	//±³¹â
+	TM1621_BLACK_OFF();
+	
 	TM1621_Show_Off();
 }
 
@@ -240,6 +246,8 @@ void Lcd_No_Speed(Operating_Parameters op_para, uint8_t status_para, uint8_t mod
 ***********************************************************************/
 void Lcd_Show(void)
 {
+	//±³¹â
+	TM1621_BLACK_ON();
 	
 	if(System_is_Operation() || System_is_Error())
 	{

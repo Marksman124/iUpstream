@@ -24,7 +24,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 
-#define LIGHT_BRIGHTNESS_MAX				0			// 最大亮度  0~500
+#define LIGHT_BRIGHTNESS_MAX				350			// 最大亮度  0~500
 
 /* Private variables ---------------------------------------------------------*/
 
