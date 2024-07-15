@@ -236,10 +236,15 @@ void Motor_RxData(uint8_t len)
 	// 10KNTC温度1 2 3
 	uint16_t ntc_tmp[3] = {Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+58]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+59],Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+60]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+61],Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+62]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+63]};
 	
+<<<<<<< HEAD
 	if(motor_fault)
 	{
 		*p_System_Fault_Static |= Change_Faule_To_Upper(motor_fault);
 	}
+=======
+//	if(motor_fault)
+//		*p_System_Fault_Static |= 0x08;
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 	
 	sprintf((char*)debug_send_buffer,"\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t%d\n母线电压:\t%d.%d\n电机故障:\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
 	

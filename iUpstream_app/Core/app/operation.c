@@ -167,12 +167,71 @@ void Display_Mode_Hide(void)
 	//TM1621_LCD_Redraw();
 }
 
+<<<<<<< HEAD
+=======
+//------------------- 显示屏 & 接口 ----------------------------
+/*
+******************************************************************************
+Display_Show_Number	
+
+显示当前故障编号， 0-100
+******************************************************************************
+*/  
+void Display_Oper_Number(uint8_t no)
+{
+	if(no > 100)
+		no = 100;
+	
+	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, GET_NUMBER_HUNDRED_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, GET_NUMBER_TEN_DIGIT(no));
+	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, GET_NUMBER_ONE_DIGIT(no));
+	
+	
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_FaultCode
+
+显示故障代码， E001 - E205
+******************************************************************************
+*/  
+void Display_Oper_value(uint8_t value)
+{
+	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH,  0);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	(value / 100)%10);
+	
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(value / 10)&10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  	(value % 10));
+	//TM1621_LCD_Redraw();
+}
+/*
+******************************************************************************
+Display_Show_Sum
+
+显示故障总数
+******************************************************************************
+*/  
+void Display_Mode_Hide(void)
+{
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  0xFF);
+	
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  0xFF);
+	
+	//TM1621_LCD_Redraw();
+}
+
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 /***********************************************************************
 *		显示 函数总入口
 *
 *
 ***********************************************************************/
+<<<<<<< HEAD
 void Lcd_Show_Operation(uint8_t type, uint16_t num)
+=======
+void Lcd_Show_Operation(uint8_t type, uint8_t num)
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 {
 	if(System_is_Operation() == 0)
 	{
@@ -184,9 +243,13 @@ void Lcd_Show_Operation(uint8_t type, uint16_t num)
 	Display_Oper_value(num);
 	Display_Mode_Hide();
 	
+<<<<<<< HEAD
 	
 	//版本号显示小数点
 	if((type == OPERATION_DISPLAY_VERSION) ||( type == OPERATION_DRIVER_VERSION))
+=======
+	if(type == 3)
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 		Lcd_Display_Symbol(STATUS_BIT_POINT);
 	else
 		Lcd_Display_Symbol(0);

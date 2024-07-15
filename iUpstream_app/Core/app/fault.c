@@ -154,8 +154,11 @@ uint8_t Get_Fault_Number_Now(uint16_t para, uint8_t num)
 // 进入故障界面
 void To_Fault_Menu(void)
 {
+<<<<<<< HEAD
 	// 故障 菜单
 	App_Fault_Init();
+=======
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 	
 	//功能暂停, 电机关闭
 	Set_System_State_Machine(ERROR_DISPLAY_STATUS);
@@ -211,7 +214,11 @@ Display_Show_FaultCode
 void Display_Show_FaultCode(uint16_t code)
 {
 	//字母 E
+<<<<<<< HEAD
 	TM1621_display_Letter(TM1621_COORDINATE_MIN_HIGH,  'E');
+=======
+	TM1621_display_Letter(TM1621_COORDINATE_MIN_HIGH,  0x02);
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	(code & 0x0F00)>>8);
 	
 	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(code & 0x00F0)>>4);

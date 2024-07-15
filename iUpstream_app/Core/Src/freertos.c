@@ -246,7 +246,8 @@ void Key_Button_Handler(void const * argument)
 {
   /* USER CODE BEGIN Key_Button_Handler */
 	App_Key_Init();
-	
+	System_Boot_Screens();
+	System_Power_Off();
   /* Infinite loop */
   while(1)
   {
@@ -268,7 +269,10 @@ void Motor_Handler(void const * argument)
 {
   /* USER CODE BEGIN Motor_Handler */
 	Metering_Receive_Init();
+<<<<<<< HEAD
 	Debug_Protocol_Init();
+=======
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 	//osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */
   for(;;)

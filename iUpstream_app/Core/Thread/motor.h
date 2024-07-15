@@ -40,7 +40,12 @@ extern "C" {
 
 #define	MOTOR_MODULE_HUART				DRIVER_USART		//
 
+<<<<<<< HEAD
 #define	MOTOR_RPM_CONVERSION_COEFFICIENT				(21)		//百分比 转 转速 转换系数
+=======
+#define	MOTOR_RPM_NUMBER_OF_POLES								5		//
+#define	MOTOR_RPM_CONVERSION_COEFFICIENT				(21*MOTOR_RPM_NUMBER_OF_POLES)		//百分比 转 转速 转换系数
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 
 #define	MOTOR_PROTOCOL_HEADER_OFFSET						3		// 协议表头 偏移地址
 /*------------------- IO define ----------------------------------------------*/

@@ -328,6 +328,10 @@ void on_pushButton_4_Long_Press(void)
     System_Power_Off();
 }
 //================================== ① + ②  组合键
+<<<<<<< HEAD
+=======
+// 关机下  参数设置
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 // 停机下  wifi配对
 void on_pushButton_1_2_Long_Press(void)
 {
@@ -344,6 +348,10 @@ void on_pushButton_1_3_Long_Press(void)
 	TM1621_LCD_Init();
 }
 //================================== ② + ③  组合键
+<<<<<<< HEAD
+=======
+// 关机下  查看版本号
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 // 停机下  蓝牙配对
 void on_pushButton_2_3_Long_Press(void)
 {
@@ -374,9 +382,12 @@ void on_pushButton_2_4_Long_Press(void)
 void App_Key_Init(void)
 {
 	Led_Button_On(0x0F);	// 按键
+<<<<<<< HEAD
 	
 	System_Boot_Screens();
 	System_Power_Off();
+=======
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 }
 
 //------------------- 按键灯 ----------------------------
@@ -559,10 +570,17 @@ void System_Boot_Screens(void)
 {
 	//全亮 2s
 	TM1621_Show_All();
+<<<<<<< HEAD
 	osDelay(2000);
 	//机型码 & 拨码状态 2s
 	Lcd_System_Information();
 	osDelay(2000);
+=======
+	osDelay(3000);
+	//机型码 & 拨码状态 2s
+	Lcd_System_Information();
+	osDelay(3000);
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 }
 
 //	恢复出厂设置

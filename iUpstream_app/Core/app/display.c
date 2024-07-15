@@ -246,6 +246,11 @@ void Lcd_Show(void)
 			return ;
 	}
 	taskENTER_CRITICAL();
+<<<<<<< HEAD
+=======
+	//±³¹â
+	TM1621_BLACK_ON()
+>>>>>>> d270ab5f65b8534cd12ca5b7204496e6b681082e
 	//
 	Lcd_Display(OP_ShowNow, LCD_Show_Bit,PMode_Now);
 	
