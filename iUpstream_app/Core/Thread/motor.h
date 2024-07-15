@@ -64,7 +64,8 @@ void App_Motor_Handler(void);
 extern uint8_t Motor_Speed_Update(void);
 //------------------- 电机转速是否达到目标值 ----------------------------
 extern uint8_t Motor_Speed_Is_Reach(void);
-
+//------------------- 电机转速 目标值 设置 ----------------------------
+extern void Motor_Speed_Target_Set(uint8_t speed);
 //------------------- 百分比转 转速 ----------------------------
 extern uint32_t Motor_Speed_To_Rpm(uint8_t speed);
 

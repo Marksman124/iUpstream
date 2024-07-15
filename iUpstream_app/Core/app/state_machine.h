@@ -145,8 +145,6 @@ extern uint8_t Special_Status_Get(uint8_t num);
 
 extern uint8_t System_State_Machine;		//	×´Ì¬»ú	
 
-extern uint8_t Motor_Speed_Target;
-
 extern uint8_t Special_Status_Bit;
 
 extern uint8_t PMode_Now;

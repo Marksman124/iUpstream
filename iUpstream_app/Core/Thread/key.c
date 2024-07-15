@@ -340,6 +340,8 @@ void on_pushButton_1_2_Long_Press(void)
 //================================== ① + ③  组合键
 void on_pushButton_1_3_Long_Press(void)
 {
+	//test 
+	TM1621_LCD_Init();
 }
 //================================== ② + ③  组合键
 // 停机下  蓝牙配对

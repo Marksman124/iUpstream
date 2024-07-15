@@ -162,7 +162,8 @@ void App_Timing_Handler(void)
 							//Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING); //底层转速同步后再删除
 							p_OP_ShowLater->speed = OP_ShowNow.speed;
 							
-							Motor_Speed_Target = OP_ShowNow.speed;
+							Motor_Speed_Target_Set(OP_ShowNow.speed);
+
 							//保存
 							
 							Lcd_Show();
@@ -174,7 +175,7 @@ void App_Timing_Handler(void)
 							Arbitrarily_To_Starting();
 							//*p_OP_ShowLater->time = OP_ShowNow.time;
 							OP_ShowNow.time = 20;
-							Motor_Speed_Target = OP_ShowNow.speed;
+							Motor_Speed_Target_Set(OP_ShowNow.speed);
 							Lcd_Show();
 						}
 						Timing_Timer_Cnt = 0;

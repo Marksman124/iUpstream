@@ -12,7 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "data.h"
 #include "tm1621.h"
-
+#include "motor.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -29,8 +29,6 @@
 Operating_Parameters OP_ShowNow;
 
 Operating_Parameters* p_OP_ShowLater;
-
-uint8_t Motor_Speed_Target = 0;
 
 // 训练模式 当前状态
 uint8_t PMode_Now = 0;
@@ -235,7 +233,7 @@ void Data_Set_Current_Speed(uint8_t speed)
 		//return;
 	
 	OP_ShowNow.speed = speed;	
-	Motor_Speed_Target = speed;
+	Motor_Speed_Target_Set(speed);
 	
 	if(System_is_Running())
 		Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);

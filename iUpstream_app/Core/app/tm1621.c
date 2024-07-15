@@ -12,7 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "tm1621.h"
 #include <string.h>
-
+#include "cmsis_os.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -109,11 +109,22 @@ uint8_t Lcd_Letter_table_2[TM1621_LETTER_MAX][2] = {
 	{0x31,'u'} // u
 };
 
-void Delay_us(uint16_t us)
-{ 
-	uint16_t i;
-	while(us--)
-		for(i=0;i<500;i++);
+
+
+//extern TIM_HandleTypeDef htim3;
+/* Private user code ---------------------------------------------------------*/
+
+static void Tm1621_Delay(uint32_t mdelay)
+{
+  uint32_t Delay = mdelay * (3);
+  do
+  {
+    __NOP();
+  }
+  while (Delay --);
+				
+	//__HAL_TIM_SET_COUNTER(&htim3,0);
+	//while(__HAL_TIM_GET_COUNTER(&htim3) < mdelay);
 }
 
 /**************************************************************************************
@@ -130,7 +141,7 @@ void TM1621_SendBitMsb(uint8_t dat, uint8_t cnt)
                         TM1621_DATA_LOW();
 		dat <<= 1;
 		TM1621_WR_LOW();
-		Delay_us(3);
+		Tm1621_Delay(3);
 		TM1621_WR_HIG();
 	}
 }
@@ -148,7 +159,7 @@ void TM1621_SendBitLsb(uint8_t dat, uint8_t cnt)
 		(dat & 0x01) ?  TM1621_DATA_HIG() :TM1621_DATA_LOW();
 		dat >>= 1;
 		TM1621_WR_LOW();
-		Delay_us(3);
+		Tm1621_Delay(3);
 		TM1621_WR_HIG();
 	}
 }
@@ -368,7 +379,7 @@ void TM1621_Buzzer_On(void)
 void TM1621_Buzzer_Whistle(uint16_t us) 
 {
 	TM1621_Buzzer_On();
-	Delay_us(us);
+	Tm1621_Delay(us);
 	TM1621_Buzzer_Off();
 }
 
@@ -381,7 +392,7 @@ void TM1621_Buzzer_Click(void)
 
 void TM1621_Buzzer_Init(void) 
 {
-	Delay_us(1);
+	Tm1621_Delay(10);
 	//蜂鸣器
 	TM1621_Write_CMD(TONE_2K);
 	TM1621_Write_CMD(TONEOFF);
@@ -399,8 +410,7 @@ void TM1621_LCD_Init(void)
 	TM1621_DATA_HIG();
 	TM1621_WR_HIG();
 	
-	NOP
-	Delay_us(1);
+	Tm1621_Delay(2000); //延时使LCD工作电压稳定
 	
 	TM1621_Write_CMD(BIAS);
 	TM1621_Write_CMD(RC);

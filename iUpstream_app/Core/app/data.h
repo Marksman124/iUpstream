@@ -92,7 +92,6 @@ extern Operating_Parameters OP_ShowNow;
 
 extern Operating_Parameters* p_OP_ShowLater;
 
-extern uint8_t Motor_Speed_Target;
 
 // 训练模式 当前状态
 extern uint8_t PMode_Now;

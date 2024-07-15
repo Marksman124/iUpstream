@@ -37,6 +37,8 @@
 #include "timing.h"
 #include "key.h"
 #include "motor.h"
+#include "debug_protocol.h"	///////////////////////	´®¿Úµ÷ÊÔ
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

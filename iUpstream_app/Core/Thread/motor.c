@@ -41,6 +41,8 @@ uint8_t Motor_TxBuff[MOTOR_RS485_TX_BUFF_SIZE]={0};//定义一个发送缓存区
 
 uint8_t Motor_Speed_Now = 0;			// 电机转速 
 
+uint8_t Motor_Speed_Target = 0;
+
 uint16_t Motor_Timer_Cnt=0;
 
 uint8_t Motor_Heartbeat_Cnt=0;
@@ -120,6 +122,16 @@ uint8_t Motor_Speed_Is_Reach(void)
 		return 0;
 }
 
+//------------------- 电机转速 目标值 设置 ----------------------------
+void Motor_Speed_Target_Set(uint8_t speed)
+{
+	if(speed > 100)
+		speed = 100;
+	
+	Motor_Speed_Target = speed;
+
+}
+
 //------------------- 百分比功率 转 电机转速 ----------------------------
 // 100% -->  2100 rpm
 uint32_t Motor_Speed_To_Rpm(uint8_t speed)
@@ -135,10 +147,12 @@ uint8_t Change_Faule_To_Upper(uint8_t type)
 {
 	uint8_t result=0;
 	
-	return  type;
+	result = type;
 	
 //	if(type = 4)
 //		result |= 
+	
+	return  result;
 }
 
 /*-------------------- 收发处理 ----------------------------------------------*/

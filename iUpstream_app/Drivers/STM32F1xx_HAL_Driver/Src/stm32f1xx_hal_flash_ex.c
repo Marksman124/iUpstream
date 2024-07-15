@@ -1079,6 +1079,69 @@ static uint8_t FLASH_OB_GetUser(void)
  * @{
  */
 
+
+static uint8_t stmflash_get_error_status(void)
+{
+    uint32_t res;
+    res = FLASH->SR;
+ 
+    if (res & (1 << 0))return 1;    /* BSY = 1      , 忙 */
+    if (res & (1 << 2))return 2;    /* PGERR = 1    , 编程错误*/
+    if (res & (1 << 4))return 3;    /* WRPRTERR = 1 , 写保护错误 */
+    
+    return 0;   /* 没有任何错误 操作完成. */
+}
+ 
+static uint8_t stmflash_wait_done(uint32_t time)
+{
+    uint8_t res;
+ 
+    do
+    {
+        res = stmflash_get_error_status();
+ 
+        if (res != 1)
+        {
+            break;      /* 非忙, 无需等待了, 直接退出 */
+        }
+        
+        time--;
+    } while (time);
+ 
+    if (time == 0)res = 0XFF;   /* 超时 */
+ 
+    return res;
+}
+ 
+/**
+ * @brief       擦除扇区
+ * @param       saddr   : 扇区地址 0 ~ 256
+ * @retval      执行结果
+ *   @arg       0   : 已完成
+ *   @arg       2   : 编程错误
+ *   @arg       3   : 写保护错误
+ *   @arg       0XFF: 超时
+ */
+static uint8_t stmflash_erase_sector(uint32_t saddr)
+{
+    uint8_t res = 0;  /* STM32F103擦除的时候是指定半字地址 */
+    res = stmflash_wait_done(0X5FFFFF);     /* 等待上次操作结束, >20ms */
+ 
+    if (res == 0)
+    {
+        FLASH->CR |= 1 << 1;    /* 页擦除 */
+        FLASH->AR = saddr;      /* 设置页地址(实际是半字地址) */
+        FLASH->CR |= 1 << 6;    /* 开始擦除 */
+        res = stmflash_wait_done(0X5FFFFF); /* 等待操作结束, >20ms */
+ 
+        if (res != 1)   /* 非忙 */
+        {
+            FLASH->CR &= ~(1 << 1); /* 清除页擦除标志 */
+        }
+    }
+ 
+    return res;
+}
 /**
   * @brief  Erase the specified FLASH memory page
   * @param  PageAddress FLASH page to erase
@@ -1088,27 +1151,28 @@ static uint8_t FLASH_OB_GetUser(void)
   */
 void FLASH_PageErase(uint32_t PageAddress)
 {
-  /* Clean the error context */
-  pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
+	stmflash_erase_sector(PageAddress);
+//  /* Clean the error context */
+//  pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
 
-#if defined(FLASH_BANK2_END)
-  if(PageAddress > FLASH_BANK1_END)
-  { 
-    /* Proceed to erase the page */
-    SET_BIT(FLASH->CR2, FLASH_CR2_PER);
-    WRITE_REG(FLASH->AR2, PageAddress);
-    SET_BIT(FLASH->CR2, FLASH_CR2_STRT);
-  }
-  else
-  {
-#endif /* FLASH_BANK2_END */
-    /* Proceed to erase the page */
-    SET_BIT(FLASH->CR, FLASH_CR_PER);
-    WRITE_REG(FLASH->AR, PageAddress);
-    SET_BIT(FLASH->CR, FLASH_CR_STRT);
-#if defined(FLASH_BANK2_END)
-  }
-#endif /* FLASH_BANK2_END */
+//#if defined(FLASH_BANK2_END)
+//  if(PageAddress > FLASH_BANK1_END)
+//  { 
+//    /* Proceed to erase the page */
+//    SET_BIT(FLASH->CR2, FLASH_CR2_PER);
+//    WRITE_REG(FLASH->AR2, PageAddress);
+//    SET_BIT(FLASH->CR2, FLASH_CR2_STRT);
+//  }
+//  else
+//  {
+//#endif /* FLASH_BANK2_END */
+//    /* Proceed to erase the page */
+//    SET_BIT(FLASH->CR, FLASH_CR_PER);
+//    WRITE_REG(FLASH->AR, PageAddress);
+//    SET_BIT(FLASH->CR, FLASH_CR_STRT);
+//#if defined(FLASH_BANK2_END)
+//  }
+//#endif /* FLASH_BANK2_END */
 }
 
 /**

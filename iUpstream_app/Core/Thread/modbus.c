@@ -15,7 +15,7 @@
 /* ----------------------- Defines ------------------------------------------*/
 // 03
 #define REG_HOLDING_START               ( MB_SLAVE_NODE_ADDRESS )
-#define REG_HOLDING_NREGS               ( MB_USER_TRAIN_MODE_TIME_P4_50 )
+#define REG_HOLDING_NREGS               ( MB_USER_TRAIN_MODE_TIME_P4_50 )   //MB_USER_TRAIN_MODE_TIME_P4_50
 
 // 04
 #define REG_INPUT_START 								( MB_DISPLAY_SOFTWARE_VERSION )
@@ -373,7 +373,7 @@ void Modbus_Handle_Task(void)
 
 void Modbus_Buffer_Init(void)
 {
-	STMFLASH_Read(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
+	STMFLASH_Read(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );// REG_HOLDING_NREGS
 	
 	// 默认波特率  测试用
 	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_BAUD_RATE,4);
