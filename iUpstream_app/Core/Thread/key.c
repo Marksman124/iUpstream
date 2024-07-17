@@ -110,6 +110,8 @@ uint8_t Key_Multiple_Clicks_Old = 0;		// 上一次 key 值
 uint32_t Key_Multiple_Clicks_time = 0;		// 第一次 key 时间
 uint32_t Key_Handler_Timer=0;
 
+uint32_t Key_For_Sleep_time = 0;		// 睡眠时间
+
 uint32_t Key_Long_Press_cnt[KEY_CALL_OUT_NUMBER_MAX]={0};	// 长按 计数器
 
 
@@ -449,10 +451,19 @@ void App_Key_Handler(void)
 	
 	Key_IO_Hardware = Key_Get_IO_Input();
 	
+	//进入睡眠
+	if(Key_Handler_Timer > (Key_For_Sleep_time + KEY_FOR_SLEEP_TIME_SHORT))
+	{
+		TM1621_Set_light_Mode(1);
+	}
+	
 	for(i=0; i<KEY_CALL_OUT_NUMBER_MAX; i++)
 	{
 		if(Key_IO_Hardware == Key_IO_Ordering_Value[i])
 		{
+			Key_For_Sleep_time = Key_Handler_Timer;// 睡眠计时
+			TM1621_Set_light_Mode(0);
+			
 			if(Key_IO_Old & Key_IO_Ordering_Value[i])
 			{
 				if(++Key_Long_Press_cnt[i] >= KEY_LONG_PRESS_TIME)//长按
@@ -557,6 +568,13 @@ void System_Power_Off(void)
 //	开机画面
 void System_Boot_Screens(void)
 {
+	
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+	return;
+#endif
+//*******************************************************
+
 	//全亮 2s
 	TM1621_Show_All();
 	osDelay(2000);

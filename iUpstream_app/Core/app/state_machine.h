@@ -62,11 +62,6 @@ typedef enum
 
 /* Exported macro ------------------------------------------------------------*/
 
-//-------------- 训练模式 最大值 -------------------
-
-#define TRAINING_MODE_NUMBER_MAX						3
-#define TRAINING_MODE_PERIOD_MAX						12
-
 
 //-------------- 特别状态 位 -------------------
 #define SPECIAL_BIT_SKIP_INITIAL				0x01		//跳过 初始化   不自动倒数3s

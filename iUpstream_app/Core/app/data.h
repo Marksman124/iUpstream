@@ -22,6 +22,8 @@ extern "C" {
 #include "stdint.h"
 #include <string.h>
 #include "state_machine.h"
+#include "tm1621.h"
+#include "motor.h"
 //#include "modbus.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -44,9 +46,8 @@ typedef struct Operating_Parameters
 
 //-------------- 训练模式 最大值 -------------------
 
-#define TRAINING_MODE_NUMBER_MAX						3
-#define TRAINING_MODE_PERIOD_MAX						12
-
+#define TRAINING_MODE_NUMBER_MAX						4
+#define TRAINING_MODE_PERIOD_MAX						20
 
 //------------------- 合法范围 ----------------------------
 #define SPEED_LEGAL_MIN						20
@@ -126,6 +127,7 @@ extern uint16_t* p_Modbus_Baud_Rate;
 extern uint16_t* p_Support_Control_Methods;
 extern uint16_t* p_Motor_Pole_Number;
 
+extern uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX];//电机状态
 #ifdef __cplusplus
 }
 #endif

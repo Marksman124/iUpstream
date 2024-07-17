@@ -12,7 +12,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "motor.h"
 #include "debug_protocol.h"
-#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -203,6 +202,43 @@ uint16_t CRC16_XMODEM_T(uint8_t *ptr, uint16_t len)
     return(crc);
 }
 
+//-------------------- 电机状态解析 ----------------------------
+void Motor_State_Analysis(void)
+{
+	//
+	uint8_t debug_send_buffer[DEBUG_PROTOCOL_TX_MAX]={0};
+	// 滤波后的mosfet温度
+	uint16_t mosfet_tmp = Motor_State_Storage[MOTOR_ADDR_MOSFET_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_MOSFET_TEMP_OFFSET+1];
+	// 滤波后的电机温度
+	uint16_t motor_tmp = Motor_State_Storage[MOTOR_ADDR_MOTOR_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_MOTOR_TEMP_OFFSET+1];
+	// 电机平均电流
+	uint32_t mosfet_current = Motor_State_Storage[MOTOR_ADDR_MOTOR_CURRENT_OFFSET]<<24 |Motor_State_Storage[MOTOR_ADDR_MOTOR_CURRENT_OFFSET+1]<<16 |Motor_State_Storage[MOTOR_ADDR_MOTOR_CURRENT_OFFSET+2]<<8 | Motor_State_Storage[MOTOR_ADDR_MOTOR_CURRENT_OFFSET+3];
+	// 当前电气转速erpm
+	uint32_t motor_speed = Motor_State_Storage[MOTOR_ADDR_MOTOR_SPEED_OFFSET]<<24 |Motor_State_Storage[MOTOR_ADDR_MOTOR_SPEED_OFFSET+1]<<16 |Motor_State_Storage[MOTOR_ADDR_MOTOR_SPEED_OFFSET+2]<<8 | Motor_State_Storage[MOTOR_ADDR_MOTOR_SPEED_OFFSET+3];
+	// 母线电压
+	uint16_t bus_voltage = Motor_State_Storage[MOTOR_ADDR_BUS_VOLTAGE_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_BUS_VOLTAGE_OFFSET+1];
+	// 获取电机故障
+	uint8_t motor_fault = Motor_State_Storage[MOTOR_ADDR_MOTOR_FAULT_OFFSET];
+	// 10KNTC温度1 2 3
+	uint16_t ntc_tmp[3] = {Motor_State_Storage[MOTOR_ADDR_NTC1_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC1_TEMP_OFFSET+1],
+	Motor_State_Storage[MOTOR_ADDR_NTC2_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC2_TEMP_OFFSET+1],
+	Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET+1]};
+	
+	sprintf((char*)debug_send_buffer,"\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t%d\n母线电压:\t%d.%d\n电机故障:\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
+	
+	mosfet_tmp/10,mosfet_tmp%10,motor_tmp/10,motor_tmp%10,mosfet_current/100,mosfet_current%100,
+	motor_speed,bus_voltage/10,bus_voltage%10,motor_fault,
+	ntc_tmp[0]/10,ntc_tmp[0]%10,ntc_tmp[1]/10,ntc_tmp[1]%10,ntc_tmp[2]/10,ntc_tmp[2]%10);
+	
+	
+	if(motor_fault)
+	{
+		*p_System_Fault_Static |= Change_Faule_To_Upper(motor_fault);
+	}
+	
+	UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
+}
+	
 //-------------------- 发送 ----------------------------
 void Motor_UART_Send(uint8_t* p_buff, uint8_t len)
 {
@@ -219,38 +255,11 @@ void Motor_RxData(uint8_t len)
 	if(Rx_cnt ++ > 20)
 	{
 		Rx_cnt=0;
-	//
-	uint8_t debug_send_buffer[DEBUG_PROTOCOL_TX_MAX]={0};
-	// 滤波后的mosfet温度
-	uint16_t mosfet_tmp = Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+0]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+1];
-	// 滤波后的电机温度
-	uint16_t motor_tmp = Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+2]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+3];
-	// 电机平均电流
-	uint32_t mosfet_current = Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+4]<<24 |Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+5]<<16 |Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+6]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+7];
-	// 当前电气转速erpm
-	uint32_t motor_speed = Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+22]<<24 |Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+23]<<16 |Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+24]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+25];
-	// 母线电压
-	uint16_t bus_voltage = Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+26]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+27];
-	// 获取电机故障
-	uint8_t motor_fault = Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+52];
-	// 10KNTC温度1 2 3
-	uint16_t ntc_tmp[3] = {Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+58]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+59],Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+60]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+61],Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+62]<<8 | Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET+63]};
-	
-	if(motor_fault)
-	{
-		*p_System_Fault_Static |= Change_Faule_To_Upper(motor_fault);
+		
+		memcpy(Motor_State_Storage, &Motor_DMABuff[MOTOR_PROTOCOL_HEADER_OFFSET], MOTOR_PROTOCOL_ADDR_MAX);
+		Motor_State_Analysis();
+		
 	}
-	
-	sprintf((char*)debug_send_buffer,"\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t%d\n母线电压:\t%d.%d\n电机故障:\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
-	
-	mosfet_tmp/10,mosfet_tmp%10,motor_tmp/10,motor_tmp%10,mosfet_current/100,mosfet_current%100,
-	motor_speed,bus_voltage/10,bus_voltage%10,motor_fault,
-	ntc_tmp[0]/10,ntc_tmp[0]%10,ntc_tmp[1]/10,ntc_tmp[1]%10,ntc_tmp[2]/10,ntc_tmp[2]%10);
-	
-	
-	UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
-	
-}
 	
 	memset(Motor_DMABuff,0,MOTOR_RS485_RX_BUFF_SIZE);    				//清空缓存区
 	__HAL_UART_CLEAR_IDLEFLAG(p_huart_motor);               //清除标志位

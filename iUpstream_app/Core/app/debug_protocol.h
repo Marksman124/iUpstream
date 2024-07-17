@@ -18,7 +18,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "modbus.h"
-
+#include <stdio.h>
 /* Exported macro ------------------------------------------------------------*/
 #define DEBUG_PROTOCOL_RX_MAX			64
 #define DEBUG_PROTOCOL_TX_MAX			256

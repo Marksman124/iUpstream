@@ -42,7 +42,22 @@ extern "C" {
 
 #define	MOTOR_RPM_CONVERSION_COEFFICIENT				(21)		//百分比 转 转速 转换系数
 
-#define	MOTOR_PROTOCOL_HEADER_OFFSET						3		// 协议表头 偏移地址
+
+
+#define	MOTOR_PROTOCOL_HEADER_OFFSET						3		// D-òé±íí· ??ò?μ??·
+#define	MOTOR_PROTOCOL_ADDR_MAX									73		// D-òé±íí· ??ò?μ??·
+
+#define	MOTOR_ADDR_MOSFET_TEMP_OFFSET						0
+#define	MOTOR_ADDR_MOTOR_TEMP_OFFSET						2
+#define	MOTOR_ADDR_MOTOR_CURRENT_OFFSET					4
+#define	MOTOR_ADDR_MOTOR_SPEED_OFFSET						22
+#define	MOTOR_ADDR_BUS_VOLTAGE_OFFSET						26
+
+#define	MOTOR_ADDR_MOTOR_FAULT_OFFSET						52
+#define	MOTOR_ADDR_NTC1_TEMP_OFFSET							58
+#define	MOTOR_ADDR_NTC2_TEMP_OFFSET							60
+#define	MOTOR_ADDR_NTC3_TEMP_OFFSET							62
+
 /*------------------- IO define ----------------------------------------------*/
 #if (MOTOR_MODULE_HUART == 1)
 #define MOTOR_RS485_TX_EN_PORT		RS48501_RE_GPIO_Port
@@ -79,6 +94,7 @@ extern void Motor_ReadFault_Send(void);
 extern void Motor_Read_Register(void);
 
 /*-------------------- 收发处理 ----------------------------------------------*/
+void Motor_State_Analysis(void);
 //-------------------- 发送 ----------------------------
 extern void Motor_UART_Send(uint8_t* p_buff, uint8_t len);
 //-------------------- 接收 ----------------------------

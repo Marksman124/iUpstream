@@ -11,7 +11,7 @@
 */
 /* Includes ------------------------------------------------------------------*/
 #include "debug_protocol.h"	///////////////////////	串口调试
-
+#include "motor.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -103,7 +103,30 @@ void To_Debug_Protocol_Analysis(uint8_t len)
 {
 #ifdef DEBUG_USART
 
-	UART_Send_Debug(Debug_Read_Buffer, len);
+	//UART_Send_Debug(Debug_Read_Buffer, len);
+	
+	if(Debug_Read_Buffer[0] <= MOTOR_PROTOCOL_ADDR_MAX)
+	{
+		switch(Debug_Read_Buffer[0])
+		{
+			case MOTOR_ADDR_MOTOR_FAULT_OFFSET:
+				Motor_State_Storage[MOTOR_ADDR_MOTOR_FAULT_OFFSET] = Debug_Read_Buffer[1];
+				break;
+		}
+		
+		Motor_State_Analysis();
+	}
+//	#define	MOTOR_ADDR_MOSFET_TEMP_OFFSET						0
+//#define	MOTOR_ADDR_MOTOR_TEMP_OFFSET						2
+//#define	MOTOR_ADDR_MOTOR_CURRENT_OFFSET					4
+//#define	MOTOR_ADDR_MOTOR_SPEED_OFFSET						22
+//#define	MOTOR_ADDR_BUS_VOLTAGE_OFFSET						26
+
+//#define	MOTOR_ADDR_MOTOR_FAULT_OFFSET						52
+//#define	MOTOR_ADDR_NTC1_TEMP_OFFSET							58
+//#define	MOTOR_ADDR_NTC2_TEMP_OFFSET							60
+//#define	MOTOR_ADDR_NTC3_TEMP_OFFSET							62
+	
 	
 	memset(Debug_Read_Buffer,0,DEBUG_PROTOCOL_RX_MAX);    				//清空缓存区
 	__HAL_UART_CLEAR_IDLEFLAG(p_huart_debug);               //清除标志位

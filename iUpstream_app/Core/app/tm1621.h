@@ -20,7 +20,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-
+#include "tim.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -34,8 +34,15 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 
-#define TM1621_BLACK_ON()		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
-#define TM1621_BLACK_OFF()	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
+#define BACK_LIGHT_BRIGHTNESS_MAX				500			// 最大亮度  0~500
+
+#define TM1621_BLACK_ON()			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+#define TM1621_BLACK_OFF()		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
+
+//#define TM1621_BLACK_ON()			TM1621_light_On();
+//#define TM1621_BLACK_OFF()		TM1621_light_Off();
+
+
 
 #define TM1621_CS_HIG()			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET)
 #define TM1621_CS_LOW()			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET)
@@ -204,8 +211,12 @@ void TM1621_Buzzer_Click(void);
 void TM1621_Buzzer_Init(void);
 void TM1621_LCD_Init(void);
 
-
-
+//------------------- pwm控制 ----------------------------
+extern void TM1621_light_Max(void);
+extern void TM1621_light_Half(void);
+extern void TM1621_light_Off(void);
+extern void TM1621_light_On(void);
+extern void TM1621_Set_light_Mode(uint8_t mode);
 /* Private defines -----------------------------------------------------------*/
 
 

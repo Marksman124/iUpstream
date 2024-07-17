@@ -48,6 +48,13 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+
+
+//******************  调试模式 **************************
+#define SYSTEM_DEBUG_MODE					1
+//*******************************************************
+
+
 // 串口1 --> 中控Modbus 	(485)
 // 串口2 --> wifi 			(ttl)
 // 串口3 --> 驱动板 			(ttl)
@@ -69,8 +76,14 @@ extern "C" {
 #define	THREAD_PERIOD_KEY_BUTTON_TASK						KEY_THREAD_LIFECYCLE
 #define	THREAD_PERIOD_MOTOR_TASK								MOTOR_THREAD_LIFECYCLE
 
-
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define POWER_ON_WAITE_TIME_TASK								(1)
+#else
 #define POWER_ON_WAITE_TIME_TASK								(4000)///40000
+#endif
+//*******************************************************
+
 
 // 产品机型码
 #define	SYSTEM_PRODUCT_MODEL_CODE								0x0001		//
@@ -100,10 +113,6 @@ void Error_Handler(void);
 #define Led_Time_GPIO_Port GPIOC
 #define Led_Mode_Pin GPIO_PIN_3
 #define Led_Mode_GPIO_Port GPIOC
-#define PWM_Led_Ring_Pin GPIO_PIN_0
-#define PWM_Led_Ring_GPIO_Port GPIOA
-#define PWM_Led_Power_Pin GPIO_PIN_1
-#define PWM_Led_Power_GPIO_Port GPIOA
 #define RS485_A_Pin GPIO_PIN_2
 #define RS485_A_GPIO_Port GPIOA
 #define RS485_B_Pin GPIO_PIN_3
@@ -124,8 +133,6 @@ void Error_Handler(void);
 #define Key_Mode_GPIO_Port GPIOC
 #define Key_Power_Pin GPIO_PIN_8
 #define Key_Power_GPIO_Port GPIOA
-#define BackLight_Pin GPIO_PIN_15
-#define BackLight_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

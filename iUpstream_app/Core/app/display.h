@@ -36,12 +36,6 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 
-//-------------- 训练模式 最大值 -------------------
-
-#define TRAINING_MODE_NUMBER_MAX						3
-#define TRAINING_MODE_PERIOD_MAX						12
-
-
 //-------------- 图标显示标准位 -------------------
 #define STATUS_BIT_BLUETOOTH			1
 #define STATUS_BIT_PERCENTAGE			2

@@ -12,6 +12,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "fault.h"
 #include "tm1621.h"
+#include "adc.h"
+#include "debug_protocol.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -96,10 +98,17 @@ void App_Fault_Init(void)
 // ¼ì²â¹ÊÕÏ
 uint8_t If_System_Is_Error(void)
 {
+	float Temperature;
+	uint8_t debug_send_buffer[32]={0};
+	
 	// ¶ÁÇı¶¯°å¹ÊÕÏ
 	//Motor_ReadFault_Send();
 	// ¼ì²é±¾µØ¹ÊÕÏ
+	Temperature = Get_External_Temp();
 	
+	sprintf((char*)debug_send_buffer,"ÎÂ¶È²ÉÑùÖµ£º%0.3frn \n",Temperature);
+	
+	UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
 	//
 	if(*p_System_Fault_Static > 0)
 		return 1;

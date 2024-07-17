@@ -24,6 +24,15 @@
 
 /* Private macro -------------------------------------------------------------*/
 
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define BUZZER_VOLUME_MAX					200
+#else
+#define BUZZER_VOLUME_MAX					10000
+#endif
+//*******************************************************
+
+
 #define NOP __NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();
 
 /********************** TM1261 模块命令 ********************************/
@@ -47,6 +56,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 uint8_t Lcd_ram[SCREEN_NUMBER_MAX]={0};
+
+
+static uint8_t Back_Light_Mode = 0;
 
 // 数字显示0-9，任何显示数字的区域，都是调用这里的数据
 
@@ -116,7 +128,7 @@ uint8_t Lcd_Letter_table_2[TM1621_LETTER_MAX][2] = {
 
 static void Tm1621_Delay(uint32_t mdelay)
 {
-  uint32_t Delay = mdelay * (3);
+  uint32_t Delay = mdelay * (30);
   do
   {
     __NOP();
@@ -318,9 +330,6 @@ TM1621_LCD_Redraw
 */ 
 void TM1621_LCD_Redraw(void)
 {
-	//背光
-	TM1621_BLACK_ON();
-	
  	TM1621_SendNDat(0,Lcd_ram,SCREEN_NUMBER_MAX,SCREEN_NUMBER_MAX);
 }
 
@@ -387,6 +396,7 @@ void TM1621_Buzzer_Whistle(uint16_t us)
 void TM1621_Buzzer_Click(void) 
 {
 	TM1621_Buzzer_On();
+	Tm1621_Delay(BUZZER_VOLUME_MAX);
 	TM1621_Buzzer_Off();
 }
 
@@ -423,9 +433,40 @@ void TM1621_LCD_Init(void)
 
 
 
+//------------------- pwm控制 ----------------------------
+
+void TM1621_light_Max(void)
+{
+	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_1);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, BACK_LIGHT_BRIGHTNESS_MAX);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+}
+
+void TM1621_light_Half(void)
+{
+	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_1);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, BACK_LIGHT_BRIGHTNESS_MAX/2);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+}
+
+void TM1621_light_Off(void)
+{
+	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_1);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 0);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+}
 
 
+void TM1621_light_On(void)
+{
+	if(Back_Light_Mode == 0)
+		TM1621_light_Max();
+	else
+		TM1621_light_Half();
+}
 
+void TM1621_Set_light_Mode(uint8_t mode)
+{
+	Back_Light_Mode = mode;
 
-
-
+}
