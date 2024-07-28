@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "data.h"
-
+#include "modbus.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -35,14 +35,14 @@ uint8_t PMode_Now = 0;
 uint8_t Period_Now = 0;
 
 // 各模式 属性 初始值
-Operating_Parameters OP_Init_Free = { 60 , 0};
+Operating_Parameters OP_Init_Free = { 40 , 0};
 
-Operating_Parameters OP_Init_Timing = { 60 , 1800};
+Operating_Parameters OP_Init_Timing = { 40 , 1800};
 
 Operating_Parameters OP_Init_PMode[TRAINING_MODE_NUMBER_MAX][TRAINING_MODE_PERIOD_MAX] = {
-{{30,120},{40,300},{30,360},{80,240},{45,540},{30,600},{40,780},{30,900}},
-{{50,180},{60,360},{50,480},{70,720},{50,780},{60,1020},{50,1200}},
-{{70,300},{80,540},{70,600},{85,840},{70,900},{80,1200},{70,1500}},
+{{30,120},{40,300}, {30,360},{45,540},{30,600},{40,780}, {30,900} },
+{{50,180},{60,360}, {50,480},{70,720},{50,780},{60,1020},{50,1200}},
+{{70,300},{80,540}, {70,600},{85,840},{70,900},{80,1200},{70,1500}},
 {{50,420},{65,1440},{50,1800}}
 };
 
@@ -69,6 +69,7 @@ uint16_t* p_Support_Control_Methods;	//屏蔽控制方式
 uint16_t* p_Motor_Pole_Number;				//电机极数
 	
 uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX]={0};//电机状态
+
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -89,9 +90,9 @@ void Check_Data_Init(void)
 	{
 		*p_OP_Timing_Mode = OP_Init_Timing;
 	}
-	*p_Modbus_Node_Addr = 21;
-	*p_Modbus_Baud_Rate = 4;
-	*p_Support_Control_Methods = 0;
+	//*p_Modbus_Node_Addr = 21;
+	//*p_Modbus_Baud_Rate = 4;
+	//*p_Support_Control_Methods = 0;
 	
 	if( ( *p_Motor_Pole_Number > MOTOR_RPM_MAX_OF_POLES) || ( *p_Motor_Pole_Number < MOTOR_RPM_MIX_OF_POLES))
 	{
@@ -126,6 +127,7 @@ extern void Get_Mapping_Register(void);
 // 初始化
 void App_Data_Init(void)
 {
+	Read_OPMode();
 	// 获取映射  flash已读
 	Get_Mapping_Register();
 	
@@ -137,7 +139,7 @@ void App_Data_Init(void)
 	Check_Data_Init();
 	
 	//存储  存一个 还是 扇区存
-	Memset_OPMode();
+	//Memset_OPMode();
 	
 	// 屏幕初始化
 	TM1621_LCD_Init();
@@ -165,8 +167,14 @@ void App_Data_ReInit(void)
 	Memset_OPMode();
 }
 
+// 读 flash
+uint8_t Read_OPMode(void)
+{
+	MB_Flash_Buffer_Read();
+	return 1;
+}
+
 // 存 flash
-extern void MB_Flash_Buffer_Write(void);
 uint8_t Memset_OPMode(void)
 {
 	MB_Flash_Buffer_Write();
@@ -180,20 +188,19 @@ void Update_OP_Data(void)
 	if(System_State_Machine <= FREE_MODE_STOP)	// 自由
 	{
 		p_OP_Free_Mode->speed = OP_ShowNow.speed;
+		p_OP_Free_Mode->time = 0;
 	}
 	else if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
 	{
 		p_OP_Timing_Mode->speed = OP_ShowNow.speed;
 		p_OP_Timing_Mode->time = OP_ShowNow.time;
 	}
-	else if(System_State_Machine <= TRAINING_MODE_STOP)	// 训练
-	{
-		if(Is_Mode_Legal(PMode_Now))
-			p_OP_PMode[PMode_Now-1][Period_Now-1].speed = OP_ShowNow.speed;
-	}
-	
-	//存储  存一个 还是 扇区存
-	Memset_OPMode();
+//	else if(System_State_Machine <= TRAINING_MODE_STOP)	// 训练  训练不保存
+//	{
+//		if(Is_Mode_Legal(PMode_Now))
+//			p_OP_PMode[PMode_Now-1][Period_Now-1].speed = OP_ShowNow.speed;
+//	}
+
 }
 
 //------------------- 判断 模式 合法 ----------------------------
@@ -237,7 +244,7 @@ void Data_Set_Current_Speed(uint8_t speed)
 	OP_ShowNow.speed = speed;	
 	Motor_Speed_Target_Set(speed);
 	
-	if(System_is_Running())
+	//if(System_is_Running())
 		Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
 }
 

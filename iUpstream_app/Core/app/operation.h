@@ -30,16 +30,16 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 
-typedef enum 
-{
-	OPERATION_ADDR_SET=1,					//	地址设置
-	OPERATION_BAUD_RATE,					//	波特率
-	OPERATION_SHIELD_MENU,				//	屏蔽控制方式
-	OPERATION_MOTOR_POLES,				//	电机极数
-	OPERATION_DISPLAY_VERSION,		//	显示板 版本号
-	OPERATION_DRIVER_VERSION,			//	驱动板 版本号
-	OPERATION_STATE_END,					//	结束
-} OPERATION_STATE_MODE_E;
+//typedef enum 
+//{
+#define OPERATION_ADDR_SET							(1)													//	地址设置
+#define	OPERATION_BAUD_RATE							(OPERATION_ADDR_SET+1)			//	波特率
+//#define	OPERATION_SPEED_MODE					(OPERATION_BAUD_RATE+1)			//	转速方式： 0：转速  1：功率
+#define	OPERATION_MOTOR_POLES						(OPERATION_BAUD_RATE+1)			//	电机极数
+#define	OPERATION_DISPLAY_VERSION				(OPERATION_MOTOR_POLES+1)			//	显示板 版本号
+#define	OPERATION_SHIELD_MENU						(OPERATION_DISPLAY_VERSION+1)			//	屏蔽控制方式
+#define	OPERATION_STATE_END							(OPERATION_SHIELD_MENU+1)			//	结束
+//} OPERATION_STATE_MODE_E;
 
 /* Exported constants --------------------------------------------------------*/
 

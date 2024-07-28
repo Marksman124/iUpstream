@@ -26,7 +26,7 @@
 
 #define DIAL_SWITCH_NUMBER		2
 
-IO_Hardware_Info IO_LED	= {GPIOB,GPIO_PIN_5};	//  PB5
+//IO_Hardware_Info IO_LED[2]	= {{GPIOB,GPIO_PIN_4},{GPIOB,GPIO_PIN_5}};	//  PB5
 
 IO_Hardware_Info IO_Pump[2][4] = {
 // PB12, PB13, PB14, PB15,
@@ -65,34 +65,36 @@ void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, led_debug_Pin|Led_Power_Pin|Led_Speed_Pin|Led_Time_Pin
-                          |Led_Mode_Pin|GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, Led_Power_Pin|Led_Mode_Pin|Led_Time_Pin|Led_Speed_Pin
+                          |RS485_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPI1_CS_Pin|CS_Pin|WR_Pin|DATA_Pin
                           |GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Fan_Switch_Pin|GPIO_PIN_15, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin PCPin
-                           PCPin PC6 */
-  GPIO_InitStruct.Pin = led_debug_Pin|Led_Power_Pin|Led_Speed_Pin|Led_Time_Pin
-                          |Led_Mode_Pin|GPIO_PIN_6;
+                           PCPin */
+  GPIO_InitStruct.Pin = Led_Power_Pin|Led_Mode_Pin|Led_Time_Pin|Led_Speed_Pin
+                          |RS485_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC4 PC5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+  /*Configure GPIO pins : PCPin PCPin PCPin PCPin
+                           PCPin */
+  GPIO_InitStruct.Pin = SW_1_Pin|SW_2_Pin|Key_Speed_Pin|Key_Time_Pin
+                          |Key_Mode_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
@@ -104,20 +106,14 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PCPin PCPin PCPin */
-  GPIO_InitStruct.Pin = Key_Speed_Pin|Key_Time_Pin|Key_Mode_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = Key_Power_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(Key_Power_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA11 PA12 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
+  /*Configure GPIO pins : PAPin PA15 */
+  GPIO_InitStruct.Pin = Fan_Switch_Pin|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -126,29 +122,29 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
-void led_show(uint16_t num, uint16_t time)
-{
-	uint16_t i;
-	
-	for(i=0; i<num; i++)
-	{
-		HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_SET);
-		HAL_Delay(time);
-		HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_RESET);
-		HAL_Delay(time);
-	}
-}
+//void led_show(uint16_t num, uint16_t time)
+//{
+//	uint16_t i;
+//	
+//	for(i=0; i<num; i++)
+//	{
+//		HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_SET);
+//		HAL_Delay(time);
+//		HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_RESET);
+//		HAL_Delay(time);
+//	}
+//}
 
-void led_on(void)
-{
-	HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_RESET);
-}
+//void led_on(uint8_t num)
+//{
+//	HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_RESET);
+//}
 
 
-void led_off(void)
-{
-	HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_SET);
-}
+//void led_off(uint8_t num)
+//{
+//	HAL_GPIO_WritePin(IO_LED.io_type, IO_LED.io_pin, GPIO_PIN_SET);
+//}
 	
 
 void StartUp_Pump(uint8_t num, uint16_t para)
@@ -210,7 +206,9 @@ uint8_t Gpio_Get_Dial_Switch(void)
 	for(i=0; i<DIAL_SWITCH_NUMBER; i++)
 	{
 		read_io = HAL_GPIO_ReadPin(IO_Dial_Switch[i].io_type, IO_Dial_Switch[i].io_pin);
-		rulse |= read_io<<i;
+		
+		if(read_io == 0)//µÍÓÐÐ§
+			rulse |= 1<<i;
 	}
 	
 	return rulse;

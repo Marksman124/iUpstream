@@ -46,6 +46,41 @@ typedef enum
 
 #define TIMING_THREAD_LIFECYCLE				500				// ms  1000
 
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define WIFI_DISTRIBUTION_TIME_CALLOUT				(6*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
+#define BT_DISTRIBUTION_TIME_CALLOUT					(6*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
+
+#define SYSTEM_FAULT_TIME_CALLOUT							(20*(1000/TIMING_THREAD_LIFECYCLE))				// 120 s
+#define SYSTEM_FAULT_RECOVERY_MAX							(3)				// 3 次故障
+#define SYSTEM_FAULT_RECOVERY_TIME						(60*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+
+#define AUTOMATIC_SHUTDOWN_TIME								(60*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+
+#else
+
+#define WIFI_DISTRIBUTION_TIME_CALLOUT				(60*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
+#define BT_DISTRIBUTION_TIME_CALLOUT					(60*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
+
+#define SYSTEM_FAULT_TIME_CALLOUT							(120*(1000/TIMING_THREAD_LIFECYCLE))				// 120 s
+#define SYSTEM_FAULT_RECOVERY_MAX							(3)				// 3 次故障
+#define SYSTEM_FAULT_RECOVERY_TIME						(3600*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+
+#define AUTOMATIC_SHUTDOWN_TIME								(3600*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+
+#endif
+//自动关机 时间
+
+//-------------- 降速检查时间 -------------------
+#define TIME_SLOW_DOWN_TIME													5		//2 min  120 sec
+//-------------- 降速 档位 -------------------
+#define TIME_SLOW_DOWN_SPEED_01											10		//第一档 降速
+#define TIME_SLOW_DOWN_SPEED_02											5			//第二档 降速
+//-------------- 降速 最低速度 -------------------
+#define TIME_SLOW_DOWN_SPEED_MIX										20		//最低降到 20%
+#define TIME_SLOW_DOWN_SPEED_MAX										100		//恢复速度最高恢复到 100%
+//*******************************************************
+
 /* Exported functions prototypes ---------------------------------------------*/
 
 extern void App_Timing_Init(void);
@@ -54,6 +89,27 @@ extern void Clean_Timing_Timer_Cnt(void);
 	
 // 定时任务主线程
 extern void App_Timing_Handler(void);
+
+//-------------------- 设置高温降速模式 0:关   1开 ----------------------------
+void Set_Temp_Slow_Down_State(uint8_t vaule);
+//-------------------- 获取高温降速模式 ----------------------------
+uint8_t Get_Temp_Slow_Down_State(void);
+//-------------------- 设置高温降速 速度 下降的速度 ----------------------------
+void Set_Temp_Slow_Down_Speed(uint8_t vaule);
+//-------------------- 获取高温降速 速度 ----------------------------
+uint8_t Get_Temp_Slow_Down_Speed(void);
+
+void CallOut_Fault_State(void);
+//-------------------- 清除故障恢复计数器 ----------------------------
+void Clean_Fault_Recovery_Cnt(void);
+//-------------------- 累计故障恢复计数器 ----------------------------
+void Add_Fault_Recovery_Cnt(void);
+//-------------------- 超过最大次数 ----------------------------
+uint8_t If_Fault_Recovery_Max(void);
+
+//-------------------- 清除 自动关机计时器 ----------------------------
+void Clean_Automatic_Shutdown_Timer(void);
+
 
 /* Private defines -----------------------------------------------------------*/
 

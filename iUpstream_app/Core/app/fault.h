@@ -51,6 +51,10 @@ typedef enum
 #define FAULT_MOTOR_LOSS								0x80
 
 
+//-------------- 机箱温度报警值 90°C -------------------
+#define AMBIENT_TEMP_ALARM_VALUE								90
+//-------------- 机箱温度 降速 70°C -------------------
+#define AMBIENT_TEMP_REDUCE_SPEED								70
 //-------------- 按键组合响应 总数 -------------------
 #define CALL_OUT_NUMBER_MAX						8
 
@@ -72,6 +76,8 @@ extern uint8_t Get_Fault_Number_Sum(uint16_t para);
 extern uint8_t Get_Fault_Number_Now(uint16_t para, uint8_t num);
 // 进入操作菜单
 extern void To_Fault_Menu(void);
+// 故障界面 更新
+void Update_Fault_Menu(void);
 // 清除故障状态
 extern void Clean_Fault_State(void);
 // 故障 显示

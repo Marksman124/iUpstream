@@ -30,7 +30,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//#include "modbus.h"
+#include "tm1621.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -115,7 +115,7 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM4_Init();
   MX_ADC2_Init();
-  MX_ADC1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
@@ -209,6 +209,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
 	if (htim->Instance == TIM4) {
     prvvTIMERExpiredISR();
+  }
+	if (htim->Instance == TIM6) {
+		TM1621_Buzzer_Off();
+		HAL_TIM_Base_Stop_IT(&htim6);
   }
   /* USER CODE END Callback 1 */
 }

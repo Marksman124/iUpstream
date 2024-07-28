@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "state_machine.h"
-
+#include "timing.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -252,6 +252,7 @@ void Arbitrarily_To_Pause(void)
 	else if(System_is_Stop())
 		System_State_Machine -= 1;
 	
+	Clean_Automatic_Shutdown_Timer();
 	return;
 }
 

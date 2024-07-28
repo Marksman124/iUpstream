@@ -362,9 +362,6 @@ eMBPoll(void)
             break;
 
         case EV_FRAME_RECEIVED:
-#ifndef SYSTEM_HARDWARE_DEBUG
-            led_on();
-#endif
             eStatus = peMBFrameReceiveCur(&ucRcvAddress, &ucMBFrame, &usLength);
             if (eStatus == MB_ENOERR)
             {
@@ -374,12 +371,10 @@ eMBPoll(void)
                     (void)xMBPortEventPost(EV_EXECUTE);
                 }
             }
+						DEBUG_LED1_OFF();
             break;
 
         case EV_EXECUTE:
-#ifndef SYSTEM_HARDWARE_DEBUG
-            led_on();
-#endif
             ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];
             eException = MB_EX_ILLEGAL_FUNCTION;
             for (i = 0; i < MB_FUNC_HANDLERS_MAX; i++)

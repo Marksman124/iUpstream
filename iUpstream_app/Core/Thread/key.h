@@ -54,7 +54,7 @@ typedef struct IO_Hardware_Pin
 #define KEY_LONG_PRESS_TIME									(3000/KEY_THREAD_LIFECYCLE)			//长按时间 3s
 #define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
 
-#define KEY_FOR_SLEEP_TIME_SHORT						(300000/KEY_THREAD_LIFECYCLE)			//????  5 min
+#define KEY_FOR_SLEEP_TIME_SHORT						(3000/KEY_THREAD_LIFECYCLE)			//????  5 min  300000
 //-------------- 按键组合响应 总数 -------------------
 #define KEY_CALL_OUT_NUMBER_MAX						8
 
@@ -64,7 +64,7 @@ typedef struct IO_Hardware_Pin
 #define KEY_VALUE_BIT_BUTTON_3						0x04
 #define KEY_VALUE_BIT_BUTTON_4						0x08
 
-
+#define KEY_VALUE_SHAKE_TIME							2		//去抖动 次数
 /* Exported functions prototypes ---------------------------------------------*/
 
 //------------------- 按键回调 ----------------------------

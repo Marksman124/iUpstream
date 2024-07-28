@@ -265,6 +265,9 @@ void Lcd_Show(void)
 void Lcd_System_Information(void)
 {
 	uint8_t dial_switch;
+	
+	//背光
+	TM1621_BLACK_ON();
 	//speed
 	Display_Hide_Speed(0xFF);
 	// time
@@ -294,6 +297,21 @@ void Lcd_Speed_Off(void)
 	taskEXIT_CRITICAL();
 }
 
+// 降速 界面 2秒1刷
+void Lcd_Show_Slow_Down(uint8_t value)
+{
+	taskENTER_CRITICAL();
+	
+	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, 0);
+	TM1621_display_Letter(TM1621_COORDINATE_SPEED_HIGH, 'A');
+	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, value);
+	// time
+	Display_Show_Min(GET_TIME_MINUTE_DIGIT(OP_ShowNow.time));
+	Display_Show_Sec(GET_TIME_SECOND_DIGIT(OP_ShowNow.time));
+	
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
+}
 //------------------- 切换模式  ----------------------------
 // 切换模式
 void Fun_Change_Mode(void)
@@ -313,6 +331,7 @@ void Fun_Change_Mode(void)
 // 关机
 void To_Power_Off(void)
 {
+	System_Self_Testing_State = 0;
 	
 	PMode_Now = 0;
 	Period_Now = 0;
@@ -381,5 +400,16 @@ void To_Train_Mode(uint8_t num)
 }
 
 
-
+//	自测
+void System_Self_Testing_Porgram(void)
+{
+	System_Self_Testing_State = 0xAA;
+	Led_Button_On(0);	// 按键
+	// 屏幕
+	TM1621_BLACK_ON();
+	TM1621_Show_All();//全亮 2s
+	osDelay(2000);
+	TM1621_Show_Repeat_All();//全部循环
+	//
+}
 

@@ -14,7 +14,8 @@
 #include "tm1621.h"
 #include "adc.h"
 #include "debug_protocol.h"
-
+#include "key.h"
+#include "ntc_3950.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -52,14 +53,21 @@ void on_Fault_Button_2_4_Long_Press(void);
 
 /* Private typedef -----------------------------------------------------------*/
 
+static uint32_t Chassis_TEMP_Timer_cnt= 0;	//高温 计数器
 
 /* Private define ------------------------------------------------------------*/
 
 /* Private macro -------------------------------------------------------------*/
+#define CHASSIS_TEMP_TIMER_MAX			9
 
 #define LCD_SYMBOL_FOT_FAULT								(STATUS_BIT_BLUETOOTH & STATUS_BIT_WIFI)
 
 /* Private variables ---------------------------------------------------------*/
+
+uint16_t Fault_Label[16] = {0x001,0x002,0x003,
+															0x101,0x102,
+															0x201,0x202,0x203,
+															0x301,0x302,0x303,0x304,0x305,0x306,0x307,0x308};
 
 uint8_t Fault_Number_Sum = 0;	// 故障总数
 uint8_t Fault_Number_Cnt = 0;	// 当前故障
@@ -84,6 +92,9 @@ void (*p_Fault_Long_Press[CALL_OUT_NUMBER_MAX])(void) = {
 	on_Fault_Button_2_3_Long_Press, on_Fault_Button_2_4_Long_Press,
 };
 
+uint8_t State_Machine_Memory = 0;
+uint8_t Motor_Speed_Memory = 0;
+uint16_t Motor_Time_Memory = 0;
 
 /* Private user code ---------------------------------------------------------*/
 
@@ -99,18 +110,87 @@ void App_Fault_Init(void)
 uint8_t If_System_Is_Error(void)
 {
 	float Temperature;
-	uint8_t debug_send_buffer[32]={0};
+	uint8_t debug_buffer[32]={0};
+	//uint8_t motor_fault=0;
+	uint16_t system_fault=0;
 	
-	// 读驱动板故障
-	//Motor_ReadFault_Send();
+	//电机故障  含驱动板通讯故障
+	system_fault = Get_Motor_Fault_State();
+
 	// 检查本地故障
+#ifdef UART_DEBUG_SEND_CTRL
+	if( Chassis_Temperature_Debug > 0)
+	{
+		Temperature = (float)Chassis_Temperature_Debug;
+	}
+	else
+	{
+		Temperature = Get_External_Temp();
+	}
+#else
 	Temperature = Get_External_Temp();
+#endif
+		
+	sprintf((char*)debug_buffer,"机箱温度：%0.3f °C \n",Temperature);
+	UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
 	
-	sprintf((char*)debug_send_buffer,"温度采样值：%0.3frn \n",Temperature);
+	// 机箱 温度
+	if(Temperature >= AMBIENT_TEMP_ALARM_VALUE)
+	{
+		//报警 停机
+		system_fault |= FAULT_TEMPERATURE_AMBIENT;
+	}
+	else if(Temperature >= AMBIENT_TEMP_REDUCE_SPEED)
+	{
+		//报警 停机  恢复
+		if(system_fault & FAULT_TEMPERATURE_AMBIENT)
+		{
+			system_fault |= ~FAULT_TEMPERATURE_AMBIENT;
+		}
+		
+		if(Chassis_TEMP_Timer_cnt < CHASSIS_TEMP_TIMER_MAX)
+			Chassis_TEMP_Timer_cnt ++;
+		else
+		{
+			//预警 降速
+			if(Get_Temp_Slow_Down_State() == 0)
+				Set_Temp_Slow_Down_State(2);
+		}
+	}
+	else
+	{
+		//报警 停机  恢复
+		if(system_fault & FAULT_TEMPERATURE_AMBIENT)
+		{
+			system_fault |= ~FAULT_TEMPERATURE_AMBIENT;
+		}
+		
+		if(Chassis_TEMP_Timer_cnt > 0)
+			Chassis_TEMP_Timer_cnt --;
+		else
+		{
+			if(Get_Temp_Slow_Down_State() == 2)
+				Set_Temp_Slow_Down_State(0);
+		}
+	}
+
 	
-	UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
-	//
-	if(*p_System_Fault_Static > 0)
+	if(*p_System_Fault_Static != system_fault)
+	{
+		if( ( *p_System_Fault_Static >0 ) && (system_fault == 0))
+		{
+			Add_Fault_Recovery_Cnt();
+			//超过3次锁住 不再更新
+			if(If_Fault_Recovery_Max())
+				return 1;
+			CallOut_Fault_State();
+		}
+		else
+			*p_System_Fault_Static = system_fault;
+	}
+
+	
+	if(system_fault > 0)
 		return 1;
 	else
 		return 0;
@@ -160,15 +240,29 @@ uint8_t Get_Fault_Number_Now(uint16_t para, uint8_t num)
 	return 0;
 }
 
+void Fault_Number_Update(void)
+{
+	Fault_Number_Sum = Get_Fault_Number_Sum(*p_MB_Fault_State);
+	
+	if(Fault_Number_Cnt > Fault_Number_Sum)
+		Fault_Number_Cnt = 1;
+}
+
 // 进入故障界面
 void To_Fault_Menu(void)
 {
+	State_Machine_Memory = Get_System_State_Machine();
+	Motor_Speed_Memory = OP_ShowNow.speed;
+	Motor_Time_Memory = OP_ShowNow.time;
+	
 	// 故障 菜单
 	App_Fault_Init();
 	
-	//功能暂停, 电机关闭
+	//功能暂停
 	Set_System_State_Machine(ERROR_DISPLAY_STATUS);
-
+	//电机关闭
+	Motor_Speed_Target_Set(0);
+	
 	Fault_Number_Sum = Get_Fault_Number_Sum(*p_MB_Fault_State);
 	
 	Fault_Number_Cnt = 1;
@@ -176,17 +270,28 @@ void To_Fault_Menu(void)
 	Lcd_Fault_Display(Fault_Number_Sum, Fault_Number_Cnt, Get_Fault_Number_Now(*p_MB_Fault_State,Fault_Number_Cnt));
 	
 }
+// 故障界面 更新
+void Update_Fault_Menu(void)
+{
+	Lcd_Fault_Display(Fault_Number_Sum, Fault_Number_Cnt, Get_Fault_Number_Now(*p_MB_Fault_State,Fault_Number_Cnt));
+}
 
 // 清除故障状态
 void Clean_Fault_State(void)
 {
+	Clean_Motor_OffLine_Timer();
 	*p_MB_Fault_State = 0;
 	
 	Fault_Number_Sum = 0;
 	
 	Fault_Number_Cnt = 0;
 	
-	To_Free_Mode(1);
+	*p_System_Fault_Static = 0;
+	
+	Set_System_State_Machine(State_Machine_Memory);
+	OP_ShowNow.speed = Motor_Speed_Memory;
+	OP_ShowNow.time = Motor_Time_Memory;
+	Data_Set_Current_Speed(Motor_Speed_Memory);
 }
 /* Private function prototypes -----------------------------------------------*/
 
@@ -250,19 +355,19 @@ void Display_Show_Sum(uint8_t sum)
 ***********************************************************************/
 void Lcd_Fault_Display(uint8_t sum, uint8_t now, uint16_t type)
 {
-	uint16_t fault_label[16] = {0x001,0x002,0x003,
-															0x101,0x102,0x103,0x104,0x105,
-															0x201,0x202,0x203,
-															0x301,0x302,0x303,0x304,0x305};
 	if(System_is_Error() == 0)
 	{
 			return ;
 	}
+	Fault_Number_Update();
+	//背光
+	TM1621_BLACK_ON();
+	
 	taskENTER_CRITICAL();
 	// sum
 	Display_Show_Sum(sum);
 	Display_Show_Number(now);
-	Display_Show_FaultCode(fault_label[type-1]);
+	Display_Show_FaultCode(Fault_Label[type-1]);
 	
 	Lcd_Display_Symbol( LCD_Show_Bit & LCD_SYMBOL_FOT_FAULT);
 	
@@ -351,6 +456,7 @@ static void on_Fault_Button_3_Long_Press(void)
 
 static void on_Fault_Button_4_Long_Press(void)
 {
+	System_Power_Off();
 }
 
 static void on_Fault_Button_1_2_Long_Press(void)
@@ -365,7 +471,7 @@ static void on_Fault_Button_1_3_Long_Press(void)
 static void on_Fault_Button_2_3_Long_Press(void)
 {
 	Set_Fault_Data(0);
-	To_Free_Mode(0);				// ui
+	//To_Free_Mode(0);				// ui
 }
 
 //

@@ -375,10 +375,6 @@ void Modbus_Buffer_Init(void)
 {
 	STMFLASH_Read(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );// REG_HOLDING_NREGS
 	
-	// 默认波特率  测试用
-	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_BAUD_RATE,4);
-	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER,MB_SLAVE_NODE_ADDRESS,21);
-	
 }
 
 void MB_Flash_Buffer_Write(void)
@@ -387,10 +383,15 @@ void MB_Flash_Buffer_Write(void)
 	STMFLASH_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
 	
 	//Eeprom_I2C_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
-
 }
 
-
+void MB_Flash_Buffer_Read(void)
+{
+	//扇区是2048， 整个 usRegHoldingBuf 一起写
+	STMFLASH_Read(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
+	
+	//Eeprom_I2C_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
+}
 
 uint16_t* Get_DataAddr_Pointer(UCHAR ucFunctionCode, USHORT addr)
 {

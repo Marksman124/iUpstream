@@ -255,7 +255,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-
+#include "debug_protocol.h"	///////////////////////	调试 串口
+#include "motor.h"	///////////////////////	驱动板 串口
 /** @addtogroup STM32F1xx_HAL_Driver
   * @{
   */
@@ -2643,13 +2644,33 @@ __weak void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
   *                the configuration information for the specified UART module.
   * @retval None
   */
-__weak void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+/* 中断错误处理函数，在此处理overrun错误 */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(huart);
-  /* NOTE: This function should not be modified, when the callback is needed,
-           the HAL_UART_ErrorCallback could be implemented in the user file
-   */
+    uint8_t i = 0;
+
+    if(__HAL_UART_GET_FLAG(huart,UART_FLAG_ORE) != RESET) 
+    {
+			if (huart->Instance == USART3) //如果是串口3
+			{
+				memset(Motor_DMABuff,0,MOTOR_RS485_RX_BUFF_SIZE);    				//清空缓存区
+				__HAL_UART_CLEAR_IDLEFLAG(huart);               //清除标志位
+				HAL_UART_Receive_DMA(huart,Motor_DMABuff,MOTOR_RS485_RX_BUFF_SIZE);  //开DMA接收，数据存入rx_buffer数组中。
+
+			}
+			else if (huart->Instance == UART4) //如果是串口4
+			{
+				memset(Debug_Read_Buffer,0,DEBUG_PROTOCOL_RX_MAX);    				//清空缓存区
+				__HAL_UART_CLEAR_IDLEFLAG(huart);               //清除标志位
+				HAL_UART_Receive_DMA(huart,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);  //开DMA接收，数据存入rx_buffer数组中。
+
+			}
+			else
+			{
+        __HAL_UART_CLEAR_OREFLAG(huart);
+        HAL_UART_Receive_IT(huart,(uint8_t *)&i,1);
+			}
+    }
 }
 
 /**

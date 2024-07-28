@@ -226,7 +226,7 @@ void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-	HAL_UART_Receive_IT(&huart3, (uint8_t *)aRxBuffer3, 1); //该函数会开启接收中断：标志位UART_IT_RXNE，并且设置接收缓冲以及接收缓冲接收最大数据量
+	//HAL_UART_Receive_IT(&huart3, (uint8_t *)aRxBuffer3, 1); //该函数会开启接收中断：标志位UART_IT_RXNE，并且设置接收缓冲以及接收缓冲接收最大数据量
   /* USER CODE END USART3_Init 2 */
 
 }

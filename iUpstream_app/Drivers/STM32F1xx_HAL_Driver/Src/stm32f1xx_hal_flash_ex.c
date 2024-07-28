@@ -1079,6 +1079,70 @@ static uint8_t FLASH_OB_GetUser(void)
  * @{
  */
 
+
+static uint8_t stmflash_get_error_status(void)
+{
+    uint32_t res;
+    res = FLASH->SR;
+ 
+    if (res & (1 << 0))return 1;    /* BSY = 1      , ?| */
+    if (res & (1 << 2))return 2;    /* PGERR = 1    , ¡À¨¤3¨¬¡ä¨ª?¨®*/
+    if (res & (1 << 4))return 3;    /* WRPRTERR = 1 , D¡ä¡À¡ê?¡è¡ä¨ª?¨® */
+    
+    return 0;   /* ??¨®D¨¨?o?¡ä¨ª?¨® 2¨´¡Á¡Â¨ª¨º3¨¦. */
+}
+ 
+static uint8_t stmflash_wait_done(uint32_t time)
+{
+    uint8_t res;
+ 
+    do
+    {
+        res = stmflash_get_error_status();
+ 
+        if (res != 1)
+        {
+            break;      /* ¡¤??|, ?TD¨¨¦Ì¨¨¡äy¨¢?, ?¡À?¨®¨ª?3? */
+        }
+        
+        time--;
+    } while (time);
+ 
+    if (time == 0)res = 0XFF;   /* 3?¨º¡À */
+ 
+    return res;
+}
+ 
+/**
+ * @brief       2¨¢3y¨¦¨¨??
+ * @param       saddr   : ¨¦¨¨??¦Ì??¡¤ 0 ~ 256
+ * @retval      ?¡äDD?¨¢1?
+ *   @arg       0   : ¨°?¨ª¨º3¨¦
+ *   @arg       2   : ¡À¨¤3¨¬¡ä¨ª?¨®
+ *   @arg       3   : D¡ä¡À¡ê?¡è¡ä¨ª?¨®
+ *   @arg       0XFF: 3?¨º¡À
+ */
+static uint8_t stmflash_erase_sector(uint32_t saddr)
+{
+    uint8_t res = 0;  /* STM32F1032¨¢3y¦Ì?¨º¡Ào¨°¨º????¡§¡ã?¡Á?¦Ì??¡¤ */
+    res = stmflash_wait_done(0X5FFFFF);     /* ¦Ì¨¨¡äy¨¦?¡ä?2¨´¡Á¡Â?¨¢¨º?, >20ms */
+ 
+    if (res == 0)
+    {
+        FLASH->CR |= 1 << 1;    /* ¨°32¨¢3y */
+        FLASH->AR = saddr;      /* ¨¦¨¨??¨°3¦Ì??¡¤(¨º¦Ì?¨º¨º?¡ã?¡Á?¦Ì??¡¤) */
+        FLASH->CR |= 1 << 6;    /* ?a¨º?2¨¢3y */
+        res = stmflash_wait_done(0X5FFFFF); /* ¦Ì¨¨¡äy2¨´¡Á¡Â?¨¢¨º?, >20ms */
+ 
+        if (res != 1)   /* ¡¤??| */
+        {
+            FLASH->CR &= ~(1 << 1); /* ??3y¨°32¨¢3y¡À¨º?? */
+        }
+    }
+ 
+    return res;
+}
+
 /**
   * @brief  Erase the specified FLASH memory page
   * @param  PageAddress FLASH page to erase
@@ -1088,27 +1152,29 @@ static uint8_t FLASH_OB_GetUser(void)
   */
 void FLASH_PageErase(uint32_t PageAddress)
 {
-  /* Clean the error context */
-  pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
+	stmflash_erase_sector(PageAddress);
+	
+//  /* Clean the error context */
+//  pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
 
-#if defined(FLASH_BANK2_END)
-  if(PageAddress > FLASH_BANK1_END)
-  { 
-    /* Proceed to erase the page */
-    SET_BIT(FLASH->CR2, FLASH_CR2_PER);
-    WRITE_REG(FLASH->AR2, PageAddress);
-    SET_BIT(FLASH->CR2, FLASH_CR2_STRT);
-  }
-  else
-  {
-#endif /* FLASH_BANK2_END */
-    /* Proceed to erase the page */
-    SET_BIT(FLASH->CR, FLASH_CR_PER);
-    WRITE_REG(FLASH->AR, PageAddress);
-    SET_BIT(FLASH->CR, FLASH_CR_STRT);
-#if defined(FLASH_BANK2_END)
-  }
-#endif /* FLASH_BANK2_END */
+//#if defined(FLASH_BANK2_END)
+//  if(PageAddress > FLASH_BANK1_END)
+//  { 
+//    /* Proceed to erase the page */
+//    SET_BIT(FLASH->CR2, FLASH_CR2_PER);
+//    WRITE_REG(FLASH->AR2, PageAddress);
+//    SET_BIT(FLASH->CR2, FLASH_CR2_STRT);
+//  }
+//  else
+//  {
+//#endif /* FLASH_BANK2_END */
+//    /* Proceed to erase the page */
+//    SET_BIT(FLASH->CR, FLASH_CR_PER);
+//    WRITE_REG(FLASH->AR, PageAddress);
+//    SET_BIT(FLASH->CR, FLASH_CR_STRT);
+//#if defined(FLASH_BANK2_END)
+//  }
+//#endif /* FLASH_BANK2_END */
 }
 
 /**

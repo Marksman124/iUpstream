@@ -24,6 +24,12 @@ extern "C" {
 #define DEBUG_PROTOCOL_TX_MAX			256
 
 
+extern uint8_t Debug_Read_Buffer[DEBUG_PROTOCOL_RX_MAX];
+
+#ifdef UART_DEBUG_SEND_CTRL
+extern uint8_t Chassis_Temperature_Debug;
+#endif
+
 /* Exported functions prototypes ---------------------------------------------*/
 void UART_Send_Debug(uint8_t * p_buff, uint8_t len);
 void To_Debug_Protocol_Analysis(uint8_t len);

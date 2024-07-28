@@ -111,7 +111,7 @@ int main(void)
 				iap_Process();
 			}
 		}
-		if(time_cnt > 5){
+		else{
 			iap_load_app(FLASH_APP_PROGRAM_ADDR);}
     /* USER CODE END WHILE */
 

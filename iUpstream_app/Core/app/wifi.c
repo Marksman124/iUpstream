@@ -27,7 +27,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-WIFI_STATE_MODE_E WIFI_State_Machine=0;
+static WIFI_STATE_MODE_E WIFI_State_Machine=0;
 
 /* Private function prototypes -----------------------------------------------*/
 

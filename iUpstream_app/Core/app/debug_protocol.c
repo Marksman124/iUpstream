@@ -23,7 +23,9 @@ UART_HandleTypeDef* p_huart_debug = &huart4;		 //调试串口 UART句柄
 UART_HandleTypeDef* p_huart_debug = &huart5;
 #endif
 
-
+#ifdef UART_DEBUG_SEND_CTRL
+uint8_t Chassis_Temperature_Debug=0;
+#endif
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -43,6 +45,8 @@ uint8_t Debug_Protocol_Mode	=	0;
 uint8_t Debug_Send_Buffer[DEBUG_PROTOCOL_TX_MAX];
 uint8_t Debug_Read_Buffer[DEBUG_PROTOCOL_RX_MAX];
 /* USER CODE END PV */
+
+extern DMA_HandleTypeDef hdma_uart4_rx;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -80,7 +84,7 @@ void Set_Debug_Protocol_Mode(uint8_t mode)
 
 void UART_Send_Debug(uint8_t * p_buff, uint8_t len)
 {
-#ifdef DEBUG_USART
+#ifdef UART_PRINTF_LOG
 //	if(Debug_Protocol_Mode != 1)
 //		return;
 	
@@ -97,41 +101,32 @@ void UART_Send_Debug(uint8_t * p_buff, uint8_t len)
 }
 
 
-
 //
 void To_Debug_Protocol_Analysis(uint8_t len)
 {
-#ifdef DEBUG_USART
+#ifdef UART_DEBUG_SEND_CTRL
 
 	//UART_Send_Debug(Debug_Read_Buffer, len);
 	
-	if(Debug_Read_Buffer[0] <= MOTOR_PROTOCOL_ADDR_MAX)
+	if(Debug_Read_Buffer[0] < MOTOR_PROTOCOL_ADDR_MAX)
 	{
-		switch(Debug_Read_Buffer[0])
-		{
-			case MOTOR_ADDR_MOTOR_FAULT_OFFSET:
-				Motor_State_Storage[MOTOR_ADDR_MOTOR_FAULT_OFFSET] = Debug_Read_Buffer[1];
-				break;
-		}
-		
+		Motor_State_Storage[Debug_Read_Buffer[0]] = Debug_Read_Buffer[1];
+		//*p_System_Fault_Static = Debug_Read_Buffer[1];
 		Motor_State_Analysis();
 	}
-//	#define	MOTOR_ADDR_MOSFET_TEMP_OFFSET						0
-//#define	MOTOR_ADDR_MOTOR_TEMP_OFFSET						2
-//#define	MOTOR_ADDR_MOTOR_CURRENT_OFFSET					4
-//#define	MOTOR_ADDR_MOTOR_SPEED_OFFSET						22
-//#define	MOTOR_ADDR_BUS_VOLTAGE_OFFSET						26
-
-//#define	MOTOR_ADDR_MOTOR_FAULT_OFFSET						52
-//#define	MOTOR_ADDR_NTC1_TEMP_OFFSET							58
-//#define	MOTOR_ADDR_NTC2_TEMP_OFFSET							60
-//#define	MOTOR_ADDR_NTC3_TEMP_OFFSET							62
+	else if(Debug_Read_Buffer[0] == 0xF1)//机箱温度
+	{
+		Chassis_Temperature_Debug = Debug_Read_Buffer[1];
+	}
+	else if(Debug_Read_Buffer[0] == 0xF2)//wifi
+	{
+		WIFI_Set_Machine_State(Debug_Read_Buffer[1]);
+	}
+	else if(Debug_Read_Buffer[0] == 0xF3)//蓝牙
+	{
+		BT_Set_Machine_State(Debug_Read_Buffer[1]);
+	}
 	
-	
-	memset(Debug_Read_Buffer,0,DEBUG_PROTOCOL_RX_MAX);    				//清空缓存区
-	__HAL_UART_CLEAR_IDLEFLAG(p_huart_debug);               //清除标志位
-	HAL_UART_Receive_DMA(p_huart_debug,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);  //开DMA接收，数据存入rx_buffer数组中。
-
 	return;
 #endif
 }
@@ -140,9 +135,14 @@ void To_Debug_Protocol_Analysis(uint8_t len)
 // 初始化
 void Debug_Protocol_Init(void)
 {
+	
+#ifdef UART_DEBUG_SEND_CTRL
+
 	__HAL_UART_ENABLE_IT(p_huart_debug, UART_IT_IDLE);//使能idle中断
 	__HAL_UART_ENABLE_IT(p_huart_debug, UART_IT_ERR);//
 	
-  HAL_UART_Receive_DMA(p_huart_debug,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);//打开串口DMA接收
+  HAL_UARTEx_ReceiveToIdle_DMA(p_huart_debug,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);//打开串口DMA接收
+	__HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);		   // 手动关闭DMA_IT_HT中断
+#endif
 }
 

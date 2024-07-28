@@ -12,7 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "operation.h"
 #include "tm1621.h"
-
+#include "key.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -68,7 +68,8 @@ static uint8_t Operation_Menu_Value = 0;		//	菜单值
 static uint16_t Operation_Addr_Value = 0;		//	地址	
 static uint16_t Operation_Baud_Rate = 0;			//	波特率	
 static uint16_t Operation_Shield_Value = 0;		//	控制方式	
-static uint16_t Operation_Motor_Poles = 0;		//	控制方式	
+static uint16_t Operation_Motor_Poles = 0;		//	电机极数	
+static uint16_t Operation_Speed_Mode = 0;		//	转速方式  0：转速   1：功率	
 
 // 发送缓冲区
 uint8_t operation_send_buffer[24] = {0};
@@ -89,6 +90,9 @@ void (*p_Operation_Long_Press[CALL_OUT_NUMBER_MAX])(void) = {
 };
 
 
+static uint16_t Baud_Rate_Value[OPERATION_BAUD_MAX] = {1200,2400,4800,9600};			//	波特率	
+//static uint16_t Speed_Mode_Value[2] = {'r','P'};			//	转速模式	
+
 static uint32_t button_cnt=0;
 /* Private user code ---------------------------------------------------------*/
 
@@ -103,10 +107,32 @@ void App_Operation_Init(void)
 	Operation_Addr_Value = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS );
 	
 	Operation_Baud_Rate = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE );
-
+	if(Operation_Baud_Rate > (OPERATION_BAUD_MAX-1))
+	{
+		Operation_Baud_Rate = (OPERATION_BAUD_MAX-1);
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate );
+	}
+	
 	Operation_Shield_Value = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS );
-		
+	if(Operation_Shield_Value > (OPERATION_SHIELD_MAX))
+	{
+		Operation_Shield_Value = (OPERATION_SHIELD_MAX);
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+	}
+	
 	Operation_Motor_Poles = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER );
+	if(Operation_Motor_Poles > (OPERATION_POLES_MAX))
+	{
+		Operation_Motor_Poles = (OPERATION_POLES_MAX);
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
+	}
+	
+	Operation_Speed_Mode = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE );
+	if(Operation_Speed_Mode > (1))
+	{
+		Operation_Speed_Mode = (1);
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
+	}
 }
 
 //static void _Delay(uint32_t mdelay)
@@ -147,10 +173,28 @@ void Display_Oper_value(uint16_t value)
 	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH,  (value / 1000)%10);
 	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	(value / 100)%10);
 	
-	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(value / 10)&10);
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	(value / 10)%10);
 	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  	(value % 10));
 	//TM1621_LCD_Redraw();
 }
+/*
+******************************************************************************
+Display_Show_FaultCode
+
+显示 字母
+******************************************************************************
+*/  
+void Display_Oper_Letter(uint8_t value)
+{
+	
+	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH,  	0xFF);
+	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  	0xFF);
+	
+	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  	0xFF);
+	TM1621_display_Letter(TM1621_COORDINATE_SEC_LOW,  	value);
+	//TM1621_LCD_Redraw();
+}
+
 /*
 ******************************************************************************
 Display_Show_Sum
@@ -178,18 +222,28 @@ void Lcd_Show_Operation(uint8_t type, uint16_t num)
 	{
 			return ;
 	}
+	//背光
+	TM1621_BLACK_ON();
 	taskENTER_CRITICAL();
+	
 	// sum
 	Display_Oper_Number(type);
-	Display_Oper_value(num);
+#ifdef OPERATION_SPEED_MODE
+	//字母
+	if(type == OPERATION_SPEED_MODE)
+		Display_Oper_Letter(num);
+	else
+#endif
+		Display_Oper_value(num);
 	Display_Mode_Hide();
 	
 	
 	//版本号显示小数点
-	if((type == OPERATION_DISPLAY_VERSION) ||( type == OPERATION_DRIVER_VERSION))
+	if(type == OPERATION_DISPLAY_VERSION)
 		Lcd_Display_Symbol(STATUS_BIT_POINT);
 	else
 		Lcd_Display_Symbol(0);
+
 	
 	TM1621_LCD_Redraw();
 	taskEXIT_CRITICAL();
@@ -228,6 +282,7 @@ void To_Operation_Menu(void)
 static void on_Button_1_clicked(void)
 {
 	button_cnt = 0;
+	//------- 地址
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
 		if(Operation_Addr_Value < 255)
@@ -237,24 +292,29 @@ static void on_Button_1_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 	}
+	//------- 波特率
 	else if(Operation_State_Machine == OPERATION_BAUD_RATE)
 	{
-		if(Operation_Baud_Rate < OPERATION_BAUD_MAX)
+		if(Operation_Baud_Rate < (OPERATION_BAUD_MAX-1))
 			(Operation_Baud_Rate)++;
 		else
 			Operation_Baud_Rate = 0;
 		
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
+		Lcd_Show_Operation( Operation_State_Machine, Baud_Rate_Value[Operation_Baud_Rate]);
 	}
-	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
+	//------- 转速模式
+#ifdef OPERATION_SPEED_MODE
+	else if(Operation_State_Machine == OPERATION_SPEED_MODE)
 	{
-		if(Operation_Shield_Value < OPERATION_SHIELD_MAX)
-			(Operation_Shield_Value)++;
+		if(Operation_Speed_Mode < 1)
+			(Operation_Speed_Mode)++;
 		else
-			Operation_Shield_Value = 0;
+			Operation_Speed_Mode = 0;
 		
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
+		Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
 	}
+#endif
+	//------- 电机 极数
 	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
 	{
 		if(Operation_Motor_Poles < OPERATION_POLES_MAX)
@@ -264,12 +324,23 @@ static void on_Button_1_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 	}
+	//------- 屏蔽 方式
+	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
+	{
+		if(Operation_Shield_Value < OPERATION_SHIELD_MAX)
+			(Operation_Shield_Value)++;
+		else
+			Operation_Shield_Value = 0;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
+	}
 }
 
 // ② 时间键
 static void on_Button_2_clicked(void)
 {
 	button_cnt = 0;
+	//------- 地址
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
 		if(Operation_Addr_Value > 0)
@@ -279,15 +350,41 @@ static void on_Button_2_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 	}
+	//------- 波特率
 	else if(Operation_State_Machine == OPERATION_BAUD_RATE)
 	{
 		if(Operation_Baud_Rate > 0)
 			(Operation_Baud_Rate)--;
 		else
-			Operation_Baud_Rate = OPERATION_BAUD_MAX;
+			Operation_Baud_Rate = (OPERATION_BAUD_MAX-1);
 		
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
+		Lcd_Show_Operation( Operation_State_Machine, Baud_Rate_Value[Operation_Baud_Rate]);
 	}
+	//------- 转速 模式
+#ifdef OPERATION_SPEED_MODE
+	else if(Operation_State_Machine == OPERATION_SPEED_MODE)
+	{
+		if(Operation_Speed_Mode < 1)
+			(Operation_Speed_Mode)++;
+		else
+			Operation_Speed_Mode = 0;
+		
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
+		Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
+	}
+#endif
+	//------- 电机 极数
+	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
+	{
+		if(Operation_Motor_Poles > OPERATION_POLES_MIX)
+			(Operation_Motor_Poles)--;
+		else
+			Operation_Motor_Poles = OPERATION_POLES_MAX;
+		
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
+	}
+	//------- 屏蔽 方式
 	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
 	{
 		if(Operation_Shield_Value > 0)
@@ -296,15 +393,6 @@ static void on_Button_2_clicked(void)
 			Operation_Shield_Value = OPERATION_SHIELD_MAX;
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
-	}
-	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
-	{
-		if(Operation_Motor_Poles > OPERATION_POLES_MIX)
-			(Operation_Motor_Poles)--;
-		else
-			Operation_Motor_Poles = OPERATION_POLES_MAX;
-		
-		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 	}
 }
 
@@ -317,15 +405,17 @@ static void on_Button_3_clicked(void)
 		case OPERATION_ADDR_SET:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
 			Operation_State_Machine = OPERATION_BAUD_RATE;
-			Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
+			Lcd_Show_Operation( Operation_State_Machine, Baud_Rate_Value[Operation_Baud_Rate]);
 		break;
 		case OPERATION_BAUD_RATE:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate );
-			Operation_State_Machine = OPERATION_SHIELD_MENU;
-			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
+#ifdef OPERATION_SPEED_MODE
+			Operation_State_Machine = OPERATION_SPEED_MODE;
+			Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
 		break;
-		case OPERATION_SHIELD_MENU:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_DISTRIBUTION_NETWORK_CONTROL, Operation_Shield_Value );
+		case OPERATION_SPEED_MODE:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
+#endif
 			Operation_State_Machine = OPERATION_MOTOR_POLES;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 		break;
@@ -336,8 +426,8 @@ static void on_Button_3_clicked(void)
 		break;
 		case OPERATION_DISPLAY_VERSION:
 			//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
-			Operation_State_Machine = OPERATION_DRIVER_VERSION;
-			Lcd_Show_Operation( Operation_State_Machine, (SOFTWARE_VERSION_HIGH*100 + SOFTWARE_VERSION_LOW));
+			Operation_State_Machine = OPERATION_SHIELD_MENU;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 		break;
 		default:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
@@ -351,7 +441,12 @@ static void on_Button_3_clicked(void)
 // ④ 开机键  短按
 static void on_Button_4_Short_Press(void)
 {
+	//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value);
 	
+	//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate);
+	//保存 flash
+	Memset_OPMode();//存flash
+	//退出
 	To_Free_Mode(1);
 }
 
@@ -409,12 +504,12 @@ static void on_Button_1_Long_Press(void)
 		if(button_cnt++ > 5)
 		{
 			button_cnt = 0;
-			if(Operation_Baud_Rate < OPERATION_BAUD_MAX)
+			if(Operation_Baud_Rate < (OPERATION_BAUD_MAX-1))
 				(Operation_Baud_Rate)++;
 			else
 				Operation_Baud_Rate = 0;
 			
-			Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
+			Lcd_Show_Operation( Operation_State_Machine, Baud_Rate_Value[Operation_Baud_Rate]);
 		}
 	}
 	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
@@ -464,9 +559,9 @@ static void on_Button_2_Long_Press(void)
 			if(Operation_Baud_Rate > 0)
 				(Operation_Baud_Rate)--;
 			else
-				Operation_Baud_Rate = OPERATION_BAUD_MAX;
+				Operation_Baud_Rate = (OPERATION_BAUD_MAX-1);
 			
-			Lcd_Show_Operation( Operation_State_Machine, Operation_Baud_Rate);
+			Lcd_Show_Operation( Operation_State_Machine, Baud_Rate_Value[Operation_Baud_Rate]);
 		}
 	}
 	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
@@ -491,6 +586,7 @@ static void on_Button_3_Long_Press(void)
 
 static void on_Button_4_Long_Press(void)
 {
+	System_Power_Off();
 }
 
 static void on_Button_1_2_Long_Press(void)

@@ -40,14 +40,26 @@ typedef struct IO_Hardware_Info
 	uint16_t io_pin;
 }IO_Hardware_Info;
 
+/* Private macro -------------------------------------------------------------*/
+
+#define DEBUG_LED1_ON()				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET)
+#define DEBUG_LED1_OFF()			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET)
+
+#define DEBUG_LED2_ON()				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET)
+#define DEBUG_LED2_OFF()			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET)
+
+
+#define FAN_SWITCH_ON()				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET)
+#define FAN_SWITCH_OFF()			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET)
+
 /* USER CODE END Private defines */
 
 void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-extern void led_show(uint16_t num, uint16_t time);
-extern void led_on(void);
-extern void led_off(void);
+//extern void led_show(uint16_t num, uint16_t time);
+//extern void led_on(void);
+//extern void led_off(void);
 	
 extern void StartUp_Pump(uint8_t num, uint16_t para);
 extern uint8_t Gpio_Get_Dial_Switch(void);

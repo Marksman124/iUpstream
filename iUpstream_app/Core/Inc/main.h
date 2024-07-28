@@ -52,6 +52,8 @@ extern "C" {
 
 //******************  调试模式 **************************
 #define SYSTEM_DEBUG_MODE					1
+#define UART_PRINTF_LOG						1
+#define UART_DEBUG_SEND_CTRL			1
 //*******************************************************
 
 
@@ -89,7 +91,7 @@ extern "C" {
 #define	SYSTEM_PRODUCT_MODEL_CODE								0x0001		//
 
 // 软件版本
-#define	SOFTWARE_VERSION_UINT32								0x00010000		//1.0.0
+#define	SOFTWARE_VERSION_UINT32								0x00010001		//1.1
 
 #define	SOFTWARE_VERSION_HIGH									((SOFTWARE_VERSION_UINT32&0xFFFF0000)>>16)
 #define	SOFTWARE_VERSION_LOW									(SOFTWARE_VERSION_UINT32&0xFFFF)
@@ -103,20 +105,28 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define led_debug_Pin GPIO_PIN_13
-#define led_debug_GPIO_Port GPIOC
 #define Led_Power_Pin GPIO_PIN_0
 #define Led_Power_GPIO_Port GPIOC
-#define Led_Speed_Pin GPIO_PIN_1
-#define Led_Speed_GPIO_Port GPIOC
+#define Led_Mode_Pin GPIO_PIN_1
+#define Led_Mode_GPIO_Port GPIOC
 #define Led_Time_Pin GPIO_PIN_2
 #define Led_Time_GPIO_Port GPIOC
-#define Led_Mode_Pin GPIO_PIN_3
-#define Led_Mode_GPIO_Port GPIOC
+#define Led_Speed_Pin GPIO_PIN_3
+#define Led_Speed_GPIO_Port GPIOC
 #define RS485_A_Pin GPIO_PIN_2
 #define RS485_A_GPIO_Port GPIOA
 #define RS485_B_Pin GPIO_PIN_3
 #define RS485_B_GPIO_Port GPIOA
+#define ADC_CN6_Pin GPIO_PIN_5
+#define ADC_CN6_GPIO_Port GPIOA
+#define ADC_CN6A6_Pin GPIO_PIN_6
+#define ADC_CN6A6_GPIO_Port GPIOA
+#define SW_1_Pin GPIO_PIN_4
+#define SW_1_GPIO_Port GPIOC
+#define SW_2_Pin GPIO_PIN_5
+#define SW_2_GPIO_Port GPIOC
+#define ADC_TEMP_Pin GPIO_PIN_1
+#define ADC_TEMP_GPIO_Port GPIOB
 #define SPI1_CS_Pin GPIO_PIN_2
 #define SPI1_CS_GPIO_Port GPIOB
 #define CS_Pin GPIO_PIN_12
@@ -125,6 +135,8 @@ void Error_Handler(void);
 #define WR_GPIO_Port GPIOB
 #define DATA_Pin GPIO_PIN_15
 #define DATA_GPIO_Port GPIOB
+#define RS485_EN_Pin GPIO_PIN_6
+#define RS485_EN_GPIO_Port GPIOC
 #define Key_Speed_Pin GPIO_PIN_7
 #define Key_Speed_GPIO_Port GPIOC
 #define Key_Time_Pin GPIO_PIN_8
@@ -133,6 +145,8 @@ void Error_Handler(void);
 #define Key_Mode_GPIO_Port GPIOC
 #define Key_Power_Pin GPIO_PIN_8
 #define Key_Power_GPIO_Port GPIOA
+#define Fan_Switch_Pin GPIO_PIN_12
+#define Fan_Switch_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

@@ -107,6 +107,8 @@ extern void Lcd_Show(void);
 // 机型码 & 拨码
 extern void Lcd_System_Information(void);
 extern void Lcd_Speed_Off(void);
+// 降速 界面 2秒1刷
+void Lcd_Show_Slow_Down(uint8_t value);
 //------------------- 切换模式  ----------------------------
 // 切换模式
 extern void Fun_Change_Mode(void);
@@ -118,6 +120,8 @@ extern void To_Free_Mode(uint8_t mode);
 extern void To_Timing_Mode(void);
 //	训练模式  num:0-2
 extern void To_Train_Mode(uint8_t num);
+//	自测
+extern void System_Self_Testing_Porgram(void);
 /* Private defines -----------------------------------------------------------*/
 
 extern uint8_t LCD_Show_Bit;

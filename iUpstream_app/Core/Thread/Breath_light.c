@@ -28,7 +28,7 @@
 #ifdef SYSTEM_DEBUG_MODE
 #define LIGHT_BRIGHTNESS_MAX					0
 #else
-#define LIGHT_BRIGHTNESS_MAX					350			// 最大亮度  0~500
+#define LIGHT_BRIGHTNESS_MAX					300			// 最大亮度  0~500
 #endif
 //*******************************************************
 
@@ -52,6 +52,9 @@ void App_Breath_light_Init(void)
 {
 	//默认关闭
 	Breath_light_PwmOut(0);
+	
+	DEBUG_LED1_OFF();
+	DEBUG_LED2_OFF();
 }
 
 
@@ -96,7 +99,6 @@ void App_Breath_light_Handler(void)
 	}
 	else if(System_is_Pause())	// 暂停
 	{
-		
 		if(Breath_light_direction == 0)
 		{
 			if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)

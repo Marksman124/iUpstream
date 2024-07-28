@@ -27,7 +27,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-BT_STATE_MODE_E BT_State_Machine=0;
+static BT_STATE_MODE_E BT_State_Machine=0;
 
 /* Private function prototypes -----------------------------------------------*/
 

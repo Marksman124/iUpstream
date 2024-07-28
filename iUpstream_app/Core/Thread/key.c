@@ -13,7 +13,8 @@
 #include "key.h"
 #include "tm1621.h"
 #include "data.h"
-
+#include "timing.h"
+#include "display.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -45,13 +46,13 @@
 
 //------------------- led & 引脚 ----------------------------
 #define LED_SPEED_IO_PORT			GPIOC
-#define LED_SPEED_IO_PIN			GPIO_PIN_1
+#define LED_SPEED_IO_PIN			GPIO_PIN_3
 
 #define LED_TIME_IO_PORT			GPIOC
 #define LED_TIME_IO_PIN				GPIO_PIN_2
 
 #define LED_TRAIN_IO_PORT			GPIOC
-#define LED_TRAIN_IO_PIN			GPIO_PIN_3
+#define LED_TRAIN_IO_PIN			GPIO_PIN_1
 
 #define LED_POWER_IO_PORT			GPIOC//GPIOA
 #define LED_POWER_IO_PIN			GPIO_PIN_0//GPIO_PIN_1
@@ -114,7 +115,7 @@ uint32_t Key_For_Sleep_time = 0;		// 睡眠时间
 
 uint32_t Key_Long_Press_cnt[KEY_CALL_OUT_NUMBER_MAX]={0};	// 长按 计数器
 
-
+uint8_t System_Self_Testing_State = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -132,6 +133,7 @@ void on_pushButton_clicked(void)
 			return;
 
 	Clean_Timing_Timer_Cnt();
+	Set_Temp_Slow_Down_Speed(0);//设置速度后重新计算
 	
 	if(Special_Status_Get(SPECIAL_BIT_SPEED_100_GEAR))
 	{
@@ -139,10 +141,10 @@ void on_pushButton_clicked(void)
 			OP_ShowNow.speed = 20;
 		
 		//if(Motor_is_Start())
-		if(System_is_Running())
+		//if(System_is_Running())
 			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
-		else if(System_is_Starting())
-			OP_ShowNow.time = p_OP_ShowLater->time;
+		//else if(System_is_Starting())
+			//OP_ShowNow.time = p_OP_ShowLater->time;
 		Arbitrarily_To_Initial();
 		Lcd_Show();
 	}
@@ -163,6 +165,16 @@ void on_pushButton_clicked(void)
 			OP_ShowNow.time = p_OP_ShowLater->time;
 		Arbitrarily_To_Initial();
 		Lcd_Show();
+	}
+	
+	if(System_State_Machine <= FREE_MODE_STOP)	// 自由
+	{
+		p_OP_Free_Mode->speed = OP_ShowNow.speed;
+		p_OP_Free_Mode->time = 0;
+	}
+	else if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
+	{
+		p_OP_Timing_Mode->speed = OP_ShowNow.speed;
 	}
 }
 
@@ -192,6 +204,11 @@ void on_pushButton_2_clicked(void)
 			Fun_Change_Mode();
 	}
 	Arbitrarily_To_Initial();
+	
+	if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
+	{
+		p_OP_Timing_Mode->time = OP_ShowNow.time;
+	}
 }
 
 //================================== ③ 模式键
@@ -199,10 +216,11 @@ void on_pushButton_3_clicked(void)
 {
 	if(System_State_Machine == POWER_OFF_STATUS)
 		return;
+	
 	Clean_Timing_Timer_Cnt();
-	if(System_State_Machine == TRAINING_MODE_INITIAL)
+	if(System_Mode_Train())
 	{
-			if(PMode_Now >= 3)
+			if(PMode_Now >= TRAINING_MODE_NUMBER_MAX)
 			{
 					To_Free_Mode(0);
 			}
@@ -231,6 +249,11 @@ void on_pushButton_4_Short_Press(void)
 			return;
 	}
 
+	if(System_is_Initial())	// 初始 --> 立即启动
+	{
+		Arbitrarily_To_Starting();
+		Data_Set_Current_Speed(p_OP_ShowLater->speed);//注意,需要在切完运行状态后再设置速度,如"启动"
+	}
 	if(System_is_Pause())	// 暂停 --> 启动
 	{
 		Arbitrarily_To_Starting();
@@ -243,12 +266,14 @@ void on_pushButton_4_Short_Press(void)
 	}
 	else	// 其它 --> 暂停
 	{
+		//if(System_is_Starting() == 0)//软启动
+			//*p_OP_ShowLater = OP_ShowNow;
+		
 		Arbitrarily_To_Pause();
-		*p_OP_ShowLater = OP_ShowNow;
 		Data_Set_Current_Speed(0);//注意,需要在切完运行状态后再设置速度,如"暂停"
 	}
 	
-	OP_ShowNow.time = 20;
+	//OP_ShowNow.time = 20;
 	Lcd_Show();
 }
 
@@ -330,12 +355,12 @@ void on_pushButton_4_Long_Press(void)
     System_Power_Off();
 }
 //================================== ① + ②  组合键
-// 停机下  wifi配对
+//   wifi配对
 void on_pushButton_1_2_Long_Press(void)
 {
 	//if(Motor_is_Start() ==0)
 	{
-		BT_Get_In_Distribution();
+		WIFI_Get_In_Distribution();
 	}
 }
 
@@ -346,16 +371,16 @@ void on_pushButton_1_3_Long_Press(void)
 	TM1621_LCD_Init();
 }
 //================================== ② + ③  组合键
-// 停机下  蓝牙配对
+//   蓝牙配对
 void on_pushButton_2_3_Long_Press(void)
 {
 //	if(System_is_Power_Off())
 //	{
 //		To_Operation_Menu();
 //	}
-//	else if(Motor_is_Start() ==0)
+	//if(Motor_is_Start() ==0)
 	{
-		WIFI_Get_In_Distribution();
+		BT_Get_In_Distribution();
 	}
 }
 //================================== ② + ④  组合键
@@ -412,22 +437,24 @@ void Special_Button_Rules()
 {
 	
 	//关机下 计数 8次
-	Key_Multiple_Clicks_cnt ++;
 	if( Key_Multiple_Clicks_Old != Key_IO_Hardware)
 	{
 		Key_Multiple_Clicks_cnt = 0;
 		Key_Multiple_Clicks_Old = Key_IO_Hardware;
 		Key_Multiple_Clicks_time =  Key_Handler_Timer;
 	}
-	
+	Key_Multiple_Clicks_cnt ++;
 	if( ( Key_Handler_Timer - Key_Multiple_Clicks_time ) <= (KEY_MULTIPLE_CLICKS_TIME/KEY_THREAD_LIFECYCLE))
 	{
 		if(Key_Multiple_Clicks_cnt >= KEY_MULTIPLE_CLICKS_MAX)
 		{
+			// 自测
+			if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_1)
+				System_Self_Testing_State = 0xAA;
 			// 菜单
-			if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_2)
+			else if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_2)
 				To_Operation_Menu();
-			// 菜单
+			// 恢复出厂
 			else if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_3)
 				Restore_Factory_Settings();
 		}
@@ -440,69 +467,105 @@ void Special_Button_Rules()
 }
 
 
-
 // 按键主循环任务
 //  20 ms
-void App_Key_Handler(void)
+void App_Key_Task(void)
 {
 	uint8_t i;
 	
 	Key_Handler_Timer ++;
 	
-	Key_IO_Hardware = Key_Get_IO_Input();
-	
-	//进入睡眠
-	if(Key_Handler_Timer > (Key_For_Sleep_time + KEY_FOR_SLEEP_TIME_SHORT))
-	{
-		TM1621_Set_light_Mode(1);
-	}
-	
-	for(i=0; i<KEY_CALL_OUT_NUMBER_MAX; i++)
-	{
-		if(Key_IO_Hardware == Key_IO_Ordering_Value[i])
+		//进入睡眠
+		if(Key_Handler_Timer > (Key_For_Sleep_time + KEY_FOR_SLEEP_TIME_SHORT))
 		{
-			Key_For_Sleep_time = Key_Handler_Timer;// 睡眠计时
-			TM1621_Set_light_Mode(0);
-			
-			if(Key_IO_Old & Key_IO_Ordering_Value[i])
+			TM1621_Set_light_Mode(1);
+		}
+		
+		for(i=0; i<KEY_CALL_OUT_NUMBER_MAX; i++)
+		{
+			if(Key_IO_Hardware == Key_IO_Ordering_Value[i])
 			{
-				if(++Key_Long_Press_cnt[i] >= KEY_LONG_PRESS_TIME)//长按
+				Key_For_Sleep_time = Key_Handler_Timer;// 睡眠计时
+				TM1621_Set_light_Mode(0);
+				
+				if(Key_IO_Old == Key_IO_Ordering_Value[i])
 				{
+					if(++Key_Long_Press_cnt[i] >= KEY_LONG_PRESS_TIME)//长按
+					{
+						if(OPERATION_MENU_STATUS == System_State_Machine)
+							p_Operation_Long_Press[i]();
+						else if(ERROR_DISPLAY_STATUS == System_State_Machine)
+							p_Fault_Long_Press[i]();
+						else
+							p_Funtion_Long_Press[i]();
+					}
+				}
+				else
+				{
+					if(Key_Long_Press_cnt[i] == 0)
+						TM1621_Buzzer_Click();
+					
 					if(OPERATION_MENU_STATUS == System_State_Machine)
-						p_Operation_Long_Press[i]();
+						p_Operation_Button[i]();
 					else if(ERROR_DISPLAY_STATUS == System_State_Machine)
-						p_Fault_Long_Press[i]();
+						p_Fault_Button[i]();
 					else
-						p_Funtion_Long_Press[i]();
+						p_Funtion_Button[i]();
+					
+					//关机下 计数 8次
+					if(POWER_OFF_STATUS == System_State_Machine)
+					{
+						Special_Button_Rules();
+					}
+					
+					Key_Long_Press_cnt[i] = 0;
 				}
 			}
 			else
 			{
-				if(Key_Long_Press_cnt[i] == 0)
-					TM1621_Buzzer_Click();
-				//关机下 计数 8次
-				if(POWER_OFF_STATUS == System_State_Machine)
-				{
-					Special_Button_Rules();
-				}
-				
-				if(OPERATION_MENU_STATUS == System_State_Machine)
-					p_Operation_Button[i]();
-				else if(ERROR_DISPLAY_STATUS == System_State_Machine)
-					p_Fault_Button[i]();
-				else
-					p_Funtion_Button[i]();
-				
 				Key_Long_Press_cnt[i] = 0;
 			}
 		}
-		else
+		
+		Key_IO_Old = Key_IO_Hardware;
+}
+
+
+
+// 按键主循环任务
+//  20 ms
+void App_Key_Handler(void)
+{
+	static uint8_t io_shake=0;
+	static uint8_t io_shake_cnt=0;
+	
+	io_shake = Key_Get_IO_Input();
+	if(Key_IO_Hardware == io_shake)
+	{
+		if(++io_shake_cnt >= KEY_VALUE_SHAKE_TIME)
 		{
-			Key_Long_Press_cnt[i] = 0;
+			//自测模式
+			if(System_Self_Testing_State == 0xAA)
+			{
+				if(Key_IO_Hardware > 0)
+				{
+					TM1621_Buzzer_Click();
+					Key_IO_Old |= Key_IO_Hardware;
+					Led_Button_On(Key_IO_Old);	// 按键
+				}
+			}
+			else//正常使用
+			{
+				App_Key_Task();
+			}
 		}
 	}
-	
-	Key_IO_Old = Key_IO_Hardware;
+	else
+	{
+		Key_IO_Hardware = io_shake;
+		io_shake_cnt = 0;
+	}
+
 	
 }
 
@@ -545,7 +608,7 @@ void System_Power_On(void)
 	//	状态
 	To_Free_Mode(0);				// ui
 	
-	//Led_Button_On(0x0F);	// 按键
+	Led_Button_On(0x0F);	// 按键
 	
 	//
 	
@@ -556,10 +619,18 @@ void System_Power_On(void)
 //	关机
 void System_Power_Off(void)
 {
+	
+	//清除故障状态
+	CallOut_Fault_State();
+	//清除计数器
+	Clean_Fault_Recovery_Cnt();
+	//to 关机模式
 	To_Power_Off();
+	//设置电机转速
+	Data_Set_Current_Speed(0);//注意,需要在切完运行状态后再设置速度,如"暂停"
 	// 寄存器
 	Set_DataAddr_Value( MB_FUNC_READ_HOLDING_REGISTER, MB_SYSTEM_POWER_ON, 0);
-	//Led_Button_On(0x08);	// 按键
+	Led_Button_On(0x08);	// 按键
 	
 	// 后台定时器
 	//BlackGround_Task_Off();
@@ -576,8 +647,8 @@ void System_Boot_Screens(void)
 //*******************************************************
 
 	//全亮 2s
-	TM1621_Show_All();
-	osDelay(2000);
+	//TM1621_Show_All();
+	//osDelay(2000);
 	//机型码 & 拨码状态 2s
 	Lcd_System_Information();
 	osDelay(2000);
@@ -595,8 +666,4 @@ void Restore_Factory_Settings(void)
 	To_Free_Mode(1);
 	
 }
-
-
-
-
 

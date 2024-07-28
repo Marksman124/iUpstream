@@ -51,7 +51,6 @@ typedef enum
 	// 异常状态
   OPERATION_MENU_STATUS,		//			操作菜单
 	ERROR_DISPLAY_STATUS,			//			故障界面
-	
 	SYSTEM_STATE_END,					//	结束
 } SYSTEM_STATE_MODE_E;
 

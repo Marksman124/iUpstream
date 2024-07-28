@@ -47,7 +47,7 @@ typedef struct Operating_Parameters
 //-------------- 训练模式 最大值 -------------------
 
 #define TRAINING_MODE_NUMBER_MAX						4
-#define TRAINING_MODE_PERIOD_MAX						20
+#define TRAINING_MODE_PERIOD_MAX						50
 
 //------------------- 合法范围 ----------------------------
 #define SPEED_LEGAL_MIN						20
@@ -67,7 +67,8 @@ extern void Check_Data_Init(void);
 extern void App_Data_Init(void);
 
 extern void App_Data_ReInit(void);
-
+// 读 flash
+extern uint8_t Read_OPMode(void);
 extern uint8_t Memset_OPMode(void);
 
 extern void Update_OP_Data(void);
@@ -128,6 +129,9 @@ extern uint16_t* p_Support_Control_Methods;
 extern uint16_t* p_Motor_Pole_Number;
 
 extern uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX];//电机状态
+
+extern uint8_t System_Self_Testing_State;
+
 #ifdef __cplusplus
 }
 #endif

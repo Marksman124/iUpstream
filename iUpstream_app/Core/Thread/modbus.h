@@ -44,6 +44,7 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_SUPPORT_CONTROL_METHODS          ( 0x02 )	//	0:可控;1：屏蔽  // 1bit：蓝牙; 2bit：Modbus-RS485; 3bit：wifi;
 #define MB_DISTRIBUTION_NETWORK_CONTROL  		( 0x03 )	//	配网控制 遥控 & wifi
 #define MB_MOTOR_POLE_NUMBER  							( 0x04 )	//	电机磁极数
+#define MB_MOTOR_SPEED_MODE  								( 0x05 )	//	转速 方式
 // ----------------------------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------------------------
@@ -146,6 +147,7 @@ extern void Modbus_Handle_Task(void);
 // *********  修改内部数据接口  *************************************
 extern void Modbus_Buffer_Init(void);
 extern void MB_Flash_Buffer_Write(void);
+extern void MB_Flash_Buffer_Read(void);
 extern uint16_t* Get_DataAddr_Pointer(UCHAR ucFunctionCode, USHORT addr);
 extern uint16_t Get_DataAddr_Value(UCHAR ucFunctionCode, USHORT addr);
 extern void Set_DataAddr_Value(UCHAR ucFunctionCode, USHORT addr, uint16_t value);

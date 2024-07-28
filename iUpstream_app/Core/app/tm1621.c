@@ -24,15 +24,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 
-//******************  调试模式 **************************
-#ifdef SYSTEM_DEBUG_MODE
-#define BUZZER_VOLUME_MAX					200
-#else
-#define BUZZER_VOLUME_MAX					10000
-#endif
-//*******************************************************
-
-
 #define NOP __NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();
 
 /********************** TM1261 模块命令 ********************************/
@@ -52,6 +43,18 @@
 #define BIAS			0x52
 #define WDTDIS 		0x0A
 #define WDTEN			0x0E
+
+
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define BUZZER_VOLUME_MAX					1						//20
+#define BUZZER_TONE_CONFIG				TONE_2K
+#else
+#define BUZZER_VOLUME_MAX					200					// 200
+#define BUZZER_TONE_CONFIG				TONE_4K			// TONE_4K
+#endif
+//*******************************************************
+
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -107,7 +110,7 @@ uint8_t Lcd_Letter_table_2[TM1621_LETTER_MAX][2] = {
 	{0x67,'H'}, // H
 	{0x15,'L'}, // L
 	{0xF5,'O'}, // O
-	{0xE3,'P'}, // P
+	{0xC7,'P'}, // P
 	{0xB6,'S'}, // S
 	{0x75,'U'}, // U
 	{0x37,'b'}, // b
@@ -210,7 +213,6 @@ void TM1621_SendNDat(uint8_t addr, uint8_t *pDat, uint8_t cnt, uint8_t bitNum)
 }
 
 
-
 /**
   * @brief  TM1621 Write CMD.
   * @param  cmd 指向写入的命令.
@@ -310,7 +312,6 @@ void TM1621_Show_Symbol(uint8_t coordinate, uint8_t value)
 			Lcd_ram[coordinate]  |= 0x08;
 		else
 			Lcd_ram[coordinate]  &= 0xF7;
-		
 	}
 	else
 	{
@@ -331,6 +332,53 @@ TM1621_LCD_Redraw
 void TM1621_LCD_Redraw(void)
 {
  	TM1621_SendNDat(0,Lcd_ram,SCREEN_NUMBER_MAX,SCREEN_NUMBER_MAX);
+}
+
+
+/*
+******************************************************************************
+TM1621_Show_LCD_Test	
+
+测试显示, 全部显示一个符号
+******************************************************************************
+*/ 
+void TM1621_Show_LCD_Test(uint8_t value)
+{
+	for( uint8_t i=0; i<SCREEN_NUMBER_MAX; i++)
+	{
+		if(	value < 10 )
+			TM1621_display_number(i, value);
+		else
+			TM1621_display_Letter(i, value);
+	}
+	TM1621_LCD_Redraw();
+}
+
+/*
+******************************************************************************
+TM1621_Show_Repeat_All	
+
+屏幕循环显示
+******************************************************************************
+*/ 
+void TM1621_Show_Repeat_All(void)
+{
+	uint8_t i;
+	
+	for( i=0; i<10; i++)
+	{
+		TM1621_Show_LCD_Test(i);
+		//Tm1621_Delay(3000*100);
+		osDelay(1000);
+	}
+	
+//	for( i=0; i<TM1621_LETTER_MAX; i++)
+//	{
+//		TM1621_Show_LCD_Test( Lcd_Letter_table_1[i][1]);
+//		//Tm1621_Delay(3000*100);
+//		osDelay(1000);
+//	}
+
 }
 
 /*
@@ -384,27 +432,41 @@ void TM1621_Buzzer_On(void)
 	TM1621_Write_CMD(TONEON);
 }
 
+void TM1621_Buzzer_Delay(uint16_t ms)
+{
+/* 启动定时器 */
+	__HAL_TIM_CLEAR_IT(&htim6,TIM_IT_UPDATE);
+	__HAL_TIM_ENABLE_IT(&htim6,TIM_IT_UPDATE);
+	__HAL_TIM_SET_COUNTER(&htim6,0);
+	__HAL_TIM_SET_AUTORELOAD(&htim6,ms*10);
+	__HAL_TIM_ENABLE(&htim6);
+	HAL_TIM_Base_Start_IT(&htim6);
+}
+
 // 鸣笛  不可打断,尽量不要用这个
-void TM1621_Buzzer_Whistle(uint16_t us) 
+void TM1621_Buzzer_Whistle(uint16_t ms) 
 {
 	TM1621_Buzzer_On();
-	Tm1621_Delay(us);
+	TM1621_Buzzer_Delay(ms);
 	TM1621_Buzzer_Off();
 }
 
 // 嘀一下
 void TM1621_Buzzer_Click(void) 
 {
+	
 	TM1621_Buzzer_On();
-	Tm1621_Delay(BUZZER_VOLUME_MAX);
-	TM1621_Buzzer_Off();
+	
+	TM1621_Buzzer_Delay(BUZZER_VOLUME_MAX);
+
+	//TM1621_Buzzer_Off();
 }
 
 void TM1621_Buzzer_Init(void) 
 {
 	Tm1621_Delay(10);
 	//蜂鸣器
-	TM1621_Write_CMD(TONE_4K);
+	TM1621_Write_CMD(BUZZER_TONE_CONFIG);
 	TM1621_Write_CMD(TONEOFF);
 }
 /*
