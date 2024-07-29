@@ -51,7 +51,7 @@ extern "C" {
 
 
 //******************  调试模式 **************************
-#define SYSTEM_DEBUG_MODE					1
+//#define SYSTEM_DEBUG_MODE					1
 #define UART_PRINTF_LOG						1
 #define UART_DEBUG_SEND_CTRL			1
 //*******************************************************
@@ -91,7 +91,7 @@ extern "C" {
 #define	SYSTEM_PRODUCT_MODEL_CODE								0x0001		//
 
 // 软件版本
-#define	SOFTWARE_VERSION_UINT32								0x00010001		//1.1
+#define	SOFTWARE_VERSION_UINT32								0x00010001		//0.1
 
 #define	SOFTWARE_VERSION_HIGH									((SOFTWARE_VERSION_UINT32&0xFFFF0000)>>16)
 #define	SOFTWARE_VERSION_LOW									(SOFTWARE_VERSION_UINT32&0xFFFF)

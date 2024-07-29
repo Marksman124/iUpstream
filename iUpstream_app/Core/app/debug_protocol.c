@@ -146,3 +146,16 @@ void Debug_Protocol_Init(void)
 #endif
 }
 
+// 重启
+void Debug_Usart_Restar(void)
+{
+	if(HAL_UART_DeInit(p_huart_debug) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+  // 重新打开串口
+  MX_UART4_Init();
+	Debug_Protocol_Init();
+}
+
