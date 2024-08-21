@@ -1086,10 +1086,10 @@ static uint8_t stmflash_get_error_status(void)
     res = FLASH->SR;
  
     if (res & (1 << 0))return 1;    /* BSY = 1      , ?| */
-    if (res & (1 << 2))return 2;    /* PGERR = 1    , ¡À¨¤3¨¬¡ä¨ª?¨®*/
-    if (res & (1 << 4))return 3;    /* WRPRTERR = 1 , D¡ä¡À¡ê?¡è¡ä¨ª?¨® */
+    if (res & (1 << 2))return 2;    /* PGERR = 1    , ?¨¤¡§¡è3¡§???¡§a?¡§?*/
+    if (res & (1 << 4))return 3;    /* WRPRTERR = 1 , D???¨¤?¨º??¨¨??¡§a?¡§? */
     
-    return 0;   /* ??¨®D¨¨?o?¡ä¨ª?¨® 2¨´¡Á¡Â¨ª¨º3¨¦. */
+    return 0;   /* ??¡§?D¡§¡§?o???¡§a?¡§? 2¡§¡ä?¨¢??¡§a¡§o3¡§|. */
 }
  
 static uint8_t stmflash_wait_done(uint32_t time)
@@ -1102,41 +1102,41 @@ static uint8_t stmflash_wait_done(uint32_t time)
  
         if (res != 1)
         {
-            break;      /* ¡¤??|, ?TD¨¨¦Ì¨¨¡äy¨¢?, ?¡À?¨®¨ª?3? */
+            break;      /* ?¡è??|, ?TD¡§¡§|¨¬¡§¡§??y¡§¡é?, ??¨¤?¡§?¡§a?3? */
         }
         
         time--;
     } while (time);
  
-    if (time == 0)res = 0XFF;   /* 3?¨º¡À */
+    if (time == 0)res = 0XFF;   /* 3?¡§o?¨¤ */
  
     return res;
 }
  
 /**
- * @brief       2¨¢3y¨¦¨¨??
- * @param       saddr   : ¨¦¨¨??¦Ì??¡¤ 0 ~ 256
- * @retval      ?¡äDD?¨¢1?
- *   @arg       0   : ¨°?¨ª¨º3¨¦
- *   @arg       2   : ¡À¨¤3¨¬¡ä¨ª?¨®
- *   @arg       3   : D¡ä¡À¡ê?¡è¡ä¨ª?¨®
- *   @arg       0XFF: 3?¨º¡À
+ * @brief       2¡§¡é3y¡§|¡§¡§??
+ * @param       saddr   : ¡§|¡§¡§??|¨¬???¡è 0 ~ 256
+ * @retval      ???DD?¡§¡é1?
+ *   @arg       0   : ¡§¡ã?¡§a¡§o3¡§|
+ *   @arg       2   : ?¨¤¡§¡è3¡§???¡§a?¡§?
+ *   @arg       3   : D???¨¤?¨º??¨¨??¡§a?¡§?
+ *   @arg       0XFF: 3?¡§o?¨¤
  */
 static uint8_t stmflash_erase_sector(uint32_t saddr)
 {
-    uint8_t res = 0;  /* STM32F1032¨¢3y¦Ì?¨º¡Ào¨°¨º????¡§¡ã?¡Á?¦Ì??¡¤ */
-    res = stmflash_wait_done(0X5FFFFF);     /* ¦Ì¨¨¡äy¨¦?¡ä?2¨´¡Á¡Â?¨¢¨º?, >20ms */
+    uint8_t res = 0;  /* STM32F1032¡§¡é3y|¨¬?¡§o?¨¤o¡§¡ã¡§o?????¡ì????¨¢?|¨¬???¡è */
+    res = stmflash_wait_done(0X5FFFFF);     /* |¨¬¡§¡§??y¡§|????2¡§¡ä?¨¢???¡§¡é¡§o?, >20ms */
  
     if (res == 0)
     {
-        FLASH->CR |= 1 << 1;    /* ¨°32¨¢3y */
-        FLASH->AR = saddr;      /* ¨¦¨¨??¨°3¦Ì??¡¤(¨º¦Ì?¨º¨º?¡ã?¡Á?¦Ì??¡¤) */
-        FLASH->CR |= 1 << 6;    /* ?a¨º?2¨¢3y */
-        res = stmflash_wait_done(0X5FFFFF); /* ¦Ì¨¨¡äy2¨´¡Á¡Â?¨¢¨º?, >20ms */
+        FLASH->CR |= 1 << 1;    /* ¡§¡ã32¡§¡é3y */
+        FLASH->AR = saddr;      /* ¡§|¡§¡§??¡§¡ã3|¨¬???¡è(¡§o|¨¬?¡§o¡§o?????¨¢?|¨¬???¡è) */
+        FLASH->CR |= 1 << 6;    /* ?a¡§o?2¡§¡é3y */
+        res = stmflash_wait_done(0X5FFFFF); /* |¨¬¡§¡§??y2¡§¡ä?¨¢???¡§¡é¡§o?, >20ms */
  
-        if (res != 1)   /* ¡¤??| */
+        if (res != 1)   /* ?¡è??| */
         {
-            FLASH->CR &= ~(1 << 1); /* ??3y¨°32¨¢3y¡À¨º?? */
+            FLASH->CR &= ~(1 << 1); /* ??3y¡§¡ã32¡§¡é3y?¨¤¡§o?? */
         }
     }
  

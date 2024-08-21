@@ -22,7 +22,9 @@ extern "C" {
 #include "stdint.h"
 #include "tim.h"
 #include "display.h"
-	
+
+#include "macro_definition.h"				// 统一宏定义
+
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -33,14 +35,22 @@ extern "C" {
 
 
 /* Exported macro ------------------------------------------------------------*/
+#ifndef __MACRO_DEFINITION_H__
 
 #define BREATH_LIGHT_THREAD_LIFECYCLE				20				// ms
 
-#define BREATH_LIGHT_GEAR_POSITION				(1000/BREATH_LIGHT_THREAD_LIFECYCLE)				// 档位
+#endif
+
 /* Exported functions prototypes ---------------------------------------------*/
 
 extern void App_Breath_light_Init(void);
 extern void App_Breath_light_Handler(void);
+
+//------------------- 模拟调节亮度 ----------------------------
+
+void Breath_light_Max(void);
+
+void Breath_light_Off(void);
 
 /* Private defines -----------------------------------------------------------*/
 

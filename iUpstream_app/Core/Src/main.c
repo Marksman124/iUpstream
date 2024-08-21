@@ -128,8 +128,7 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	//StartUp_PWM1(50);
-	//StartUp_PWM2(50);
+
   while (1)
   {
     /* USER CODE END WHILE */

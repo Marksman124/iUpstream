@@ -32,8 +32,10 @@ uint8_t System_State_Machine = 0;		//	状态机
 
 // 特别状态 位
 uint8_t Special_Status_Bit = 0;
-			
 
+
+// 拨码开关
+uint8_t System_Dial_Switch = 0;
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -80,6 +82,14 @@ uint8_t Motor_is_Start(void)
 		return 0;
 }
 
+// 正常工作状态
+uint8_t System_is_Normal_Operation(void)
+{
+	if((System_State_Machine >= FREE_MODE_INITIAL) && (System_State_Machine <= TRAINING_MODE_STOP))
+		return 1;
+	else
+		return 0;
+}
 
 // 初始状态
 uint8_t System_is_Initial(void)
@@ -271,6 +281,8 @@ void Arbitrarily_To_Stop(void)
 	else if(System_is_Stop())
 		return;
 	
+	Motor_Speed_Target_Set(0);
+	Clean_Automatic_Shutdown_Timer();
 	return;
 }
 

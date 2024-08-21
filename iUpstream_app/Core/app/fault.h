@@ -25,6 +25,7 @@ extern "C" {
 #include "data.h"
 #include "dev.h"
 #include "modbus.h"
+#include "macro_definition.h"				// 统一宏定义
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -41,24 +42,25 @@ typedef enum
 
 
 /* Exported macro ------------------------------------------------------------*/
-#define FAULT_BUS_VOLTAGE_ABNORMAL			0x1
-#define FAULT_BUS_CURRENT_ABNORMAL			0x2
-#define FAULT_BUS_CURRENT_BIAS					0x4
-#define FAULT_TEMPERATURE_MOS						0x8
-#define FAULT_TEMPERATURE_AMBIENT				0x10
-#define FAULT_TEMPERATURE_SENSOR				0x20
-#define FAULT_MOTOR_DRIVER							0x40
-#define FAULT_MOTOR_LOSS								0x80
+#define FAULT_BUS_VOLTAGE_ABNORMAL					0x1
+#define FAULT_BUS_CURRENT_ABNORMAL					0x2
+#define FAULT_BUS_CURRENT_BIAS							0x4
+#define FAULT_ABNORMAL_OUTPUT_VOLTAGE				0x8
+#define FAULT_TEMPERATURE_MOS								0x10
+#define FAULT_TEMPERATURE_AMBIENT						0x20
+#define FAULT_TEMPERATURE_SENSOR						0x40
+#define FAULT_MOTOR_DRIVER									0x80
+#define FAULT_MOTOR_LOSS										0x100
 
-
-//-------------- 机箱温度报警值 90°C -------------------
-#define AMBIENT_TEMP_ALARM_VALUE								90
-//-------------- 机箱温度 降速 70°C -------------------
-#define AMBIENT_TEMP_REDUCE_SPEED								70
 //-------------- 按键组合响应 总数 -------------------
 #define CALL_OUT_NUMBER_MAX						8
 
 
+// 恢复故障后等待时间
+#define RECOVERY_ATTEMPT_TIME							30
+
+
+//extern uint8_t Fault_Recovery_Attempt_cnt;				//
 
 /* Exported functions prototypes ---------------------------------------------*/
 // 初始化

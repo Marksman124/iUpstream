@@ -24,6 +24,8 @@ extern "C" {
 #include "data.h"
 
 #include "fault.h"				// 故障 菜单
+#include "macro_definition.h"				// 统一宏定义
+
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -43,36 +45,37 @@ typedef enum
 
 
 /* Exported macro ------------------------------------------------------------*/
-
+#ifndef __MACRO_DEFINITION_H__
 #define TIMING_THREAD_LIFECYCLE				500				// ms  1000
 
 //******************  调试模式 **************************
 #ifdef SYSTEM_DEBUG_MODE
-#define WIFI_DISTRIBUTION_TIME_CALLOUT				(6*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
-#define BT_DISTRIBUTION_TIME_CALLOUT					(6*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
-
-#define SYSTEM_FAULT_TIME_CALLOUT							(20*(1000/TIMING_THREAD_LIFECYCLE))				// 120 s
+//配网时长
+#define WIFI_DISTRIBUTION_TIME_CALLOUT				(6*(1000/TIMING_THREAD_LIFECYCLE))				// 6 s
+#define BT_DISTRIBUTION_TIME_CALLOUT					(6*(1000/TIMING_THREAD_LIFECYCLE))				// 6 s
+//故障自恢复
+#define SYSTEM_FAULT_TIME_CALLOUT							(20*(1000/TIMING_THREAD_LIFECYCLE))				// 20 s
 #define SYSTEM_FAULT_RECOVERY_MAX							(3)				// 3 次故障
-#define SYSTEM_FAULT_RECOVERY_TIME						(60*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
-
-#define AUTOMATIC_SHUTDOWN_TIME								(60*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+#define SYSTEM_FAULT_RECOVERY_TIME						(60*(1000/TIMING_THREAD_LIFECYCLE))				// 1 分钟  60 s
+//自动关机
+#define AUTOMATIC_SHUTDOWN_TIME								(600*(1000/TIMING_THREAD_LIFECYCLE))				// 10 min
 
 #else
-
+//配网时长
 #define WIFI_DISTRIBUTION_TIME_CALLOUT				(60*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
 #define BT_DISTRIBUTION_TIME_CALLOUT					(60*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
-
+//故障自恢复
 #define SYSTEM_FAULT_TIME_CALLOUT							(120*(1000/TIMING_THREAD_LIFECYCLE))				// 120 s
 #define SYSTEM_FAULT_RECOVERY_MAX							(3)				// 3 次故障
 #define SYSTEM_FAULT_RECOVERY_TIME						(3600*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
-
+//自动关机
 #define AUTOMATIC_SHUTDOWN_TIME								(3600*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
 
 #endif
 //自动关机 时间
 
 //-------------- 降速检查时间 -------------------
-#define TIME_SLOW_DOWN_TIME													5		//2 min  120 sec
+#define TIME_SLOW_DOWN_TIME													120		//2 min  120 sec
 //-------------- 降速 档位 -------------------
 #define TIME_SLOW_DOWN_SPEED_01											10		//第一档 降速
 #define TIME_SLOW_DOWN_SPEED_02											5			//第二档 降速
@@ -80,7 +83,7 @@ typedef enum
 #define TIME_SLOW_DOWN_SPEED_MIX										20		//最低降到 20%
 #define TIME_SLOW_DOWN_SPEED_MAX										100		//恢复速度最高恢复到 100%
 //*******************************************************
-
+#endif
 /* Exported functions prototypes ---------------------------------------------*/
 
 extern void App_Timing_Init(void);
@@ -112,7 +115,10 @@ void Clean_Automatic_Shutdown_Timer(void);
 
 
 /* Private defines -----------------------------------------------------------*/
-
+//电机电流低
+extern uint16_t Check_Motor_Current_Cnt;
+//电机转速不符
+extern uint16_t Check_Motor_Speed_Cnt;
 
 #ifdef __cplusplus
 }

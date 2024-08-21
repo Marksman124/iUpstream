@@ -47,7 +47,7 @@ typedef enum
 #define BT_ERROR_BLINK_TIME								1				// 1 S
 
 
-#define BT_DISTRIBUTION_TIME_OUT				180				// 3 min
+#define BT_DISTRIBUTION_TIME_OUT					180			// 3 min
 
 
 /* Exported functions prototypes ---------------------------------------------*/

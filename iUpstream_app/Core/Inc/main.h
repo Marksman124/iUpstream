@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "macro_definition.h"				// 统一宏定义
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -49,28 +49,19 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
-
-//******************  调试模式 **************************
-//#define SYSTEM_DEBUG_MODE					1
-#define UART_PRINTF_LOG						1
-#define UART_DEBUG_SEND_CTRL			1
-//*******************************************************
-
-
 // 串口1 --> 中控Modbus 	(485)
 // 串口2 --> wifi 			(ttl)
 // 串口3 --> 驱动板 			(ttl)
 // 串口4 --> 调试 debug 	(ttl)
 // 串口5 --> 蓝牙				(ttl)
 
-#define MODBUS_USART								1
-#define	WIFI_USART									2
-#define	DRIVER_USART								3
-#define	DEBUG_USART									4
-#define	BLUETOOTH_USART							5
+#define MODBUS_USART								MACRO_MODBUS_USART
+#define	WIFI_USART									MACRO_WIFI_USART
+#define	DRIVER_USART								MACRO_DRIVER_USART
+#define	DEBUG_USART									MACRO_DEBUG_USART
+#define	BLUETOOTH_USART							MACRO_BLUETOOTH_USART
 
-
-#define	SYSTEM_USER_USART_MAX				5
+#define	SYSTEM_USER_USART_MAX				MACRO_SYSTEM_USER_USART_MAX
 
 #define THREAD_PERIOD_RS485_MODBUS_TASK					MODBUS_THREAD_LIFECYCLE
 #define THREAD_PERIOD_MAIN_TASK									TIMING_THREAD_LIFECYCLE
@@ -78,23 +69,28 @@ extern "C" {
 #define	THREAD_PERIOD_KEY_BUTTON_TASK						KEY_THREAD_LIFECYCLE
 #define	THREAD_PERIOD_MOTOR_TASK								MOTOR_THREAD_LIFECYCLE
 
-//******************  调试模式 **************************
-#ifdef SYSTEM_DEBUG_MODE
-#define POWER_ON_WAITE_TIME_TASK								(1)
-#else
-#define POWER_ON_WAITE_TIME_TASK								(4000)///40000
-#endif
+
+#define POWER_ON_WAITE_TIME_TASK								MACRO_POWER_ON_WAITE_TIME_TASK
+
 //*******************************************************
 
 
 // 产品机型码
-#define	SYSTEM_PRODUCT_MODEL_CODE								0x0001		//
+#define	SYSTEM_PRODUCT_MODEL_CODE								MACRO_SYSTEM_PRODUCT_MODEL_CODE		//
 
 // 软件版本
-#define	SOFTWARE_VERSION_UINT32								0x00010001		//0.1
+#define	SOFTWARE_VERSION_UINT32									MACRO_SOFTWARE_VERSION_UINT32		//1.1
 
-#define	SOFTWARE_VERSION_HIGH									((SOFTWARE_VERSION_UINT32&0xFFFF0000)>>16)
-#define	SOFTWARE_VERSION_LOW									(SOFTWARE_VERSION_UINT32&0xFFFF)
+#define	SOFTWARE_VERSION_HIGH										((SOFTWARE_VERSION_UINT32&0xFFFF0000)>>16)
+#define	SOFTWARE_VERSION_LOW										(SOFTWARE_VERSION_UINT32&0xFFFF)
+
+
+// 软件版本  驱动板
+#define	DEVICES_VERSION_UINT32									MACRO_DEVICES_VERSION_UINT32		//1.0
+
+#define	DEVICES_VERSION_HIGH										((DEVICES_VERSION_UINT32&0xFFFF0000)>>16)
+#define	DEVICES_VERSION_LOW										(DEVICES_VERSION_UINT32&0xFFFF)
+
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -125,6 +121,8 @@ void Error_Handler(void);
 #define SW_1_GPIO_Port GPIOC
 #define SW_2_Pin GPIO_PIN_5
 #define SW_2_GPIO_Port GPIOC
+#define BZ_PWM_Pin GPIO_PIN_0
+#define BZ_PWM_GPIO_Port GPIOB
 #define ADC_TEMP_Pin GPIO_PIN_1
 #define ADC_TEMP_GPIO_Port GPIOB
 #define SPI1_CS_Pin GPIO_PIN_2
@@ -147,6 +145,12 @@ void Error_Handler(void);
 #define Key_Power_GPIO_Port GPIOA
 #define Fan_Switch_Pin GPIO_PIN_12
 #define Fan_Switch_GPIO_Port GPIOA
+#define LCD_BackLight_Pin GPIO_PIN_15
+#define LCD_BackLight_GPIO_Port GPIOA
+#define Debug_Led_02_Pin GPIO_PIN_4
+#define Debug_Led_02_GPIO_Port GPIOB
+#define Debug_Led_01_Pin GPIO_PIN_5
+#define Debug_Led_01_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

@@ -207,7 +207,12 @@ void Lcd_Display(Operating_Parameters op_para, uint8_t status_para, uint8_t mode
 	Display_Show_Sec(GET_TIME_SECOND_DIGIT(op_para.time));
 	// mode
 	if(mode == 0)
-		Display_Hide_Mode(0xFF);
+	{
+		if(System_Mode_Free())
+			Display_Show_Mode(0);
+		else
+			Display_Hide_Mode(0xFF);
+	}
 	else
 		Display_Show_Mode(mode);
 	
@@ -264,23 +269,25 @@ void Lcd_Show(void)
 // 机型码 & 拨码
 void Lcd_System_Information(void)
 {
-	uint8_t dial_switch;
-	
 	//背光
 	TM1621_BLACK_ON();
 	//speed
-	Display_Hide_Speed(0xFF);
+	//Display_Hide_Speed(0xFF);
+	//TM1621_display_number(TM1621_COORDINATE_SPEED_HIGH, 5);
+	TM1621_display_Letter(TM1621_COORDINATE_SPEED_HIGH, 'S');
+	TM1621_display_Letter(TM1621_COORDINATE_SPEED_LOW, 'J');
 	// time
 	TM1621_display_number(TM1621_COORDINATE_MIN_HIGH, (SYSTEM_PRODUCT_MODEL_CODE/1000)%10);
 	TM1621_display_number(TM1621_COORDINATE_MIN_LOW,  (SYSTEM_PRODUCT_MODEL_CODE/100)%10);
 	TM1621_display_number(TM1621_COORDINATE_SEC_HIGH,  (SYSTEM_PRODUCT_MODEL_CODE/10)%10);
 	TM1621_display_number(TM1621_COORDINATE_SEC_LOW,  (SYSTEM_PRODUCT_MODEL_CODE)%10);
 	//
-	dial_switch = Gpio_Get_Dial_Switch();
-	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  GET_NUMBER_TEN_DIGIT(dial_switch));
-	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  GET_NUMBER_ONE_DIGIT(dial_switch));
+	System_Dial_Switch = Gpio_Get_Dial_Switch();
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH,  GET_NUMBER_TEN_DIGIT(System_Dial_Switch));
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  GET_NUMBER_ONE_DIGIT(System_Dial_Switch));
 	
 	Lcd_Display_Symbol(0);
+	TM1621_Show_Symbol(TM1621_COORDINATE_SPEED_HUNDRED, 		0);
 	
 	TM1621_LCD_Redraw();
 }
@@ -316,16 +323,16 @@ void Lcd_Show_Slow_Down(uint8_t value)
 // 切换模式
 void Fun_Change_Mode(void)
 {
-    if(Motor_is_Start())
-    {
-			OP_ShowNow.speed = 20;
-			
-			Lcd_Show();
-    }
-		else
-		{
-			
-		}
+//    if(Motor_is_Start())
+//    {
+//			OP_ShowNow.speed = 20;
+//			
+//			Lcd_Show();
+//    }
+//		else
+//		{
+//			
+//		}
 }
 
 // 关机
@@ -376,7 +383,7 @@ void To_Timing_Mode(void)
 	Lcd_Show();
 }
 
-//	训练模式  num:1-3
+//	训练模式  num:1-4
 void To_Train_Mode(uint8_t num)
 {
 	if(Is_Mode_Legal(num) == 0)
@@ -391,7 +398,7 @@ void To_Train_Mode(uint8_t num)
 	p_OP_ShowLater->time = 0;
 	
 	OP_ShowNow.speed = p_OP_PMode[num-1][0].speed;
-	OP_ShowNow.time = p_OP_PMode[num-1][TRAINING_MODE_PERIOD_MAX-1].time;
+	OP_ShowNow.time = 0;//p_OP_PMode[num-1][TRAINING_MODE_PERIOD_MAX-1].time;
 	
 	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
 	

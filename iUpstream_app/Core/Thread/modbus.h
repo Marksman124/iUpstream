@@ -32,8 +32,12 @@ extern "C" {
 #include "control_interface.h"	 // 控制接口
 /* Private defines -----------------------------------------------------------*/
 
+/* Exported macro ------------------------------------------------------------*/
+#ifndef __MACRO_DEFINITION_H__
 
-#define MODBUS_THREAD_LIFECYCLE							100				// ms
+#define MODBUS_THREAD_LIFECYCLE							10000				// ms 暂时不用
+
+#endif
 
 extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 
@@ -45,6 +49,7 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_DISTRIBUTION_NETWORK_CONTROL  		( 0x03 )	//	配网控制 遥控 & wifi
 #define MB_MOTOR_POLE_NUMBER  							( 0x04 )	//	电机磁极数
 #define MB_MOTOR_SPEED_MODE  								( 0x05 )	//	转速 方式
+#define MB_MOTOR_BREATH_LIGHT_MAX  					( 0x06 )	//	光圈亮度
 // ----------------------------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------------------------

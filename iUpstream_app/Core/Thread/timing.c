@@ -51,6 +51,11 @@ static uint32_t Temp_Slow_Down_Timing_Cnt= 0;		//计时器
 static uint8_t Temp_Slow_Down_State=0;//			高温降速 标志  bit 1 :mos  bit 2 机箱温度
 static uint8_t Temp_Slow_Down_Speed=0;//			高温降速 速度  百分比
 
+//电机电流低
+uint16_t Check_Motor_Current_Cnt=0;
+//电机转速不符
+uint16_t Check_Motor_Speed_Cnt=0;
+
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -190,6 +195,8 @@ void CallOut_Fault_State(void)
 {
 	Clean_Fault_State();
 	System_Fault_Timing_Cnt = 0;
+	Check_Motor_Current_Cnt = 0;
+	Lcd_Show();
 }
 
 // 故障 状态基  1秒进一次
@@ -201,7 +208,7 @@ void Fault_State_Handler(void)
 	}
 	else if(System_is_Error())//故障 2min恢复 非通讯故障
 	{
-		if(If_Fault_Recovery_Max()==0)
+		if((If_Fault_Recovery_Max()==0)&&(Get_Motor_Fault_State() != FAULT_MOTOR_LOSS))
 		{
 			// 3次以内 退出故障, 超过3次只能重启
 			if((Timing_Half_Second_Cnt - Fault_Recovery_Timing_Cnt) > SYSTEM_FAULT_RECOVERY_TIME)
@@ -229,9 +236,19 @@ void Fault_State_Handler(void)
 			{
 				System_Fault_Recovery_Cnt++;
 				CallOut_Fault_State();
+				//Fault_Recovery_Attempt_cnt = RECOVERY_ATTEMPT_TIME;
 			}
 		}
 	}
+	
+	if(Motor_Speed_Is_Reach())
+	{
+		if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
+		{
+			Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
+		}
+	}
+	
 	
 	Update_Fault_Menu();
 }
@@ -278,7 +295,18 @@ void Running_State_Handler(void)
 	else if(System_State_Machine == TRAINING_MODE_RUNNING)					// 训练
 	{
 		OP_ShowNow.time ++;
-		if(Is_Mode_Legal(PMode_Now))
+		if(PMode_Now == 5)//冲浪
+		{
+			if(OP_ShowNow.time >= 6000)
+			{
+				OP_ShowNow.time = 0;
+			}
+			if((OP_ShowNow.time % 10) == 0)
+				Data_Set_Current_Speed(100);//注意,需要在切完运行状态后再设置速度,如"暂停"
+			else if((OP_ShowNow.time % 10) == 6)
+				Data_Set_Current_Speed(20);//注意,需要在切完运行状态后再设置速度,如"暂停"
+		}
+		else if(Is_Mode_Legal(PMode_Now))
 		{
 			if(OP_ShowNow.time >= p_OP_PMode[PMode_Now-1][Period_Now].time)
 			{
@@ -296,14 +324,40 @@ void Running_State_Handler(void)
 		}
 	}
 	
+	// 转速达到目标值
 	if(Motor_Speed_Is_Reach())
 	{
+		// 光圈 常亮
 		if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
 		{
 			Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
 		}
+//判断电机电流
+#ifdef MOTOR_CANNOT_START_TIME
+		if(Check_Motor_Current())
+		{
+			Check_Motor_Current_Cnt = 0;
+		}
+		else
+		{
+			if(Check_Motor_Current_Cnt <= MOTOR_CANNOT_START_TIME)
+				Check_Motor_Current_Cnt ++;
+		}
+#endif
+//判断电机转速
+#ifdef MOTOR_SPEED_ERROR_TIME
+		if(Check_Motor_Speed())
+		{
+			Check_Motor_Speed_Cnt = 0;
+		}
+		else
+		{
+			if(Check_Motor_Speed_Cnt <= MOTOR_SPEED_ERROR_TIME)
+				Check_Motor_Speed_Cnt ++;
+		}
+#endif
 	}
-	
+	//高温降速
 	if(Get_Temp_Slow_Down_State())
 	{
 		Temp_Slow_Down_Timing_Cnt ++;
@@ -323,7 +377,7 @@ void Running_State_Handler(void)
 		}
 		
 	}
-	else if(Temp_Slow_Down_Timing_Cnt > 0)
+	/*else if(Temp_Slow_Down_Timing_Cnt > 0) // 缓慢恢复
 	{
 
 		//高温 恢复
@@ -358,8 +412,17 @@ void Running_State_Handler(void)
 		}
 		
 		Temp_Slow_Down_Timing_Cnt --;
+	}*/
+	else //直接恢复
+	{
+		if(Temp_Slow_Down_Timing_Cnt > 0)
+		{
+			Data_Set_Current_Speed(Motor_Speed_Target_Get() + Temp_Slow_Down_Speed);
+			Temp_Slow_Down_Speed = 0;
+			Temp_Slow_Down_Timing_Cnt = 0;//可提前退出
+		}
 	}
-	
+		
 	//减速界面 2秒1刷
 	if(((Temp_Slow_Down_Timing_Cnt % 4)==2)||((Temp_Slow_Down_Timing_Cnt % 4)==3))
 	{
@@ -381,6 +444,7 @@ void Pause_State_Handler(void)
 //		OP_ShowNow.time --;
 //		Lcd_Show();
 //	}
+	Lcd_Show();
 	if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
 		Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
 }
@@ -412,8 +476,13 @@ void Stop_State_Handler(void)
 void Initial_State_Handler(void)
 {
 	if(Special_Status_Get( SPECIAL_BIT_SKIP_INITIAL))// 跳过 自动启动
+	{
+		if((Timing_Half_Second_Cnt - Automatic_Shutdown_Timing_Cnt) > AUTOMATIC_SHUTDOWN_TIME)
+		{
+			System_Power_Off();
+		}
 		return;
-	
+	}
 	Timing_Timer_Cnt++;
 	// 3秒 闪烁
 	if(Timing_Timer_Cnt < 6)
@@ -425,7 +494,7 @@ void Initial_State_Handler(void)
 	}
 	else
 	{
-		//Update_OP_Data();	// 保存最新转速
+		Update_OP_Data();	// 保存最新转速
 		if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
 			Memset_OPMode();//存flash
 
@@ -479,7 +548,7 @@ void App_Timing_Task(void)
 	if((Timing_Half_Second_Cnt % 2) == 1)
 	{
 		// 时间 : 闪烁  半秒
-		if(Motor_is_Start())
+		if(System_is_Normal_Operation())
 		{
 			LCD_Show_Bit |= STATUS_BIT_COLON;
 			TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		1);
@@ -488,11 +557,14 @@ void App_Timing_Task(void)
 	}
 	else
 	{
-		// 时间 : 闪烁  半秒
-		LCD_Show_Bit &= ~STATUS_BIT_COLON;
-		TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		0);
-		TM1621_LCD_Redraw();
-		
+		if(Motor_is_Start()==0)
+		{
+			// 时间 : 闪烁  半秒
+			LCD_Show_Bit &= ~STATUS_BIT_COLON;
+			TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		0);
+			TM1621_LCD_Redraw();
+		}
+		//故障检测
 		if(If_System_Is_Error())
 		{
 			Fault_State_Handler();
@@ -502,7 +574,10 @@ void App_Timing_Task(void)
 			System_Fault_Timing_Cnt = 0;
 			
 			if(ERROR_DISPLAY_STATUS == Get_System_State_Machine())// && (If_Fault_Recovery_Max() == 0))
+			{
 				Clean_Fault_State();
+				Lcd_Show();
+			}
 			
 			if(System_is_Initial())
 			{
@@ -599,7 +674,7 @@ void Add_Fault_Recovery_Cnt(void)
 //-------------------- 超过最大次数 ----------------------------
 uint8_t If_Fault_Recovery_Max(void)
 {
-	if(System_Fault_Recovery_Cnt >= (SYSTEM_FAULT_RECOVERY_MAX))
+	if(System_Fault_Recovery_Cnt >= (SYSTEM_FAULT_RECOVERY_MAX-1))
 		return 1;
 	else
 		return 0;

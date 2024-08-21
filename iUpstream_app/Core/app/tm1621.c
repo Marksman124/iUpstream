@@ -13,6 +13,8 @@
 #include "tm1621.h"
 #include <string.h>
 #include "cmsis_os.h"
+#include "tim.h"
+
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -85,6 +87,7 @@ uint8_t Lcd_Letter_table_1[TM1621_LETTER_MAX][2] = {
 	{0x79,'E'}, // E
 	{0x71,'F'}, // F
 	{0x76,'H'}, // H
+	{0x0E,'J'}, // J
 	{0x58,'L'}, // L
 	{0x5F,'O'}, // O
 	{0x73,'P'}, // P
@@ -108,6 +111,7 @@ uint8_t Lcd_Letter_table_2[TM1621_LETTER_MAX][2] = {
 	{0x97,'E'}, // E
 	{0x87,'F'}, // F
 	{0x67,'H'}, // H
+	{0x70,'J'}, // J
 	{0x15,'L'}, // L
 	{0xF5,'O'}, // O
 	{0xC7,'P'}, // P
@@ -391,6 +395,8 @@ TM1621_Show_All
 void TM1621_Show_All(void)
 {
 	uint8_t show_all[SCREEN_NUMBER_MAX] = { 0xF7,0xFF,0xFF,0xFF,0xFF,0xFF,0x7F,0xFF};
+	//背光
+	TM1621_BLACK_ON();
 	
 	memcpy(Lcd_ram, show_all, SCREEN_NUMBER_MAX);
 	
@@ -409,6 +415,16 @@ void TM1621_Show_Off(void)
 	
  	TM1621_LCD_Redraw();
 }
+
+//------------------- pwm控制 ----------------------------
+// 调节范围 : 1 - 100
+void Buzzer_IO_PwmOut(uint16_t pul)
+{
+	HAL_TIM_PWM_Stop_IT(&htim3, TIM_CHANNEL_3);
+	__HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_3, pul);//pul
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+}
+
 /*
 ******************************************************************************
 TM1621_Show_Off	
@@ -418,7 +434,8 @@ TM1621_Show_Off
 */ 
 void TM1621_Buzzer_Off(void)
 {	
-	TM1621_Write_CMD(TONEOFF);
+	Buzzer_IO_PwmOut(0);
+	//TM1621_Write_CMD(TONEOFF);
 }
 /*
 ******************************************************************************
@@ -429,7 +446,8 @@ TM1621_Show_Off
 */ 
 void TM1621_Buzzer_On(void)
 {	
-	TM1621_Write_CMD(TONEON);
+	Buzzer_IO_PwmOut(50);
+	//TM1621_Write_CMD(TONEON);
 }
 
 void TM1621_Buzzer_Delay(uint16_t ms)
@@ -454,12 +472,21 @@ void TM1621_Buzzer_Whistle(uint16_t ms)
 // 嘀一下
 void TM1621_Buzzer_Click(void) 
 {
-	
+	TM1621_Buzzer_Off();
+	//-------------- 蜂鸣器 长度 -------------------
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
 	TM1621_Buzzer_On();
-	
-	TM1621_Buzzer_Delay(BUZZER_VOLUME_MAX);
+	__NOP();
+	TM1621_Buzzer_Off();
+#else
+	TM1621_Buzzer_On();
+	//用定时器不稳定, 在线程循环里计时
+	//TM1621_Buzzer_Delay(BUZZER_VOLUME_MAX);
 
 	//TM1621_Buzzer_Off();
+#endif
+//*******************************************************
 }
 
 void TM1621_Buzzer_Init(void) 
@@ -499,23 +526,23 @@ void TM1621_LCD_Init(void)
 
 void TM1621_light_Max(void)
 {
-	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_1);
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, BACK_LIGHT_BRIGHTNESS_MAX);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Stop_IT(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL);
+	__HAL_TIM_SetCompare(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL, BACK_LIGHT_BRIGHTNESS_MAX);
+	HAL_TIM_PWM_Start(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL);
 }
 
 void TM1621_light_Half(void)
 {
-	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_1);
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, BACK_LIGHT_BRIGHTNESS_MAX/2);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Stop_IT(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL);
+	__HAL_TIM_SetCompare(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL, BACK_LIGHT_BRIGHTNESS_MAX/2);
+	HAL_TIM_PWM_Start(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL);
 }
 
 void TM1621_light_Off(void)
 {
-	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_1);
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 0);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Stop_IT(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL);
+	__HAL_TIM_SetCompare(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL, 0);
+	HAL_TIM_PWM_Start(&htim2, LCD_BACK_LIGHT_PWM_CHANNEL);
 }
 
 

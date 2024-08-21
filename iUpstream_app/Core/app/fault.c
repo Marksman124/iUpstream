@@ -16,10 +16,11 @@
 #include "debug_protocol.h"
 #include "key.h"
 #include "ntc_3950.h"
+#include "timing.h"
 /* Private includes ----------------------------------------------------------*/
 
 
-
+//uint8_t Fault_Recovery_Attempt_cnt=0;				//
 /* Private function prototypes -----------------------------------------------*/
 extern void To_Free_Mode(uint8_t mode);
 
@@ -64,15 +65,15 @@ static uint32_t Chassis_TEMP_Timer_cnt= 0;	//高温 计数器
 
 /* Private variables ---------------------------------------------------------*/
 
-uint16_t Fault_Label[16] = {0x001,0x002,0x003,
+uint16_t Fault_Label[16] = {0x001,0x002,0x003,0x004,
 															0x101,0x102,
 															0x201,0x202,0x203,
-															0x301,0x302,0x303,0x304,0x305,0x306,0x307,0x308};
+															0x301,0x302,0x303,0x304,0x305,0x306,0x307};
 
 uint8_t Fault_Number_Sum = 0;	// 故障总数
 uint8_t Fault_Number_Cnt = 0;	// 当前故障
 
-uint16_t *p_MB_Fault_State;
+uint16_t *p_MB_Fault_State;	//系统故障状态
 
 // 发送缓冲区
 uint8_t fault_send_buffer[24] = {0};
@@ -113,10 +114,24 @@ uint8_t If_System_Is_Error(void)
 	uint8_t debug_buffer[32]={0};
 	//uint8_t motor_fault=0;
 	uint16_t system_fault=0;
-	
+
 	//电机故障  含驱动板通讯故障
 	system_fault = Get_Motor_Fault_State();
-
+	//添加本地故障  新增功能 
+#ifdef MOTOR_CANNOT_START_TIME
+	if(Check_Motor_Current_Cnt >= MOTOR_CANNOT_START_TIME)
+	{
+		//电机起不来 故障 202 驱动故障
+		system_fault |= FAULT_MOTOR_DRIVER;
+	}
+#endif
+#ifdef MOTOR_CANNOT_START_TIME
+	if(Check_Motor_Speed_Cnt >= MOTOR_SPEED_ERROR_TIME)
+	{
+		//电机转速不准 故障 202 驱动故障
+		system_fault |= FAULT_MOTOR_DRIVER;
+	}
+#endif
 	// 检查本地故障
 #ifdef UART_DEBUG_SEND_CTRL
 	if( Chassis_Temperature_Debug > 0)
@@ -142,12 +157,6 @@ uint8_t If_System_Is_Error(void)
 	}
 	else if(Temperature >= AMBIENT_TEMP_REDUCE_SPEED)
 	{
-		//报警 停机  恢复
-		if(system_fault & FAULT_TEMPERATURE_AMBIENT)
-		{
-			system_fault |= ~FAULT_TEMPERATURE_AMBIENT;
-		}
-		
 		if(Chassis_TEMP_Timer_cnt < CHASSIS_TEMP_TIMER_MAX)
 			Chassis_TEMP_Timer_cnt ++;
 		else
@@ -157,16 +166,10 @@ uint8_t If_System_Is_Error(void)
 				Set_Temp_Slow_Down_State(2);
 		}
 	}
-	else
+	else if(Temperature <= AMBIENT_TEMP_RESTORE_SPEED)
 	{
-		//报警 停机  恢复
-		if(system_fault & FAULT_TEMPERATURE_AMBIENT)
-		{
-			system_fault |= ~FAULT_TEMPERATURE_AMBIENT;
-		}
-		
 		if(Chassis_TEMP_Timer_cnt > 0)
-			Chassis_TEMP_Timer_cnt --;
+			Chassis_TEMP_Timer_cnt = 0;
 		else
 		{
 			if(Get_Temp_Slow_Down_State() == 2)
@@ -179,18 +182,27 @@ uint8_t If_System_Is_Error(void)
 	{
 		if( ( *p_System_Fault_Static >0 ) && (system_fault == 0))
 		{
-			Add_Fault_Recovery_Cnt();
-			//超过3次锁住 不再更新
-			if(If_Fault_Recovery_Max())
-				return 1;
-			CallOut_Fault_State();
+			// 通讯故障不累加
+			if(*p_System_Fault_Static == FAULT_MOTOR_LOSS )
+			{
+				CallOut_Fault_State();
+			}
+			//拨码自动恢复
+			else if(System_Dial_Switch == 1)
+			{
+				//超过3次锁住 不再更新
+				if((If_Fault_Recovery_Max())&&(*p_System_Fault_Static != FAULT_MOTOR_LOSS))
+					return 1;
+				Add_Fault_Recovery_Cnt();
+				CallOut_Fault_State();
+			}
 		}
 		else
 			*p_System_Fault_Static = system_fault;
 	}
 
 	
-	if(system_fault > 0)
+	if(*p_System_Fault_Static > 0)
 		return 1;
 	else
 		return 0;
@@ -269,6 +281,7 @@ void To_Fault_Menu(void)
 	
 	Lcd_Fault_Display(Fault_Number_Sum, Fault_Number_Cnt, Get_Fault_Number_Now(*p_MB_Fault_State,Fault_Number_Cnt));
 	
+	//Clean_Automatic_Shutdown_Timer();  //自动关机
 }
 // 故障界面 更新
 void Update_Fault_Menu(void)
@@ -417,7 +430,7 @@ static void on_Fault_Button_4_Short_Press(void)
 // ① + ②  组合键 
 static void on_Fault_Button_1_2_Short_Press(void)
 {
-	Clean_Fault_State();
+	
 }
 
 
@@ -456,7 +469,8 @@ static void on_Fault_Button_3_Long_Press(void)
 
 static void on_Fault_Button_4_Long_Press(void)
 {
-	System_Power_Off();
+	if(If_Fault_Recovery_Max()==0)
+		System_Power_Off();
 }
 
 static void on_Fault_Button_1_2_Long_Press(void)
@@ -470,8 +484,7 @@ static void on_Fault_Button_1_3_Long_Press(void)
 // 复位
 static void on_Fault_Button_2_3_Long_Press(void)
 {
-	Set_Fault_Data(0);
-	//To_Free_Mode(0);				// ui
+	//Clean_Fault_State();
 }
 
 //

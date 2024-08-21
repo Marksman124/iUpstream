@@ -75,10 +75,10 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPI1_CS_Pin|CS_Pin|WR_Pin|DATA_Pin
-                          |GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
+                          |Debug_Led_02_Pin|Debug_Led_01_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Fan_Switch_Pin|GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Fan_Switch_Pin|LCD_BackLight_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin PCPin
                            PCPin */
@@ -98,9 +98,9 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PB4 PB5 */
+                           PBPin PBPin */
   GPIO_InitStruct.Pin = SPI1_CS_Pin|CS_Pin|WR_Pin|DATA_Pin
-                          |GPIO_PIN_4|GPIO_PIN_5;
+                          |Debug_Led_02_Pin|Debug_Led_01_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -112,8 +112,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(Key_Power_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PA15 */
-  GPIO_InitStruct.Pin = Fan_Switch_Pin|GPIO_PIN_15;
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = Fan_Switch_Pin|LCD_BackLight_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

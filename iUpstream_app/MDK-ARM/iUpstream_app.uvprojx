@@ -1077,24 +1077,19 @@
           <GroupName>App</GroupName>
           <Files>
             <File>
-              <FileName>iap.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\app\iap.c</FilePath>
-            </File>
-            <File>
               <FileName>dev.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\app\dev.c</FilePath>
             </File>
             <File>
+              <FileName>iap.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\app\iap.c</FilePath>
+            </File>
+            <File>
               <FileName>debug_protocol.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\app\debug_protocol.c</FilePath>
-            </File>
-            <File>
-              <FileName>data.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\app\data.c</FilePath>
             </File>
             <File>
               <FileName>display.c</FileName>
@@ -1105,6 +1100,11 @@
               <FileName>state_machine.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\app\state_machine.c</FilePath>
+            </File>
+            <File>
+              <FileName>data.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\app\data.c</FilePath>
             </File>
             <File>
               <FileName>operation.c</FileName>
@@ -1170,6 +1170,11 @@
               <FileName>motor.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Thread\motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>macro_definition.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Thread\macro_definition.h</FilePath>
             </File>
           </Files>
         </Group>

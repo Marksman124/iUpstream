@@ -65,7 +65,7 @@ typedef enum
 //-------------- 特别状态 位 -------------------
 #define SPECIAL_BIT_SKIP_INITIAL				0x01		//跳过 初始化   不自动倒数3s
 #define SPECIAL_BIT_SKIP_STARTING				0x02		//跳过 软启动  直接进入 运行
-#define SPECIAL_BIT_SKIP_STARTING				0x02		//跳过 软启动  直接进入 运行
+//#define SPECIAL_BIT_SKIP_STARTING				0x02		//跳过 软启动  直接进入 运行
 
 #define SPECIAL_BIT_SPEED_100_GEAR			0x10		//速度 100 档位
 #define SPECIAL_BIT_TIME_100_GEAR				0x20		//定时 100 档位
@@ -84,6 +84,8 @@ extern uint8_t Get_System_State_Machine(void);
 //------------------- 快速获取状态  ----------------------------
 // 电机启动状态
 extern uint8_t Motor_is_Start(void);
+// 正常工作状态
+extern uint8_t System_is_Normal_Operation(void);
 // 初始状态
 extern uint8_t System_is_Initial(void);
 // 启动状态
@@ -140,6 +142,9 @@ extern uint8_t Special_Status_Get(uint8_t num);
 extern uint8_t System_State_Machine;		//	状态机	
 
 extern uint8_t Special_Status_Bit;
+
+// 拨码开关
+extern uint8_t System_Dial_Switch;
 
 extern uint8_t PMode_Now;
 

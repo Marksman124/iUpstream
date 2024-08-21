@@ -116,7 +116,7 @@ extern Operating_Parameters* p_OP_Timing_Mode;
 extern Operating_Parameters (*p_OP_PMode)[TRAINING_MODE_PERIOD_MAX];
 
 extern uint16_t* p_System_Fault_Static;			//故障状态
-extern uint16_t* p_Motor_Fault_Static;				//故障状态
+extern uint16_t* p_Motor_Fault_Static;			//故障状态
 extern uint16_t* p_Mos_Temperature;					//mos 温度
 extern uint16_t* p_Motor_Temperature;				//电机 温度
 extern uint32_t* p_Motor_Current;						//电机 电流
@@ -127,6 +127,7 @@ extern uint16_t* p_Modbus_Node_Addr;
 extern uint16_t* p_Modbus_Baud_Rate;
 extern uint16_t* p_Support_Control_Methods;
 extern uint16_t* p_Motor_Pole_Number;
+extern uint16_t* p_Breath_Light_Max;				//光圈亮度  
 
 extern uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX];//电机状态
 

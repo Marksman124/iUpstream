@@ -30,6 +30,7 @@ extern "C" {
 
 #include "wifi.h"				// wifi 模组
 #include "bluetooth.h"				// bluetooth 模组
+#include "macro_definition.h"				// 统一宏定义
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -48,6 +49,7 @@ typedef struct IO_Hardware_Pin
 
 
 /* Exported macro ------------------------------------------------------------*/
+#ifndef __MACRO_DEFINITION_H__
 
 #define KEY_THREAD_LIFECYCLE								20				// 任务生命周期 200ms
 
@@ -55,16 +57,27 @@ typedef struct IO_Hardware_Pin
 #define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
 
 #define KEY_FOR_SLEEP_TIME_SHORT						(3000/KEY_THREAD_LIFECYCLE)			//????  5 min  300000
+
+//-------------- 蜂鸣器 长度 -------------------
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define KEY_BUZZER_TIME						1					//周期  KEY_THREAD_LIFECYCLE 倍数
+#else
+#define KEY_BUZZER_TIME						8					//周期  KEY_THREAD_LIFECYCLE 倍数
+#endif
+
+#define KEY_VALUE_SHAKE_TIME							2		//去抖动 次数
+
+#endif
+
 //-------------- 按键组合响应 总数 -------------------
 #define KEY_CALL_OUT_NUMBER_MAX						8
-
 
 #define KEY_VALUE_BIT_BUTTON_1						0x01
 #define KEY_VALUE_BIT_BUTTON_2						0x02
 #define KEY_VALUE_BIT_BUTTON_3						0x04
 #define KEY_VALUE_BIT_BUTTON_4						0x08
 
-#define KEY_VALUE_SHAKE_TIME							2		//去抖动 次数
 /* Exported functions prototypes ---------------------------------------------*/
 
 //------------------- 按键回调 ----------------------------

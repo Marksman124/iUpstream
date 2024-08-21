@@ -21,6 +21,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 #include "tim.h"
+#include "macro_definition.h"				// 统一宏定义
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -34,13 +35,15 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 
-#define BACK_LIGHT_BRIGHTNESS_MAX				500			// 最大亮度  0~500
-
+#if(LCD_BACK_LIGHT_PWM_CTRL)
+//PWM 控制
+#define TM1621_BLACK_ON()			TM1621_light_On();
+#define TM1621_BLACK_OFF()		TM1621_light_Off();
+#else
+//IO控制
 #define TM1621_BLACK_ON()			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
 #define TM1621_BLACK_OFF()		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
-
-//#define TM1621_BLACK_ON()			TM1621_light_On();
-//#define TM1621_BLACK_OFF()		TM1621_light_Off();
+#endif
 
 
 
@@ -69,7 +72,7 @@ extern "C" {
 
 #define SCREEN_NUMBER_MAX			8		// 屏幕数字单元数量
 
-#define TM1621_LETTER_MAX			19	//字母表长度
+#define TM1621_LETTER_MAX			20	//字母表长度
 
 #define TM1621_DIGITAL_NUMBER_1			7
 #define TM1621_DIGITAL_NUMBER_2			6

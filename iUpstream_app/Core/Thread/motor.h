@@ -24,7 +24,7 @@ extern "C" {
 //#include "display.h"			// 显示模块
 //#include "port.h"
 //#include "mbcrc.h"				// crc
-
+#include "macro_definition.h"				// 统一宏定义
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -35,23 +35,63 @@ extern "C" {
 
 
 /* Exported macro ------------------------------------------------------------*/
+#ifndef __MACRO_DEFINITION_H__
 
-#define MOTOR_THREAD_LIFECYCLE								100				// 任务生命周期 50ms
+#define MOTOR_THREAD_LIFECYCLE								50				// 任务生命周期 50ms
 
-#define	MOTOR_MODULE_HUART				DRIVER_USART		//
+// 心跳 周期 500s 
+#define MOTOR_HEARTBEAT_CYCLE							(500/(MOTOR_THREAD_LIFECYCLE))				// 500 毫秒
+// 命令 周期 50 ms
+#define MOTOR_COMMAND_CYCLE								(200/(MOTOR_THREAD_LIFECYCLE))				// 5秒: 50 毫秒     20秒 : 200ms
+// 读状态 周期 1s 
+#define MOTOR_READ_STATIC_CYCLE						(1000/(MOTOR_THREAD_LIFECYCLE))				// 1 秒
 
-#define	MOTOR_RPM_CONVERSION_COEFFICIENT				(21)		//百分比 转 转速 转换系数
+//电机极数
+#define	MOTOR_POLE_NUMBER				(5)
+
+//最大转速 100%
+#define	MOTOR_RPM_SPEED_MAX				(1950*MOTOR_POLE_NUMBER)		//9750
+//最低转速 100%
+#define	MOTOR_RPM_SPEED_MIX				(700*MOTOR_POLE_NUMBER)		//3500
+
+// 700  1012   1324  1636   1948
+//每 1% 转速 
+#define	MOTOR_RPM_CONVERSION_COEFFICIENT				((MOTOR_RPM_SPEED_MAX-MOTOR_RPM_SPEED_MIX)/80)			//15.6
+
+//每 20% 转速 
+#define	MOTOR_RPM_CONVERSION_COEFFICIENT_20				((MOTOR_RPM_SPEED_MAX-MOTOR_RPM_SPEED_MIX)/4)			//312.5     
+
 
 //-------------- MOS 温度报警值 90°C -------------------
 #define MOS_TEMP_ALARM_VALUE								90
 //-------------- MOS 温度 降速 80°C -------------------
-#define MOS_TEMP_REDUCE_SPEED								80
-
+#define MOS_TEMP_REDUCE_SPEED								80		// 降档 温度
+#define MOS_TEMP_RESTORE_SPEED							75		// 恢复 温度
+ 
 //通讯故障 报警时间
 #define FAULT_MOTOR_LOSS_TIME						(30000/(MOTOR_THREAD_LIFECYCLE))				// 30 秒
 
+
+/*------------------- IO define ----------------------------------------------*/
+#define	MOTOR_MODULE_HUART				DRIVER_USART		//
+
+#if (MOTOR_MODULE_HUART == 1)
+#define MOTOR_RS485_TX_EN_PORT		RS48501_RE_GPIO_Port
+#define MOTOR_RS485_TX_EN_PIN			RS48501_RE_Pin
+#elif (MOTOR_MODULE_HUART == 4)
+#define MOTOR_RS485_TX_EN_PORT		RS48504_RE_GPIO_Port
+#define MOTOR_RS485_TX_EN_PIN			RS48504_RE_Pin
+#endif
+
+#endif
+
+// 缓冲区大小
+#define MOTOR_RS485_TX_BUFF_SIZE			16
+#define MOTOR_RS485_RX_BUFF_SIZE			256
+
+
 //驱动板故障 标志位
-#define MOTOR_FAULT_SIGN_BIT						0x6F
+#define MOTOR_FAULT_SIGN_BIT						FAULT_TEMPERATURE_AMBIENT
 #define CLEAN_MOTOR_FAULT(n)						(n &= ~MOTOR_FAULT_SIGN_BIT)
 
 #define	MOTOR_PROTOCOL_HEADER_OFFSET						3
@@ -68,17 +108,6 @@ extern "C" {
 #define	MOTOR_ADDR_NTC2_TEMP_OFFSET							60
 #define	MOTOR_ADDR_NTC3_TEMP_OFFSET							62
 
-/*------------------- IO define ----------------------------------------------*/
-#if (MOTOR_MODULE_HUART == 1)
-#define MOTOR_RS485_TX_EN_PORT		RS48501_RE_GPIO_Port
-#define MOTOR_RS485_TX_EN_PIN			RS48501_RE_Pin
-#elif (MOTOR_MODULE_HUART == 4)
-#define MOTOR_RS485_TX_EN_PORT		RS48504_RE_GPIO_Port
-#define MOTOR_RS485_TX_EN_PIN			RS48504_RE_Pin
-#endif
-
-#define MOTOR_RS485_TX_BUFF_SIZE			16
-#define MOTOR_RS485_RX_BUFF_SIZE			256
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Metering_Receive_Init(void);
@@ -103,7 +132,7 @@ extern uint32_t Motor_Speed_To_Rpm(uint8_t speed);
 
 //================================================== 内部调用接口
 //-------------------- 获取电机故障状态 ----------------------------
-uint8_t Get_Motor_Fault_State(void);
+uint16_t Get_Motor_Fault_State(void);
 
 
 //------------------- 发送 ----------------------------
@@ -122,6 +151,10 @@ extern void Motor_UART_Send(uint8_t* p_buff, uint8_t len);
 //-------------------- 接收 ----------------------------
 extern void Motor_RxData(uint8_t len);
 
+//-------------------- 检查电机电流 ----------------------------
+extern uint8_t Check_Motor_Current(void);
+//-------------------- 检查电机转速 ----------------------------
+extern uint8_t Check_Motor_Speed(void);
 
 
 /* Private defines -----------------------------------------------------------*/

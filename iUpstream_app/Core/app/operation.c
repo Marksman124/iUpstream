@@ -70,7 +70,7 @@ static uint16_t Operation_Baud_Rate = 0;			//	波特率
 static uint16_t Operation_Shield_Value = 0;		//	控制方式	
 static uint16_t Operation_Motor_Poles = 0;		//	电机极数	
 static uint16_t Operation_Speed_Mode = 0;		//	转速方式  0：转速   1：功率	
-
+//static uint16_t Operation_Breath_Light_Max = 0;		//	光圈亮度	
 // 发送缓冲区
 uint8_t operation_send_buffer[24] = {0};
 
@@ -239,7 +239,7 @@ void Lcd_Show_Operation(uint8_t type, uint16_t num)
 	
 	
 	//版本号显示小数点
-	if(type == OPERATION_DISPLAY_VERSION)
+	if((type == OPERATION_DISPLAY_VERSION) || (type == OPERATION_DEIVES_VERSION))
 		Lcd_Display_Symbol(STATUS_BIT_POINT);
 	else
 		Lcd_Display_Symbol(0);
@@ -314,6 +314,7 @@ static void on_Button_1_clicked(void)
 		Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
 	}
 #endif
+#ifdef OPERATION_MOTOR_POLES
 	//------- 电机 极数
 	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
 	{
@@ -324,6 +325,7 @@ static void on_Button_1_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 	}
+#endif
 	//------- 屏蔽 方式
 	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
 	{
@@ -334,6 +336,18 @@ static void on_Button_1_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 	}
+#ifdef OPERATION_BREATH_LIGHT_MAX
+	//------- 光圈亮度
+	if(Operation_State_Machine == OPERATION_BREATH_LIGHT_MAX)
+	{
+		if(Operation_Breath_Light_Max < 500)
+			(Operation_Breath_Light_Max)+= 10;
+		else
+			Operation_Breath_Light_Max = 0;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Breath_Light_Max);
+	}
+#endif
 }
 
 // ② 时间键
@@ -373,6 +387,7 @@ static void on_Button_2_clicked(void)
 		Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
 	}
 #endif
+#ifdef OPERATION_MOTOR_POLES
 	//------- 电机 极数
 	else if(Operation_State_Machine == OPERATION_MOTOR_POLES)
 	{
@@ -384,6 +399,7 @@ static void on_Button_2_clicked(void)
 		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 	}
+#endif
 	//------- 屏蔽 方式
 	else if(Operation_State_Machine == OPERATION_SHIELD_MENU)
 	{
@@ -394,6 +410,18 @@ static void on_Button_2_clicked(void)
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 	}
+#ifdef OPERATION_BREATH_LIGHT_MAX
+	//------- 光圈亮度
+	if(Operation_State_Machine == OPERATION_BREATH_LIGHT_MAX)
+	{
+		if(Operation_Breath_Light_Max > 10)
+			(Operation_Breath_Light_Max)-=10;
+		else
+			Operation_Breath_Light_Max = 500;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Breath_Light_Max);
+	}
+#endif
 }
 
 // ③ 模式键
@@ -416,21 +444,37 @@ static void on_Button_3_clicked(void)
 		case OPERATION_SPEED_MODE:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
 #endif
-			Operation_State_Machine = OPERATION_MOTOR_POLES;
+#ifdef OPERATION_MOTOR_POLES
+			Operation_State_Machine += OPERATION_MOTOR_POLES;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 		break;
 		case OPERATION_MOTOR_POLES:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
-			Operation_State_Machine = OPERATION_DISPLAY_VERSION;
-			Lcd_Show_Operation( Operation_State_Machine, (SOFTWARE_VERSION_HIGH*100 + SOFTWARE_VERSION_LOW));
-		break;
-		case OPERATION_DISPLAY_VERSION:
-			//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+#endif
 			Operation_State_Machine = OPERATION_SHIELD_MENU;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 		break;
-		default:
+
+		case OPERATION_SHIELD_MENU:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+			Operation_State_Machine = OPERATION_DISPLAY_VERSION;
+			Lcd_Show_Operation( Operation_State_Machine, (SOFTWARE_VERSION_HIGH*100 + SOFTWARE_VERSION_LOW));
+		break;
+		
+		case OPERATION_DISPLAY_VERSION:
+#ifdef OPERATION_BREATH_LIGHT_MAX
+			Operation_State_Machine = OPERATION_BREATH_LIGHT_MAX;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Breath_Light_Max);
+		break;
+		
+		case OPERATION_BREATH_LIGHT_MAX:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_BREATH_LIGHT_MAX, Operation_Breath_Light_Max );
+#endif
+			Operation_State_Machine = OPERATION_DEIVES_VERSION;
+			Lcd_Show_Operation( Operation_State_Machine, (DEVICES_VERSION_HIGH*100 + DEVICES_VERSION_LOW));
+		break;
+		
+		default:
 			Operation_State_Machine = OPERATION_ADDR_SET;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 		break;
@@ -525,6 +569,30 @@ static void on_Button_1_Long_Press(void)
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 		}
 	}
+#ifdef OPERATION_BREATH_LIGHT_MAX
+	else if(Operation_State_Machine == OPERATION_BREATH_LIGHT_MAX)
+	{
+		if(Operation_Breath_Light_Max < 500)
+		{
+			button_cnt++;
+			if(button_cnt > 5)
+			{
+				(Operation_Breath_Light_Max) += 5;
+			}
+			else if(button_cnt > 10)
+				(Operation_Breath_Light_Max) += 10;
+			else
+				(Operation_Breath_Light_Max)++;
+			
+			if(Operation_Breath_Light_Max > 500)
+				Operation_Breath_Light_Max = 500;
+		}
+		else
+			Operation_Breath_Light_Max = 0;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Breath_Light_Max);
+	}
+#endif
 }
 
 static void on_Button_2_Long_Press(void)
@@ -577,6 +645,30 @@ static void on_Button_2_Long_Press(void)
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 		}
 	}
+#ifdef OPERATION_BREATH_LIGHT_MAX
+	else if(Operation_State_Machine == OPERATION_BREATH_LIGHT_MAX)
+	{
+		if(Operation_Breath_Light_Max > 0)
+		{
+			button_cnt++;
+			if(button_cnt > 5)
+			{
+				(Operation_Breath_Light_Max) -= 5;
+			}
+			else if(button_cnt > 10)
+			{
+				(Operation_Breath_Light_Max) -= 10;
+			}
+			else
+				(Operation_Breath_Light_Max)--;
+			
+		}
+		else
+			Operation_Breath_Light_Max = 500;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Operation_Breath_Light_Max);
+	}
+#endif
 }
 
 static void on_Button_3_Long_Press(void)

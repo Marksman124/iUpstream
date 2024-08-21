@@ -17,20 +17,12 @@
 
 
 /* Private typedef -----------------------------------------------------------*/
-
+TIM_HandleTypeDef* p_htim_breath_light = &htim2;
 
 /* Private define ------------------------------------------------------------*/
 
 
 /* Private macro -------------------------------------------------------------*/
-
-//******************  调试模式 **************************
-#ifdef SYSTEM_DEBUG_MODE
-#define LIGHT_BRIGHTNESS_MAX					0
-#else
-#define LIGHT_BRIGHTNESS_MAX					300			// 最大亮度  0~500
-#endif
-//*******************************************************
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -38,7 +30,7 @@ uint16_t Light_Brightness = 0;
 
 uint16_t Light_Brightness_cmp = 0;
 
-uint8_t Breath_light_direction=0;
+uint8_t Breath_light_direction=0; // 方向  亮 灭
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -72,24 +64,23 @@ void App_Breath_light_Handler(void)
 		}
 	}
 	
-	
-	if(System_is_Starting() || (System_is_Running() && Special_Status_Get(SPECIAL_BIT_SKIP_STARTING)))	// 软启动
+	if(System_is_Starting() || ((System_is_Running()||System_is_Error()) && Special_Status_Get(SPECIAL_BIT_SKIP_STARTING)))	// 软启动
 	{
 		if(Breath_light_direction == 0)
 		{
 			if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)
-				Light_Brightness += (LIGHT_BRIGHTNESS_MAX/BREATH_LIGHT_GEAR_POSITION);
+				Light_Brightness += (LIGHT_BRIGHTNESS_STEP);
 			else
 				Breath_light_direction = 1;
 		}
 		else
 		{
-			if(Light_Brightness > 0)
+			if(Light_Brightness > LIGHT_BRIGHTNESS_MIX)
 			{
-				if( Light_Brightness > (LIGHT_BRIGHTNESS_MAX/BREATH_LIGHT_GEAR_POSITION) )
-					Light_Brightness -= (LIGHT_BRIGHTNESS_MAX/BREATH_LIGHT_GEAR_POSITION);
+				if( Light_Brightness > (LIGHT_BRIGHTNESS_STEP) )
+					Light_Brightness -= (LIGHT_BRIGHTNESS_STEP);
 				else
-					Light_Brightness = 0;
+					Light_Brightness = LIGHT_BRIGHTNESS_MIX;
 			}
 			else
 			{
@@ -102,18 +93,18 @@ void App_Breath_light_Handler(void)
 		if(Breath_light_direction == 0)
 		{
 			if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)
-				Light_Brightness += (LIGHT_BRIGHTNESS_MAX/(BREATH_LIGHT_GEAR_POSITION*2));
+				Light_Brightness += (LIGHT_BRIGHTNESS_STEP/2);
 			else
 				Breath_light_direction = 1;
 		}
 		else
 		{
-			if(Light_Brightness > 0)
+			if(Light_Brightness > LIGHT_BRIGHTNESS_MIX)
 			{
-				if( Light_Brightness > (LIGHT_BRIGHTNESS_MAX/(BREATH_LIGHT_GEAR_POSITION*2)) )
-					Light_Brightness -= (LIGHT_BRIGHTNESS_MAX/(BREATH_LIGHT_GEAR_POSITION*2));
+				if( Light_Brightness > (LIGHT_BRIGHTNESS_STEP/2) )
+					Light_Brightness -= (LIGHT_BRIGHTNESS_STEP/2);
 				else
-					Light_Brightness = 0;
+					Light_Brightness = LIGHT_BRIGHTNESS_MIX;
 			}
 			else
 			{
@@ -123,19 +114,30 @@ void App_Breath_light_Handler(void)
 	}
 	else if(System_State_Machine == POWER_OFF_STATUS)	// 关机
 	{
-		if(Light_Brightness > 0)
+		if(Light_Brightness > LIGHT_BRIGHTNESS_MIX)
 		{
-			if( Light_Brightness > (LIGHT_BRIGHTNESS_MAX/(BREATH_LIGHT_GEAR_POSITION*2)) )
-				Light_Brightness -= (LIGHT_BRIGHTNESS_MAX/(BREATH_LIGHT_GEAR_POSITION*2));
+			if( Light_Brightness > ( LIGHT_BRIGHTNESS_STEP/2) )
+				Light_Brightness -= ( LIGHT_BRIGHTNESS_STEP/2);
 			else
-				Light_Brightness = 0;
+				Light_Brightness = LIGHT_BRIGHTNESS_MIX;
 		}
 	}
 	else
 	{
 		if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)
-				Light_Brightness += (LIGHT_BRIGHTNESS_MAX/(BREATH_LIGHT_GEAR_POSITION*2));
-		//Light_Brightness = LIGHT_BRIGHTNESS_MAX;
+		{
+			if((LIGHT_BRIGHTNESS_MAX - Light_Brightness) > (LIGHT_BRIGHTNESS_STEP/2))
+				Light_Brightness += (LIGHT_BRIGHTNESS_STEP/2);
+			else
+				Light_Brightness = LIGHT_BRIGHTNESS_MAX;
+		}
+		else
+		{
+			if((Light_Brightness - LIGHT_BRIGHTNESS_MAX) > (LIGHT_BRIGHTNESS_STEP/2))
+				Light_Brightness -= (LIGHT_BRIGHTNESS_STEP/2);
+			else
+				Light_Brightness = LIGHT_BRIGHTNESS_MAX;
+		}
 	}
 }
 
@@ -144,21 +146,21 @@ void App_Breath_light_Handler(void)
 // 调节范围 : 1 - 100
 void Breath_light_PwmOut(uint16_t pul)
 {
-	HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
-	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, pul);//pul
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Stop_IT(p_htim_breath_light, BREATH_LIGHT_PWM_CHANNEL);
+	__HAL_TIM_SetCompare(p_htim_breath_light, BREATH_LIGHT_PWM_CHANNEL, pul);//pul
+	HAL_TIM_PWM_Start(p_htim_breath_light, BREATH_LIGHT_PWM_CHANNEL);
 }
 
 //------------------- 模拟调节亮度 ----------------------------
 
-void Led_Light_On(void)
+void Breath_light_Max(void)
 {
-	
+	Breath_light_PwmOut(LIGHT_BRIGHTNESS_MAX);
 }
 
-void Led_Light_Off(void)
+void Breath_light_Off(void)
 {
-	
+	Breath_light_PwmOut(0);
 }
 
 

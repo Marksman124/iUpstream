@@ -40,10 +40,10 @@ Operating_Parameters OP_Init_Free = { 40 , 0};
 Operating_Parameters OP_Init_Timing = { 40 , 1800};
 
 Operating_Parameters OP_Init_PMode[TRAINING_MODE_NUMBER_MAX][TRAINING_MODE_PERIOD_MAX] = {
-{{30,120},{40,300}, {30,360},{45,540},{30,600},{40,780}, {30,900} },
-{{50,180},{60,360}, {50,480},{70,720},{50,780},{60,1020},{50,1200}},
+{{20,120},{30,300}, {20,360},{35,540},{20,600},{30,780}, {20,900} },
+{{45,180},{55,360}, {45,480},{70,720},{45,780},{55,1020},{45,1200}},
 {{70,300},{80,540}, {70,600},{85,840},{70,900},{80,1200},{70,1500}},
-{{50,420},{65,1440},{50,1800}}
+{{45,420},{65,1440},{45,1800}},
 };
 
 	
@@ -62,11 +62,11 @@ uint32_t* p_Motor_Current;						//电机 电流
 uint32_t* p_Motor_Reality_Speed;			//电机 实际 转速
 uint16_t* p_Motor_Bus_Voltage;				//母线 电压
 	
-	
 uint16_t* p_Modbus_Node_Addr;					//地址
 uint16_t* p_Modbus_Baud_Rate;					//波特率
 uint16_t* p_Support_Control_Methods;	//屏蔽控制方式
 uint16_t* p_Motor_Pole_Number;				//电机极数
+uint16_t* p_Breath_Light_Max;					//光圈亮度  
 	
 uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX]={0};//电机状态
 
@@ -145,6 +145,9 @@ void App_Data_Init(void)
 	TM1621_LCD_Init();
 	
 	TM1621_Buzzer_Init();
+	
+	//测试代码 记得删
+	TM1621_light_Off();
 }
 
 
@@ -251,8 +254,8 @@ void Data_Set_Current_Speed(uint8_t speed)
 //------------------- 设置 当前 时间 ----------------------------
 void Data_Set_Current_Time(uint16_t time)
 {
-	if(System_is_Starting())
-		return;
+	//if(System_is_Starting())
+		//return;
 	
 	OP_ShowNow.time = time;
 }

@@ -39,6 +39,7 @@
 #include "motor.h"
 #include "debug_protocol.h"	///////////////////////	串口调试
 
+#include "macro_definition.h"				// 统一宏定义
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

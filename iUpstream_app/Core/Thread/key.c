@@ -15,6 +15,8 @@
 #include "data.h"
 #include "timing.h"
 #include "display.h"
+#include "Breath_light.h"
+#include "debug_protocol.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -117,6 +119,7 @@ uint32_t Key_Long_Press_cnt[KEY_CALL_OUT_NUMBER_MAX]={0};	// 长按 计数器
 
 uint8_t System_Self_Testing_State = 0;
 
+uint8_t Key_Buzzer_cnt = 0;
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -158,23 +161,9 @@ void on_pushButton_clicked(void)
 		if(OP_ShowNow.speed > 100)
 			OP_ShowNow.speed = 20;
 		
-		//if(Motor_is_Start())
-		if(System_is_Running())
-			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
-		else if(System_is_Starting())
-			OP_ShowNow.time = p_OP_ShowLater->time;
+		Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
 		Arbitrarily_To_Initial();
 		Lcd_Show();
-	}
-	
-	if(System_State_Machine <= FREE_MODE_STOP)	// 自由
-	{
-		p_OP_Free_Mode->speed = OP_ShowNow.speed;
-		p_OP_Free_Mode->time = 0;
-	}
-	else if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
-	{
-		p_OP_Timing_Mode->speed = OP_ShowNow.speed;
 	}
 }
 
@@ -249,20 +238,16 @@ void on_pushButton_4_Short_Press(void)
 			return;
 	}
 
-	if(System_is_Initial())	// 初始 --> 立即启动
+	if(System_is_Initial() && (Special_Status_Get(SPECIAL_BIT_SKIP_INITIAL)))	// 初始 --> 立即启动
+	{
+			Special_Status_Delete(SPECIAL_BIT_SKIP_INITIAL);
+			Arbitrarily_To_Starting();
+			Data_Set_Current_Speed(p_OP_ShowLater->speed);//注意,需要在切完运行状态后再设置速度,如"启动"
+	}
+	else if(System_is_Pause())	// 暂停 --> 启动
 	{
 		Arbitrarily_To_Starting();
 		Data_Set_Current_Speed(p_OP_ShowLater->speed);//注意,需要在切完运行状态后再设置速度,如"启动"
-	}
-	if(System_is_Pause())	// 暂停 --> 启动
-	{
-		Arbitrarily_To_Starting();
-		Data_Set_Current_Speed(p_OP_ShowLater->speed);//注意,需要在切完运行状态后再设置速度,如"启动"
-	}
-	else if(System_is_Initial())	// 初始 --> 启动
-	{
-		Arbitrarily_To_Starting();
-		*p_OP_ShowLater = OP_ShowNow;
 	}
 	else	// 其它 --> 暂停
 	{
@@ -330,11 +315,9 @@ void on_pushButton_1_Long_Press(void)
 	if(Special_Status_Get(SPECIAL_BIT_SPEED_100_GEAR))
 	{
 		if(OP_ShowNow.speed++ >= 100)
-					OP_ShowNow.speed = 20;
-		if(System_is_Running())
-			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
-		else if(System_is_Starting())
-			OP_ShowNow.time = p_OP_ShowLater->time;
+				OP_ShowNow.speed = 20;
+
+		Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
 		Arbitrarily_To_Initial();
 		Lcd_Show();
 	}
@@ -368,7 +351,7 @@ void on_pushButton_1_2_Long_Press(void)
 void on_pushButton_1_3_Long_Press(void)
 {
 	//test 
-	TM1621_LCD_Init();
+	//TM1621_LCD_Init();
 }
 //================================== ② + ③  组合键
 //   蓝牙配对
@@ -466,12 +449,38 @@ void Special_Button_Rules()
 	}
 }
 
+void Buzzer_Click_On(void)
+{
+	Key_Buzzer_cnt = 1;
+}
+
+void Buzzer_Click_Handler(void)
+{
+	if(Key_Buzzer_cnt == 1)
+		{
+			TM1621_Buzzer_Off();
+		}
+		else if(Key_Buzzer_cnt == 2)
+		{
+			TM1621_Buzzer_Click();
+		}
+		else if(Key_Buzzer_cnt > (KEY_BUZZER_TIME+2))
+		{
+			TM1621_Buzzer_Off();
+			Key_Buzzer_cnt = 0;
+		}
+		
+		if(Key_Buzzer_cnt > 0)
+			Key_Buzzer_cnt++;
+}
+
 
 // 按键主循环任务
 //  20 ms
 void App_Key_Task(void)
 {
 	uint8_t i;
+	uint8_t debug_buffer[32]={0};
 	
 	Key_Handler_Timer ++;
 	
@@ -492,6 +501,10 @@ void App_Key_Task(void)
 				{
 					if(++Key_Long_Press_cnt[i] >= KEY_LONG_PRESS_TIME)//长按
 					{
+						//测试发送串口
+					sprintf((char*)debug_buffer,"[按键长按]: %d\n",Key_IO_Ordering_Value[i]);
+					UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
+						
 						if(OPERATION_MENU_STATUS == System_State_Machine)
 							p_Operation_Long_Press[i]();
 						else if(ERROR_DISPLAY_STATUS == System_State_Machine)
@@ -503,7 +516,12 @@ void App_Key_Task(void)
 				else
 				{
 					if(Key_Long_Press_cnt[i] == 0)
-						TM1621_Buzzer_Click();
+					{
+						Buzzer_Click_On();
+					}
+					//测试发送串口
+					sprintf((char*)debug_buffer,"[按键点击]: %d\n",i);
+					UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
 					
 					if(OPERATION_MENU_STATUS == System_State_Machine)
 						p_Operation_Button[i]();
@@ -530,8 +548,6 @@ void App_Key_Task(void)
 		Key_IO_Old = Key_IO_Hardware;
 }
 
-
-
 // 按键主循环任务
 //  20 ms
 void App_Key_Handler(void)
@@ -544,12 +560,15 @@ void App_Key_Handler(void)
 	{
 		if(++io_shake_cnt >= KEY_VALUE_SHAKE_TIME)
 		{
+			Buzzer_Click_Handler();
+			
 			//自测模式
 			if(System_Self_Testing_State == 0xAA)
 			{
 				if(Key_IO_Hardware > 0)
 				{
-					TM1621_Buzzer_Click();
+					Buzzer_Click_On();
+					
 					Key_IO_Old |= Key_IO_Hardware;
 					Led_Button_On(Key_IO_Old);	// 按键
 				}
@@ -630,28 +649,33 @@ void System_Power_Off(void)
 	Data_Set_Current_Speed(0);//注意,需要在切完运行状态后再设置速度,如"暂停"
 	// 寄存器
 	Set_DataAddr_Value( MB_FUNC_READ_HOLDING_REGISTER, MB_SYSTEM_POWER_ON, 0);
-	Led_Button_On(0x08);	// 按键
+	Led_Button_On(0x0F);	// 按键
 	
 	// 后台定时器
 	//BlackGround_Task_Off();
+	
+	//退出100档位模式
+	Special_Status_Delete(SPECIAL_BIT_SPEED_100_GEAR);
 }
 
 //	开机画面
 void System_Boot_Screens(void)
 {
 	
-//******************  调试模式 **************************
-#ifdef SYSTEM_DEBUG_MODE
-	return;
-#endif
-//*******************************************************
+////******************  调试模式 **************************
+//#ifdef SYSTEM_DEBUG_MODE
+//	return;
+//#endif
+////*******************************************************
 
 	//全亮 2s
-	//TM1621_Show_All();
-	//osDelay(2000);
+	Breath_light_Max();
+	TM1621_Show_All();
+	osDelay(2000);
 	//机型码 & 拨码状态 2s
 	Lcd_System_Information();
 	osDelay(2000);
+	Breath_light_Off();
 }
 
 //	恢复出厂设置
