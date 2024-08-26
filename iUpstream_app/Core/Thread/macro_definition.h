@@ -27,7 +27,7 @@ extern "C" {
 
 //******************  调试模式 **************************
 //#define SYSTEM_DEBUG_MODE					1
-//#define UART_PRINTF_LOG						1
+#define UART_PRINTF_LOG						1
 //#define UART_DEBUG_SEND_CTRL			1
 //*******************************************************
 
@@ -54,7 +54,7 @@ extern "C" {
 #define	MACRO_SYSTEM_PRODUCT_MODEL_CODE								(1200)		//
 
 // 软件版本
-#define	MACRO_SOFTWARE_VERSION_UINT32								0x00000002		//0.2
+#define	MACRO_SOFTWARE_VERSION_UINT32								0x00000003		//0.3
 
 // 软件版本  驱动板
 #define	MACRO_DEVICES_VERSION_UINT32								0x00010000		//1.0
@@ -192,7 +192,7 @@ extern "C" {
 #define MODBUS_THREAD_TURN_ON					1
 
 #if(MODBUS_THREAD_TURN_ON)
-#define MODBUS_THREAD_LIFECYCLE							(1000*THREAD_LIFECYCLE_PERIOD_MIX)				// ms 暂时不用
+#define MODBUS_THREAD_LIFECYCLE							(2*THREAD_LIFECYCLE_PERIOD_MIX)				// ms 暂时不用
 
 #endif
 /*==============================================================================================================*/

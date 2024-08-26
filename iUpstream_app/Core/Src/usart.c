@@ -166,7 +166,7 @@ void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer1, 1);
+	//HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer1, 1);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -646,35 +646,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 	if (huart->Instance == UART5) //如果是串口5
 	{
-		if ((USART5_RX_STA & 0x8000) == 0) //接收未完成
-		{
-			if (USART5_RX_STA & 0x4000) //接收到了0x0d
-			{
-				if (aRxBuffer5[0] != 0x0a)
-					USART5_RX_STA = 0; //接收错误,重新开始
-				else
-					USART5_RX_STA |= 0x8000; //接收完成了
-			}
-			else //还没收到0X0D
-			{
-				if (aRxBuffer5[0] == 0x0d)
-					USART5_RX_STA |= 0x4000;
-				else
-				{
-					USART5_RX_BUF[USART5_RX_STA & 0X3FFF] = aRxBuffer5[0];
-					USART5_RX_STA++;
-					if (USART5_RX_STA > (USART_REC_LEN - 1))
-						USART5_RX_STA = 0; //接收数据错误,重新开始接收
-				}
-			}
-		}
-
-		if (USART5_RX_STA & 0x8000)
-		{
-			flag = 1;
-			memset(USART5_RX_BUF, 0, USART5_RX_STA & 0x3fff);
-			USART5_RX_STA = 0;
-		}
+		__HAL_UART_CLEAR_IDLEFLAG(&huart5);
+		Usart_IRQ_CallBack(aRxBuffer4[0]);
 	}
 }
 

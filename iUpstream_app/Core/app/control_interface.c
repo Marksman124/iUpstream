@@ -86,9 +86,12 @@ void Ctrl_Set_System_Status(uint16_t para)
 		if(System_is_Pause() == 0)	// ÔÝÍ£ --> Æô¶¯
 		{
 			Arbitrarily_To_Pause();
-			*p_OP_ShowLater = OP_ShowNow;
-			OP_ShowNow.speed = 0;
-			OP_ShowNow.time = 20;
+			
+			p_OP_ShowLater->speed = *p_OP_ShowNow_Speed;
+			p_OP_ShowLater->time = *p_OP_ShowNow_Time;
+			
+			*p_OP_ShowNow_Speed = 0;
+			*p_OP_ShowNow_Time = 20;
 		}
 	}
 	else if(para == 1)
@@ -96,8 +99,8 @@ void Ctrl_Set_System_Status(uint16_t para)
 		if(System_is_Pause())	// ÔÝÍ£ --> Æô¶¯
 		{
 			Arbitrarily_To_Starting();
-			OP_ShowNow.speed = p_OP_ShowLater->speed;
-			OP_ShowNow.time = 20;
+			*p_OP_ShowNow_Speed = p_OP_ShowLater->speed;
+			*p_OP_ShowNow_Time = 20;
 		}
 	}
 	else if(para == 2)
@@ -113,7 +116,7 @@ void Ctrl_Set_System_Status(uint16_t para)
 		}
 		else if(System_Mode_Train())
 		{
-			To_Train_Mode(PMode_Now);	//	ÑµÁ· Ä£Ê½
+			To_Train_Mode(*p_PMode_Now);	//	ÑµÁ· Ä£Ê½
 		}
 	}
 	else if(para == 3)

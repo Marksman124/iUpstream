@@ -96,11 +96,11 @@ void Display_Hide_Mode(uint8_t para);
 
 extern void Lcd_Display_Symbol(uint8_t status_para);
 extern void Lcd_Test(uint8_t num);
-extern void Lcd_Display(Operating_Parameters op_para, uint8_t status_para, uint8_t mode);
+extern void Lcd_Display(uint16_t speed, uint16_t time, uint8_t status_para, uint8_t mode);
 // 息屏
 extern void Lcd_Off(void);
 // 速度 熄灭
-extern void Lcd_No_Speed(Operating_Parameters op_para, uint8_t status_para, uint8_t mode);
+extern void Lcd_No_Speed(uint16_t time, uint8_t status_para, uint8_t mode);
 //------------------- 外部接口  ----------------------------
 //显示
 extern void Lcd_Show(void);

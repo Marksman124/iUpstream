@@ -188,7 +188,7 @@ eMBRTUReceive( UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT * pusLength )
     EXIT_CRITICAL_SECTION(  );
 		
 //		// 转发至串口  用于调试
-		UART_Send_Debug((UCHAR *)ucRTUBuf, usRcvBufferPos); //将收到的信息发送出去
+//		UART_Send_Debug((UCHAR *)ucRTUBuf, usRcvBufferPos); //将收到的信息发送出去
 		
     return eStatus;
 }

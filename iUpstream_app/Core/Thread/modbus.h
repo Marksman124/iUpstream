@@ -41,6 +41,24 @@ extern "C" {
 
 extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 
+/* ----------------------- Defines ------------------------------------------*/
+// 03
+#define REG_HOLDING_START               ( MB_SLAVE_NODE_ADDRESS )
+#define REG_HOLDING_NREGS               ( MB_USER_TRAIN_MODE_TIME_P4_50 )   //MB_USER_TRAIN_MODE_TIME_P4_50
+
+// 04
+#define REG_INPUT_START 								( MB_DISPLAY_SOFTWARE_VERSION )
+#define REG_INPUT_NREGS 								( MB_MOTOR_BUS_VOLTAGE )
+
+// 21
+#define REG_FILE_NUMBER_MAX 								( 0x270F )
+#define REG_FILE_NUMBER_STAR 								( 0 )
+#define REG_FILE_NUMBER_END 								( 0xFFFF )
+#define REG_FILE_LENTH_MAX 									( 0x77 )
+
+#define MODBUS_RESTART_TIMEOUT 							( 10 )					// 100MS * N
+
+
 // 03 Holding
 
 #define MB_SLAVE_NODE_ADDRESS								( 0x00 )	//	从机节点地址
@@ -53,12 +71,14 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 // ----------------------------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------------------------
-#define MB_SYSTEM_WORKING_MODE     					( 0x61 )	//	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
-#define MB_SYSTEM_WORKING_STATUS      			( 0x62 )	//	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
-#define MB_SYSTEM_POWER_ON				        	( 0x63 )	//	系统开机 0：关机  1：开机
+#define MB_SYSTEM_WORKING_MODE     					( 0x21 )	//	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
+#define MB_SYSTEM_WORKING_STATUS      			( 0x22 )	//	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
 // ----------------------------------------------------------------------------------------------
-#define MB_MOTOR_CURRENT_SPEED		        	( 0x70 )	//	当前转速 (临时有效)
-#define MB_MOTOR_CURRENT_TIME        				( 0x71 )	//	当前时间
+#define MB_MOTOR_CURRENT_SPEED		        	( 0x23 )	//	当前转速 (临时有效)
+#define MB_MOTOR_CURRENT_TIME        				( 0x24 )	//	当前时间
+// ----------------------------------------------------------------------------------------------
+#define MB_MOTOR_LEATER_SPEED		        		( 0x30 )	//	当前转速 (临时有效)
+#define MB_MOTOR_LEATER_TIME        				( 0x31 )	//	当前时间
 // ----------------------------------------------------------------------------------------------
 #define MB_USER_FREE_MODE_SPEED		        	( 0x80 )	//	用户 自由模式 	转速
 #define MB_USER_FREE_MODE_TIME        			( 0x81 )	//								时间
@@ -105,6 +125,7 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_DRIVER_SOFTWARE_VERSION								( 0x04 )	//	驱动板 软件版本
 #define MB_DRIVER_HARDWARE_VERSION             		( 0x06 )	//	驱动板 硬件版本
 #define MB_SYSTEM_FAULT_STATUS					          ( 0x08 )	//	系统故障状态
+#define MB_CHASSIS_TEMPERATURE					          ( 0x09 )	//	机箱  温度
 
 #define MB_MOTOR_FAULT_STATUS					          	( 0x09 )	// 	电机 	故障状态
 #define MB_MOS_TEMPERATURE					          		( 0x0A )	//	mos 	温度
@@ -112,6 +133,7 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_MOTOR_CURRENT					          			( 0x0C )	// 	电机 	电流
 #define MB_MOTOR_REALITY_SPEED					          ( 0x0E )	//	电机 	实际 转速
 #define MB_MOTOR_BUS_VOLTAGE					          	( 0x10 )	//	母线 	电压
+
 
 /*
 #define MB_DEFAULT_FREE_MODE_SPEED		        		( 0x11 )	//	默认 自由模式 	转速

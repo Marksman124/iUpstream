@@ -259,12 +259,12 @@ void Starting_State_Handler(void)
 	Arbitrarily_To_Running();
 	return;
 	
-//	OP_ShowNow.time --;
+//	*p_OP_ShowNow_Time --;
 //	Lcd_Show();
-//	if(OP_ShowNow.time == 0)
+//	if(*p_OP_ShowNow_Time == 0)
 //	{
 //		Arbitrarily_To_Running();
-//		OP_ShowNow.time = p_OP_ShowLater->time;
+//		*p_OP_ShowNow_Time = p_OP_ShowLater->time;
 //		Lcd_Show();
 //	}
 }
@@ -274,51 +274,51 @@ void Running_State_Handler(void)
 {
 	uint8_t slow_down_speed;//高温降速使用
 	
-	if(System_State_Machine == FREE_MODE_RUNNING)									// 自由
+	if(*p_System_State_Machine == FREE_MODE_RUNNING)									// 自由
 	{
-		OP_ShowNow.time ++;
-		if(OP_ShowNow.time >= 6000)
+		*p_OP_ShowNow_Time = (*p_OP_ShowNow_Time + 1);
+		if(*p_OP_ShowNow_Time >= 6000)
 		{
-			OP_ShowNow.time = 0;
+			*p_OP_ShowNow_Time = 0;
 		}
 	}
-	else if(System_State_Machine == TIMING_MODE_RUNNING)					// 定时
+	else if(*p_System_State_Machine == TIMING_MODE_RUNNING)					// 定时
 	{
-		OP_ShowNow.time --;
+		*p_OP_ShowNow_Time = (*p_OP_ShowNow_Time - 1);
 		Lcd_Show();
-		if(OP_ShowNow.time == 0)
+		if(*p_OP_ShowNow_Time == 0)
 		{
 			Arbitrarily_To_Stop();
-			OP_ShowNow.time = p_OP_Timing_Mode->time;
+			*p_OP_ShowNow_Time = p_OP_Timing_Mode->time;
 		}
 	}
-	else if(System_State_Machine == TRAINING_MODE_RUNNING)					// 训练
+	else if(*p_System_State_Machine == TRAINING_MODE_RUNNING)					// 训练
 	{
-		OP_ShowNow.time ++;
-		if(PMode_Now == 5)//冲浪
+		*p_OP_ShowNow_Time = (*p_OP_ShowNow_Time + 1);
+		if(*p_PMode_Now == 5)//冲浪
 		{
-			if(OP_ShowNow.time >= 6000)
+			if(*p_OP_ShowNow_Time >= 6000)
 			{
-				OP_ShowNow.time = 0;
+				*p_OP_ShowNow_Time = 0;
 			}
-			if((OP_ShowNow.time % 10) == 0)
+			if((*p_OP_ShowNow_Time % 10) == 0)
 				Data_Set_Current_Speed(100);//注意,需要在切完运行状态后再设置速度,如"暂停"
-			else if((OP_ShowNow.time % 10) == 6)
+			else if((*p_OP_ShowNow_Time % 10) == 6)
 				Data_Set_Current_Speed(20);//注意,需要在切完运行状态后再设置速度,如"暂停"
 		}
-		else if(Is_Mode_Legal(PMode_Now))
+		else if(Is_Mode_Legal(*p_PMode_Now))
 		{
-			if(OP_ShowNow.time >= p_OP_PMode[PMode_Now-1][Period_Now].time)
+			if(*p_OP_ShowNow_Time >= p_OP_PMode[*p_PMode_Now-1][Period_Now].time)
 			{
-				if((Period_Now == (TRAINING_MODE_PERIOD_MAX-1))||(p_OP_PMode[PMode_Now-1][Period_Now+1].time < p_OP_PMode[PMode_Now-1][Period_Now].time))
+				if((Period_Now == (TRAINING_MODE_PERIOD_MAX-1))||(p_OP_PMode[*p_PMode_Now-1][Period_Now+1].time < p_OP_PMode[*p_PMode_Now-1][Period_Now].time))
 				{
 					Arbitrarily_To_Stop();
-					OP_ShowNow.speed = p_OP_PMode[PMode_Now-1][0].speed;
+					*p_OP_ShowNow_Speed = p_OP_PMode[*p_PMode_Now-1][0].speed;
 				}
 				else
 				{
 					Period_Now ++;
-					Data_Set_Current_Speed(p_OP_PMode[PMode_Now-1][Period_Now].speed);//注意,需要在切完运行状态后再设置速度,如"暂停"
+					Data_Set_Current_Speed(p_OP_PMode[*p_PMode_Now-1][Period_Now].speed);//注意,需要在切完运行状态后再设置速度,如"暂停"
 				}
 			}
 		}
@@ -439,9 +439,9 @@ void Pause_State_Handler(void)
 	{
 		System_Power_Off();
 	}
-//	if(OP_ShowNow.time > 0)
+//	if(*p_OP_ShowNow_Time > 0)
 //	{
-//		OP_ShowNow.time --;
+//		*p_OP_ShowNow_Time --;
 //		Lcd_Show();
 //	}
 	Lcd_Show();
@@ -495,13 +495,12 @@ void Initial_State_Handler(void)
 	else
 	{
 		Update_OP_Data();	// 保存最新转速
-		if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
+		if(*p_System_State_Machine <= TIMING_MODE_STOP)	// 定时
 			Memset_OPMode();//存flash
 
-		//Speed_Save_Flash(OP_ShowNow,System_State_Machine);
-		if(System_State_Machine == TIMING_MODE_INITIAL)
+		if(*p_System_State_Machine == TIMING_MODE_INITIAL)
 		{
-			p_OP_ShowLater->time = OP_ShowNow.time;
+			p_OP_ShowLater->time = *p_OP_ShowNow_Time;
 		}
 		Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);//光圈自动判断
 		
@@ -509,9 +508,9 @@ void Initial_State_Handler(void)
 //		if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))	//跳过 软启动
 		{
 			//Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING); //底层转速同步后再删除
-			p_OP_ShowLater->speed = OP_ShowNow.speed;
+			p_OP_ShowLater->speed = *p_OP_ShowNow_Speed;
 			
-			Motor_Speed_Target_Set(OP_ShowNow.speed);
+			Motor_Speed_Target_Set(*p_OP_ShowNow_Speed);
 			
 			//保存
 			
@@ -522,9 +521,9 @@ void Initial_State_Handler(void)
 //		{
 //			// 进入 软启动
 //			Arbitrarily_To_Starting();
-//			//*p_OP_ShowLater->time = OP_ShowNow.time;
-//			OP_ShowNow.time = 20;
-//			Motor_Speed_Target_Set(OP_ShowNow.speed);
+//			//*p_OP_ShowLater->time = *p_OP_ShowNow_Time;
+//			*p_OP_ShowNow_Time = 20;
+//			Motor_Speed_Target_Set(*p_OP_ShowNow_Speed);
 //			Lcd_Show();
 //		}
 		Timing_Timer_Cnt = 0;

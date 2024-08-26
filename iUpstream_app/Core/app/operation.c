@@ -471,7 +471,7 @@ static void on_Button_3_clicked(void)
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_BREATH_LIGHT_MAX, Operation_Breath_Light_Max );
 #endif
 			Operation_State_Machine = OPERATION_DEIVES_VERSION;
-			Lcd_Show_Operation( Operation_State_Machine, (DEVICES_VERSION_HIGH*100 + DEVICES_VERSION_LOW));
+			Lcd_Show_Operation( Operation_State_Machine, (*p_Motor_Temperature));
 		break;
 		
 		default:

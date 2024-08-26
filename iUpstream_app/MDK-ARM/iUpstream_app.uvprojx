@@ -1141,6 +1141,11 @@
               <FileType>1</FileType>
               <FilePath>..\Core\app\ntc_3950.c</FilePath>
             </File>
+            <File>
+              <FileName>my_modbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\app\my_modbus.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

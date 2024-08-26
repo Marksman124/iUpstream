@@ -86,17 +86,13 @@ extern uint8_t Is_Time_Legal(uint16_t time);
 extern void Data_Set_Current_Speed(uint8_t speed);
 //------------------- 设置 当前 时间 ----------------------------
 extern void Data_Set_Current_Time(uint16_t time);
+//------------------- 设置 训练时段 ----------------------------
+extern void Set_Pmode_Period_Now(uint16_t value);
 
 
 /* Private defines -----------------------------------------------------------*/
 
-extern Operating_Parameters OP_ShowNow;
-
 extern Operating_Parameters* p_OP_ShowLater;
-
-
-// 训练模式 当前状态
-extern uint8_t PMode_Now;
 
 extern uint8_t Period_Now;
 
@@ -107,7 +103,12 @@ extern Operating_Parameters OP_Init_Timing;
 
 extern Operating_Parameters OP_Init_PMode[TRAINING_MODE_NUMBER_MAX][TRAINING_MODE_PERIOD_MAX];
 
-	
+//--------------------------- 系统属性
+extern uint16_t* p_System_State_Machine;			//状态机
+extern uint16_t* p_PMode_Now;									// 当前模式
+extern uint16_t* p_OP_ShowNow_Speed;					// 当前速度
+extern uint16_t* p_OP_ShowNow_Time;						// 当前时间
+
 // 各模式 属性
 extern Operating_Parameters* p_OP_Free_Mode;
 

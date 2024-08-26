@@ -198,13 +198,13 @@ void Lcd_Test(uint8_t num)
 	return;
 }
 
-void Lcd_Display(Operating_Parameters op_para, uint8_t status_para, uint8_t mode)
+void Lcd_Display(uint16_t speed, uint16_t time, uint8_t status_para, uint8_t mode)
 {
 	//speed
-	Display_Show_Speed(op_para.speed);
+	Display_Show_Speed(speed);
 	// time
-	Display_Show_Min(GET_TIME_MINUTE_DIGIT(op_para.time));
-	Display_Show_Sec(GET_TIME_SECOND_DIGIT(op_para.time));
+	Display_Show_Min(GET_TIME_MINUTE_DIGIT(time));
+	Display_Show_Sec(GET_TIME_SECOND_DIGIT(time));
 	// mode
 	if(mode == 0)
 	{
@@ -233,13 +233,13 @@ void Lcd_Off(void)
 
 
 // ËÙ¶È Ï¨Ãð
-void Lcd_No_Speed(Operating_Parameters op_para, uint8_t status_para, uint8_t mode)
+void Lcd_No_Speed(uint16_t time, uint8_t status_para, uint8_t mode)
 {
 	//speed
 	Display_Hide_Speed(0xFF);
 	// time
-	Display_Show_Min(GET_TIME_MINUTE_DIGIT(op_para.time));
-	Display_Show_Sec(GET_TIME_SECOND_DIGIT(op_para.time));
+	Display_Show_Min(GET_TIME_MINUTE_DIGIT(time));
+	Display_Show_Sec(GET_TIME_SECOND_DIGIT(time));
 
 }
 
@@ -260,7 +260,7 @@ void Lcd_Show(void)
 	}
 	taskENTER_CRITICAL();
 	//
-	Lcd_Display(OP_ShowNow, LCD_Show_Bit,PMode_Now);
+	Lcd_Display(*p_OP_ShowNow_Speed, *p_OP_ShowNow_Time, LCD_Show_Bit,*p_PMode_Now);
 	
 	TM1621_LCD_Redraw();
 	taskEXIT_CRITICAL();
@@ -299,7 +299,7 @@ void Lcd_Speed_Off(void)
 	//TM1621_BLACK_OFF()
 	//
 	taskENTER_CRITICAL();
-	Lcd_No_Speed(OP_ShowNow, LCD_Show_Bit,PMode_Now);
+	Lcd_No_Speed(*p_OP_ShowNow_Time, LCD_Show_Bit,*p_PMode_Now);
 	TM1621_LCD_Redraw();
 	taskEXIT_CRITICAL();
 }
@@ -313,8 +313,8 @@ void Lcd_Show_Slow_Down(uint8_t value)
 	TM1621_display_Letter(TM1621_COORDINATE_SPEED_HIGH, 'A');
 	TM1621_display_number(TM1621_COORDINATE_SPEED_LOW, value);
 	// time
-	Display_Show_Min(GET_TIME_MINUTE_DIGIT(OP_ShowNow.time));
-	Display_Show_Sec(GET_TIME_SECOND_DIGIT(OP_ShowNow.time));
+	Display_Show_Min(GET_TIME_MINUTE_DIGIT(*p_OP_ShowNow_Time));
+	Display_Show_Sec(GET_TIME_SECOND_DIGIT(*p_OP_ShowNow_Time));
 	
 	TM1621_LCD_Redraw();
 	taskEXIT_CRITICAL();
@@ -325,7 +325,7 @@ void Fun_Change_Mode(void)
 {
 //    if(Motor_is_Start())
 //    {
-//			OP_ShowNow.speed = 20;
+//			*p_OP_ShowNow_Speed = 20;
 //			
 //			Lcd_Show();
 //    }
@@ -340,12 +340,12 @@ void To_Power_Off(void)
 {
 	System_Self_Testing_State = 0;
 	
-	PMode_Now = 0;
+	*p_PMode_Now = 0;
 	Period_Now = 0;
 	
 	Special_Status_Bit = 0;
 	
-	System_State_Machine = POWER_OFF_STATUS;
+	*p_System_State_Machine = POWER_OFF_STATUS;
 		
 	Lcd_Off();
 }
@@ -362,10 +362,12 @@ void To_Free_Mode(uint8_t mode)
 	
 	Set_System_State_Machine(FREE_MODE_INITIAL);
 	*p_OP_ShowLater = *p_OP_Free_Mode;
-	OP_ShowNow = *p_OP_ShowLater;
+
+	*p_OP_ShowNow_Speed = p_OP_ShowLater->speed;
+	*p_OP_ShowNow_Time  = p_OP_ShowLater->time;
 	
 	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
-	PMode_Now = 0;
+	*p_PMode_Now = 0;
 	Lcd_Show();
 }
 
@@ -376,10 +378,12 @@ void To_Timing_Mode(void)
 	Set_System_State_Machine(TIMING_MODE_INITIAL);
 
 	*p_OP_ShowLater = *p_OP_Timing_Mode;
-	OP_ShowNow = *p_OP_ShowLater;
+
+	*p_OP_ShowNow_Speed = p_OP_ShowLater->speed;
+	*p_OP_ShowNow_Time  = p_OP_ShowLater->time;
 	
 	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
-	PMode_Now = 0;
+	*p_PMode_Now = 0;
 	Lcd_Show();
 }
 
@@ -390,15 +394,15 @@ void To_Train_Mode(uint8_t num)
 		return;
 	
 	Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
-	PMode_Now = num;
+	*p_PMode_Now = num;
 	
 	Set_System_State_Machine(TRAINING_MODE_INITIAL);
 
 	p_OP_ShowLater->speed = p_OP_PMode[num-1][0].speed;
 	p_OP_ShowLater->time = 0;
 	
-	OP_ShowNow.speed = p_OP_PMode[num-1][0].speed;
-	OP_ShowNow.time = 0;//p_OP_PMode[num-1][TRAINING_MODE_PERIOD_MAX-1].time;
+	*p_OP_ShowNow_Speed = p_OP_PMode[num-1][0].speed;
+	*p_OP_ShowNow_Time = 0;//p_OP_PMode[num-1][TRAINING_MODE_PERIOD_MAX-1].time;
 	
 	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
 	

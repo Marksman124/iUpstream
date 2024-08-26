@@ -150,7 +150,12 @@ uint8_t If_System_Is_Error(void)
 	UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
 	
 	// 机箱 温度
-	if(Temperature >= AMBIENT_TEMP_ALARM_VALUE)
+	if(Temperature == -100)
+	{
+		//传感器故障
+		system_fault |= FAULT_TEMPERATURE_SENSOR;
+	}
+	else if(Temperature >= AMBIENT_TEMP_ALARM_VALUE)
 	{
 		//报警 停机
 		system_fault |= FAULT_TEMPERATURE_AMBIENT;
@@ -264,8 +269,8 @@ void Fault_Number_Update(void)
 void To_Fault_Menu(void)
 {
 	State_Machine_Memory = Get_System_State_Machine();
-	Motor_Speed_Memory = OP_ShowNow.speed;
-	Motor_Time_Memory = OP_ShowNow.time;
+	Motor_Speed_Memory = *p_OP_ShowNow_Speed;
+	Motor_Time_Memory = *p_OP_ShowNow_Time;
 	
 	// 故障 菜单
 	App_Fault_Init();
@@ -302,8 +307,8 @@ void Clean_Fault_State(void)
 	*p_System_Fault_Static = 0;
 	
 	Set_System_State_Machine(State_Machine_Memory);
-	OP_ShowNow.speed = Motor_Speed_Memory;
-	OP_ShowNow.time = Motor_Time_Memory;
+	*p_OP_ShowNow_Speed = Motor_Speed_Memory;
+	*p_OP_ShowNow_Time = Motor_Time_Memory;
 	Data_Set_Current_Speed(Motor_Speed_Memory);
 }
 /* Private function prototypes -----------------------------------------------*/

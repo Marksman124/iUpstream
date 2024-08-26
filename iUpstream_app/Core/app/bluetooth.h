@@ -51,7 +51,10 @@ typedef enum
 
 
 /* Exported functions prototypes ---------------------------------------------*/
-
+//串口发送接口
+extern void SerialWrite(unsigned char *buff,int length);
+//接收中断调用
+extern void Usart_IRQ_CallBack(uint8_t data);
 //------------------- 设置wifi状态机 ----------------------------
 extern void BT_Set_Machine_State(BT_STATE_MODE_E para);
 //------------------- 获取wifi状态机 ----------------------------

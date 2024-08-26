@@ -25,12 +25,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-Operating_Parameters OP_ShowNow;
-
 Operating_Parameters* p_OP_ShowLater;
 
-// 训练模式 当前状态
-uint8_t PMode_Now = 0;
 
 uint8_t Period_Now = 0;
 
@@ -46,7 +42,13 @@ Operating_Parameters OP_Init_PMode[TRAINING_MODE_NUMBER_MAX][TRAINING_MODE_PERIO
 {{45,420},{65,1440},{45,1800}},
 };
 
-	
+//--------------------------- 系统属性
+uint16_t* p_System_State_Machine;			// 状态机
+uint16_t* p_PMode_Now;								// 当前模式
+uint16_t* p_OP_ShowNow_Speed;					// 当前速度
+uint16_t* p_OP_ShowNow_Time;					// 当前时间
+
+
 // 各模式 属性
 Operating_Parameters* p_OP_Free_Mode;
 
@@ -132,7 +134,7 @@ void App_Data_Init(void)
 	Get_Mapping_Register();
 	
 	// 训练模式 当前状态
-	PMode_Now = 0;
+	*p_PMode_Now = 0;
 	Period_Now = 0;
 	
 	// 各模式 属性
@@ -155,7 +157,7 @@ void App_Data_Init(void)
 void App_Data_ReInit(void)
 {
 	// 训练模式 当前状态
-	PMode_Now = 0;
+	*p_PMode_Now = 0;
 	Period_Now = 0;
 	
 	// 各模式 属性
@@ -188,20 +190,20 @@ uint8_t Memset_OPMode(void)
 void Update_OP_Data(void)
 {
 	
-	if(System_State_Machine <= FREE_MODE_STOP)	// 自由
+	if(*p_System_State_Machine <= FREE_MODE_STOP)	// 自由
 	{
-		p_OP_Free_Mode->speed = OP_ShowNow.speed;
+		p_OP_Free_Mode->speed = *p_OP_ShowNow_Speed;
 		p_OP_Free_Mode->time = 0;
 	}
-	else if(System_State_Machine <= TIMING_MODE_STOP)	// 定时
+	else if(*p_System_State_Machine <= TIMING_MODE_STOP)	// 定时
 	{
-		p_OP_Timing_Mode->speed = OP_ShowNow.speed;
-		p_OP_Timing_Mode->time = OP_ShowNow.time;
+		p_OP_Timing_Mode->speed = *p_OP_ShowNow_Speed;
+		p_OP_Timing_Mode->time = *p_OP_ShowNow_Time;
 	}
-//	else if(System_State_Machine <= TRAINING_MODE_STOP)	// 训练  训练不保存
+//	else if(*p_System_State_Machine <= TRAINING_MODE_STOP)	// 训练  训练不保存
 //	{
-//		if(Is_Mode_Legal(PMode_Now))
-//			p_OP_PMode[PMode_Now-1][Period_Now-1].speed = OP_ShowNow.speed;
+//		if(Is_Mode_Legal(*p_PMode_Now))
+//			p_OP_PMode[*p_PMode_Now-1][Period_Now-1].speed = *p_OP_ShowNow_Speed;
 //	}
 
 }
@@ -244,7 +246,7 @@ void Data_Set_Current_Speed(uint8_t speed)
 	//if(System_is_Starting())
 		//return;
 	
-	OP_ShowNow.speed = speed;	
+	*p_OP_ShowNow_Speed = speed;	
 	Motor_Speed_Target_Set(speed);
 	
 	//if(System_is_Running())
@@ -257,5 +259,12 @@ void Data_Set_Current_Time(uint16_t time)
 	//if(System_is_Starting())
 		//return;
 	
-	OP_ShowNow.time = time;
+	*p_OP_ShowNow_Time = time;
 }
+
+//------------------- 设置 训练时段 ----------------------------
+void Set_Pmode_Period_Now(uint16_t value)
+{
+	Period_Now = value;
+}
+

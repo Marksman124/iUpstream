@@ -27,9 +27,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t System_State_Machine = 0;		//	状态机	
-
-
 // 特别状态 位
 uint8_t Special_Status_Bit = 0;
 
@@ -44,7 +41,7 @@ uint8_t System_Dial_Switch = 0;
 // 初始化
 void App_State_Machine_Init(void)
 {
-	System_State_Machine = POWER_OFF_STATUS;  //状态机
+	*p_System_State_Machine = POWER_OFF_STATUS;  //状态机
 	
 	Special_Status_Bit = 0;
 }
@@ -56,7 +53,7 @@ uint8_t Set_System_State_Machine(uint8_t val)
 	if(val >= SYSTEM_STATE_END) //溢出
 		return 0;
 	
-	System_State_Machine = val;
+	*p_System_State_Machine = val;
 	
 	return 1;
 }
@@ -66,7 +63,7 @@ uint8_t Set_System_State_Machine(uint8_t val)
 
 uint8_t Get_System_State_Machine(void)
 {
-	return System_State_Machine;
+	return *p_System_State_Machine;
 }
 
 //------------------- 快速获取状态  ----------------------------
@@ -74,9 +71,9 @@ uint8_t Get_System_State_Machine(void)
 // 电机启动状态
 uint8_t Motor_is_Start(void)
 {
-	if((System_State_Machine == FREE_MODE_STARTING) || (System_State_Machine == FREE_MODE_RUNNING) 
-			|| (System_State_Machine == TIMING_MODE_STARTING) || (System_State_Machine == TIMING_MODE_RUNNING)
-			|| (System_State_Machine == TRAINING_MODE_STARTING) || (System_State_Machine == TRAINING_MODE_RUNNING))
+	if((*p_System_State_Machine == FREE_MODE_STARTING) || (*p_System_State_Machine == FREE_MODE_RUNNING) 
+			|| (*p_System_State_Machine == TIMING_MODE_STARTING) || (*p_System_State_Machine == TIMING_MODE_RUNNING)
+			|| (*p_System_State_Machine == TRAINING_MODE_STARTING) || (*p_System_State_Machine == TRAINING_MODE_RUNNING))
 	return 1;
 	else
 		return 0;
@@ -85,7 +82,7 @@ uint8_t Motor_is_Start(void)
 // 正常工作状态
 uint8_t System_is_Normal_Operation(void)
 {
-	if((System_State_Machine >= FREE_MODE_INITIAL) && (System_State_Machine <= TRAINING_MODE_STOP))
+	if((*p_System_State_Machine >= FREE_MODE_INITIAL) && (*p_System_State_Machine <= TRAINING_MODE_STOP))
 		return 1;
 	else
 		return 0;
@@ -94,7 +91,7 @@ uint8_t System_is_Normal_Operation(void)
 // 初始状态
 uint8_t System_is_Initial(void)
 {
-	if((System_State_Machine == FREE_MODE_INITIAL) || (System_State_Machine == TIMING_MODE_INITIAL) || (System_State_Machine == TRAINING_MODE_INITIAL))
+	if((*p_System_State_Machine == FREE_MODE_INITIAL) || (*p_System_State_Machine == TIMING_MODE_INITIAL) || (*p_System_State_Machine == TRAINING_MODE_INITIAL))
 		return 1;
 	else
 		return 0;
@@ -103,7 +100,7 @@ uint8_t System_is_Initial(void)
 // 启动状态
 uint8_t System_is_Starting(void)
 {
-	if((System_State_Machine == FREE_MODE_STARTING) || (System_State_Machine == TIMING_MODE_STARTING) || (System_State_Machine == TRAINING_MODE_STARTING))
+	if((*p_System_State_Machine == FREE_MODE_STARTING) || (*p_System_State_Machine == TIMING_MODE_STARTING) || (*p_System_State_Machine == TRAINING_MODE_STARTING))
 		return 1;
 	else
 		return 0;
@@ -112,7 +109,7 @@ uint8_t System_is_Starting(void)
 // 运行状态
 uint8_t System_is_Running(void)
 {
-	if((System_State_Machine == FREE_MODE_RUNNING) || (System_State_Machine == TIMING_MODE_RUNNING) || (System_State_Machine == TRAINING_MODE_RUNNING))
+	if((*p_System_State_Machine == FREE_MODE_RUNNING) || (*p_System_State_Machine == TIMING_MODE_RUNNING) || (*p_System_State_Machine == TRAINING_MODE_RUNNING))
 		return 1;
 	else
 		return 0;
@@ -121,7 +118,7 @@ uint8_t System_is_Running(void)
 // 暂停状态
 uint8_t System_is_Pause(void)
 {
-	if((System_State_Machine == FREE_MODE_SUSPEND) || (System_State_Machine == TIMING_MODE_SUSPEND) || (System_State_Machine == TRAINING_MODE_SUSPEND))
+	if((*p_System_State_Machine == FREE_MODE_SUSPEND) || (*p_System_State_Machine == TIMING_MODE_SUSPEND) || (*p_System_State_Machine == TRAINING_MODE_SUSPEND))
 		return 1;
 	else
 		return 0;
@@ -130,7 +127,7 @@ uint8_t System_is_Pause(void)
 // 结束状态
 uint8_t System_is_Stop(void)
 {
-	if((System_State_Machine == FREE_MODE_STOP) || (System_State_Machine == TIMING_MODE_STOP) || (System_State_Machine == TRAINING_MODE_STOP))
+	if((*p_System_State_Machine == FREE_MODE_STOP) || (*p_System_State_Machine == TIMING_MODE_STOP) || (*p_System_State_Machine == TRAINING_MODE_STOP))
 		return 1;
 	else
 		return 0;
@@ -139,7 +136,7 @@ uint8_t System_is_Stop(void)
 // 操作菜单
 uint8_t System_is_Operation(void)
 {
-	if(System_State_Machine == OPERATION_MENU_STATUS)
+	if(*p_System_State_Machine == OPERATION_MENU_STATUS)
 		return 1;
 	else
 		return 0;
@@ -148,7 +145,7 @@ uint8_t System_is_Operation(void)
 // 故障界面
 uint8_t System_is_Error(void)
 {
-	if(System_State_Machine == ERROR_DISPLAY_STATUS)
+	if(*p_System_State_Machine == ERROR_DISPLAY_STATUS)
 		return 1;
 	else
 		return 0;
@@ -157,7 +154,7 @@ uint8_t System_is_Error(void)
 // 关机
 uint8_t System_is_Power_Off(void)
 {
-	if(System_State_Machine == POWER_OFF_STATUS)
+	if(*p_System_State_Machine == POWER_OFF_STATUS)
 		return 1;
 	else
 		return 0;
@@ -167,7 +164,7 @@ uint8_t System_is_Power_Off(void)
 // 自由 模式
 uint8_t System_Mode_Free(void)
 {
-	if( (System_State_Machine >= FREE_MODE_INITIAL) && (System_State_Machine <= FREE_MODE_STOP))
+	if( (*p_System_State_Machine >= FREE_MODE_INITIAL) && (*p_System_State_Machine <= FREE_MODE_STOP))
 		return 1;
 	else
 		return 0;
@@ -176,7 +173,7 @@ uint8_t System_Mode_Free(void)
 // 定时 模式
 uint8_t System_Mode_Time(void)
 {
-	if( (System_State_Machine >= TIMING_MODE_INITIAL) && (System_State_Machine <= TIMING_MODE_STOP))
+	if( (*p_System_State_Machine >= TIMING_MODE_INITIAL) && (*p_System_State_Machine <= TIMING_MODE_STOP))
 		return 1;
 	else
 		return 0;
@@ -185,7 +182,7 @@ uint8_t System_Mode_Time(void)
 // 训练 模式
 uint8_t System_Mode_Train(void)
 {
-	if( (System_State_Machine >= TRAINING_MODE_INITIAL) && (System_State_Machine <= TRAINING_MODE_STOP))
+	if( (*p_System_State_Machine >= TRAINING_MODE_INITIAL) && (*p_System_State_Machine <= TRAINING_MODE_STOP))
 		return 1;
 	else
 		return 0;
@@ -200,13 +197,13 @@ void Arbitrarily_To_Initial(void)
 	if(System_is_Initial())
 		return;
 	else if(System_is_Starting())
-		System_State_Machine -= 1;
+		*p_System_State_Machine -= 1;
 	else if(System_is_Running())
-		System_State_Machine -= 2;
+		*p_System_State_Machine -= 2;
 	else if(System_is_Pause())
-		System_State_Machine -= 3;
+		*p_System_State_Machine -= 3;
 	else if(System_is_Stop())
-		System_State_Machine -= 4;
+		*p_System_State_Machine -= 4;
 	
 	return;
 }
@@ -216,15 +213,15 @@ void Arbitrarily_To_Starting(void)
 {
 	Special_Status_Delete(SPECIAL_BIT_SKIP_INITIAL);
 	if(System_is_Initial())
-		System_State_Machine += 1;
+		*p_System_State_Machine += 1;
 	else if(System_is_Starting())
 		return;
 	else if(System_is_Running())
-		System_State_Machine -= 1;
+		*p_System_State_Machine -= 1;
 	else if(System_is_Pause())
-		System_State_Machine -= 2;
+		*p_System_State_Machine -= 2;
 	else if(System_is_Stop())
-		System_State_Machine -= 3;
+		*p_System_State_Machine -= 3;
 	
 	return;
 }
@@ -234,15 +231,15 @@ void Arbitrarily_To_Running(void)
 {
 	Special_Status_Delete(SPECIAL_BIT_SKIP_INITIAL);
 	if(System_is_Initial())
-		System_State_Machine += 2;
+		*p_System_State_Machine += 2;
 	else if(System_is_Starting())
-		System_State_Machine += 1;
+		*p_System_State_Machine += 1;
 	else if(System_is_Running())
 		return;
 	else if(System_is_Pause())
-		System_State_Machine -= 1;
+		*p_System_State_Machine -= 1;
 	else if(System_is_Stop())
-		System_State_Machine -= 2;
+		*p_System_State_Machine -= 2;
 	
 	return;
 }
@@ -252,15 +249,15 @@ void Arbitrarily_To_Pause(void)
 {
 	Special_Status_Delete(SPECIAL_BIT_SKIP_INITIAL);
 	if(System_is_Initial())
-		System_State_Machine += 3;
+		*p_System_State_Machine += 3;
 	else if(System_is_Starting())
-		System_State_Machine += 2;
+		*p_System_State_Machine += 2;
 	else if(System_is_Running())
-		System_State_Machine += 1;
+		*p_System_State_Machine += 1;
 	else if(System_is_Pause())
 		return;
 	else if(System_is_Stop())
-		System_State_Machine -= 1;
+		*p_System_State_Machine -= 1;
 	
 	Clean_Automatic_Shutdown_Timer();
 	return;
@@ -271,13 +268,13 @@ void Arbitrarily_To_Stop(void)
 {
 	Special_Status_Delete(SPECIAL_BIT_SKIP_INITIAL);
 	if(System_is_Initial())
-		System_State_Machine += 4;
+		*p_System_State_Machine += 4;
 	else if(System_is_Starting())
-		System_State_Machine += 3;
+		*p_System_State_Machine += 3;
 	else if(System_is_Running())
-		System_State_Machine += 2;
+		*p_System_State_Machine += 2;
 	else if(System_is_Pause())
-		System_State_Machine += 1;
+		*p_System_State_Machine += 1;
 	else if(System_is_Stop())
 		return;
 	

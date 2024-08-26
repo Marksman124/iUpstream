@@ -12,23 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "modbus.h"
 #include "dev.h"
-/* ----------------------- Defines ------------------------------------------*/
-// 03
-#define REG_HOLDING_START               ( MB_SLAVE_NODE_ADDRESS )
-#define REG_HOLDING_NREGS               ( MB_USER_TRAIN_MODE_TIME_P4_50 )   //MB_USER_TRAIN_MODE_TIME_P4_50
-
-// 04
-#define REG_INPUT_START 								( MB_DISPLAY_SOFTWARE_VERSION )
-#define REG_INPUT_NREGS 								( MB_MOTOR_BUS_VOLTAGE )
-
-// 21
-#define REG_FILE_NUMBER_MAX 								( 0x270F )
-#define REG_FILE_NUMBER_STAR 								( 0 )
-#define REG_FILE_NUMBER_END 								( 0xFFFF )
-#define REG_FILE_LENTH_MAX 									( 0x77 )
-
-#define MODBUS_RESTART_TIMEOUT 							( 10 )					// 100MS * N
-
+#include "key.h"
 /* Private variables ---------------------------------------------------------*/
 ULONG OTA_Pack_Len=0;					// 总长度
 
@@ -45,8 +29,8 @@ USHORT   usRegInputBuf[REG_INPUT_NREGS+1];
 
 USHORT		MB_Data_Addr_Need_CallOut[] = {
 	MB_SLAVE_NODE_ADDRESS,MB_SLAVE_BAUD_RATE,MB_DISTRIBUTION_NETWORK_CONTROL,
-	MB_SYSTEM_WORKING_MODE,MB_SYSTEM_WORKING_STATUS,MB_SYSTEM_POWER_ON,
-	MB_MOTOR_CURRENT_SPEED,MB_MOTOR_CURRENT_TIME,
+	MB_SYSTEM_WORKING_MODE,MB_SYSTEM_WORKING_STATUS,
+	//MB_MOTOR_CURRENT_SPEED,MB_MOTOR_CURRENT_TIME,
 };
 
 BOOL Dmx512_Data_Change_Sign =0;
@@ -101,30 +85,34 @@ HoldingCallOut( USHORT usAddress )
 #endif
 		__HAL_UART_ENABLE(p_huart_mb);
 	}
-	else if(usAddress == MB_DISTRIBUTION_NETWORK_CONTROL) //	配网控制 遥控 & wifi
-	{
-		Ctrl_GetIn_Distribution(usRegHoldingBuf[MB_DISTRIBUTION_NETWORK_CONTROL]);
-	}
+//	else if(usAddress == MB_DISTRIBUTION_NETWORK_CONTROL) //	配网控制 遥控 & wifi
+//	{
+//		Ctrl_GetIn_Distribution(usRegHoldingBuf[MB_DISTRIBUTION_NETWORK_CONTROL]);
+//	}
 	else if(usAddress == MB_SYSTEM_WORKING_MODE) //	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
 	{
-		Ctrl_Set_System_Mode(usRegHoldingBuf[MB_SYSTEM_WORKING_MODE]);
+		if(usRegHoldingBuf[MB_SYSTEM_WORKING_MODE] > 0)//P模式
+		{
+			Set_Pmode_Period_Now(0);
+		}
+		if(usRegHoldingBuf[MB_SYSTEM_WORKING_STATUS] == 0)//状态机
+		{
+			System_Power_Off();
+		}
+		//Ctrl_Set_System_Mode(usRegHoldingBuf[MB_SYSTEM_WORKING_MODE]);
 	}
-	else if(usAddress == MB_SYSTEM_WORKING_STATUS) //	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
-	{
-		Ctrl_Set_System_Status(usRegHoldingBuf[MB_SYSTEM_WORKING_STATUS]);
-	}
-	else if(usAddress == MB_SYSTEM_POWER_ON) //	系统开机 0：关机  1：开机
-	{
-		Ctrl_Set_System_PowerOn(usRegHoldingBuf[MB_SYSTEM_POWER_ON]);
-	}
-	else if(usAddress == MB_MOTOR_CURRENT_SPEED) //	当前转速 (临时有效)
-	{
-		Ctrl_Set_Motor_Current_Speed(usRegHoldingBuf[MB_MOTOR_CURRENT_SPEED]);
-	}
-	else if(usAddress == MB_MOTOR_CURRENT_TIME) ///	当前时间 (临时有效)
-	{
-		Ctrl_Set_Motor_Current_Time(usRegHoldingBuf[MB_MOTOR_CURRENT_TIME]);
-	}
+//	else if(usAddress == MB_SYSTEM_WORKING_STATUS) //	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
+//	{
+//		//Ctrl_Set_System_Status(usRegHoldingBuf[MB_SYSTEM_WORKING_STATUS]);
+//	}
+//	else if(usAddress == MB_MOTOR_CURRENT_SPEED) //	当前转速 (临时有效)
+//	{
+//		Ctrl_Set_Motor_Current_Speed(usRegHoldingBuf[MB_MOTOR_CURRENT_SPEED]);
+//	}
+//	else if(usAddress == MB_MOTOR_CURRENT_TIME) ///	当前时间 (临时有效)
+//	{
+//		Ctrl_Set_Motor_Current_Time(usRegHoldingBuf[MB_MOTOR_CURRENT_TIME]);
+//	}
 	
 	//扇区是2048， 整个 usRegHoldingBuf 一起写
 	//STMFLASH_Write(FLASH_APP_PARAM_ADDR, usRegHoldingBuf, REG_HOLDING_NREGS );
@@ -463,7 +451,7 @@ void Set_DataValue_U32(UCHAR ucFunctionCode, USHORT addr, uint32_t value)
 
 void Get_Mapping_Register(void)
 {
-	p_OP_ShowLater = 		(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_MOTOR_CURRENT_SPEED);
+	p_OP_ShowLater = 		(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_MOTOR_LEATER_SPEED);
 	p_OP_Free_Mode = 		(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_USER_FREE_MODE_SPEED);
 	p_OP_Timing_Mode = 	(Operating_Parameters*)Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_USER_TIME_MODE_SPEED);
 	p_OP_PMode =				(Operating_Parameters(*)[TRAINING_MODE_PERIOD_MAX])Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER , MB_USER_TRAIN_MODE_SPEED_P1_1);
@@ -490,11 +478,19 @@ void Get_Mapping_Register(void)
 	p_Motor_Current = (uint32_t*)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_CURRENT);
 	//电机 实际 转速
 	p_Motor_Reality_Speed = (uint32_t*)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_REALITY_SPEED);
-//母线 电压
+	//母线 电压
 	p_Motor_Bus_Voltage = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_BUS_VOLTAGE);
 
-	
-	
+
+	//--------------------------- 系统属性
+	// 状态机
+	p_System_State_Machine = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_SYSTEM_WORKING_STATUS);
+	// 当前模式
+	p_PMode_Now = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_SYSTEM_WORKING_MODE);
+	// 当前速度
+	p_OP_ShowNow_Speed = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_MOTOR_CURRENT_SPEED);
+	// 当前时间
+	p_OP_ShowNow_Time = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_MOTOR_CURRENT_TIME);
 }
 
 

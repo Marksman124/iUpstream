@@ -20,7 +20,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
-
+#include "macro_definition.h"				// 统一宏定义
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -138,15 +138,12 @@ extern void Special_Status_Delete(uint8_t num);
 extern uint8_t Special_Status_Get(uint8_t num);
 
 /* Private defines -----------------------------------------------------------*/
-
-extern uint8_t System_State_Machine;		//	状态机	
-
 extern uint8_t Special_Status_Bit;
 
 // 拨码开关
 extern uint8_t System_Dial_Switch;
 
-extern uint8_t PMode_Now;
+extern uint16_t *p_PMode_Now;
 
 extern uint8_t Period_Now;
 

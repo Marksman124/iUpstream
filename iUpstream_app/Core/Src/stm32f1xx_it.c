@@ -257,17 +257,17 @@ void USART1_IRQHandler(void)
 	}
 #elif MODBUS_USART == 1
 	DEBUG_LED1_ON();
-	if(__HAL_UART_GET_IT_SOURCE(&huart4, UART_IT_RXNE)!= RESET) 
+	if(__HAL_UART_GET_IT_SOURCE(&huart1, UART_IT_RXNE)!= RESET) 
 		{
 			prvvUARTRxISR();//接收中断
 		}
 
-	if(__HAL_UART_GET_IT_SOURCE(&huart4, UART_IT_TXE)!= RESET) 
+	if(__HAL_UART_GET_IT_SOURCE(&huart1, UART_IT_TXE)!= RESET) 
 		{
 			prvvUARTTxReadyISR();//发送中断
 		}
 	
-  HAL_NVIC_ClearPendingIRQ(UART4_IRQn);
+  HAL_NVIC_ClearPendingIRQ(USART1_IRQn);
 	//DEBUG_LED1_OFF();
 #else
   /* USER CODE END USART1_IRQn 0 */
