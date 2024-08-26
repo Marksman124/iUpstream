@@ -28,7 +28,7 @@ extern "C" {
 #include "operation.h"		// 操作 菜单
 #include "fault.h"				// 故障 菜单
 
-#include "wifi.h"				// wifi 模组
+#include "wifi_thread.h"				// wifi 模组
 #include "bluetooth.h"				// bluetooth 模组
 #include "macro_definition.h"				// 统一宏定义
 /* Private includes ----------------------------------------------------------*/

@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "timing.h"
-#include "wifi.h"
+#include "wifi_thread.h"
 #include "tm1621.h"
 #include "motor.h"
 #include "display.h"

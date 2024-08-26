@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../STM32MB/modbus/include;../STM32MB/port;../STM32MB/modbus/ascii;../STM32MB/modbus/rtu;../STM32MB/modbus/tcp;../Core/app;../Core/Thread</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../STM32MB/modbus/include;../STM32MB/port;../STM32MB/modbus/ascii;../STM32MB/modbus/rtu;../STM32MB/modbus/tcp;../Core/app;../Core/Thread;..\Core\fyld_mcu_sdk</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1122,11 +1122,6 @@
               <FilePath>..\Core\app\tm1621.c</FilePath>
             </File>
             <File>
-              <FileName>wifi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\app\wifi.c</FilePath>
-            </File>
-            <File>
               <FileName>bluetooth.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\app\bluetooth.c</FilePath>
@@ -1145,6 +1140,11 @@
               <FileName>my_modbus.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\app\my_modbus.c</FilePath>
+            </File>
+            <File>
+              <FileName>wifi_thread.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\app\wifi_thread.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1180,6 +1180,51 @@
               <FileName>macro_definition.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Core\Thread\macro_definition.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>fyld_mcu_sdk</GroupName>
+          <Files>
+            <File>
+              <FileName>mcu_api.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\mcu_api.c</FilePath>
+            </File>
+            <File>
+              <FileName>mcu_api.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\mcu_api.h</FilePath>
+            </File>
+            <File>
+              <FileName>protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\protocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>protocol.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\protocol.h</FilePath>
+            </File>
+            <File>
+              <FileName>readme.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\readme.txt</FilePath>
+            </File>
+            <File>
+              <FileName>system.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\system.c</FilePath>
+            </File>
+            <File>
+              <FileName>system.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\system.h</FilePath>
+            </File>
+            <File>
+              <FileName>wifi.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\fyld_mcu_sdk\wifi.h</FilePath>
             </File>
           </Files>
         </Group>

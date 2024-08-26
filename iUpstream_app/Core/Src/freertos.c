@@ -40,6 +40,8 @@
 #include "debug_protocol.h"	///////////////////////	串口调试
 
 #include "macro_definition.h"				// 统一宏定义
+#include "wifi_thread.h"				// wifi模组
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,6 +68,7 @@ osThreadId Rs485_Modbus_TaHandle;
 osThreadId Main_TaskHandle;
 osThreadId Key_Button_TaskHandle;
 osThreadId Motor_TaskHandle;
+osThreadId wifi_moduleHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -77,6 +80,7 @@ void Rs485_Modbus_Handler(void const * argument);
 void Main_Handler(void const * argument);
 void Key_Button_Handler(void const * argument);
 void Motor_Handler(void const * argument);
+void wifi_module_Handler(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -154,8 +158,12 @@ void MX_FREERTOS_Init(void) {
   Key_Button_TaskHandle = osThreadCreate(osThread(Key_Button_Task), NULL);
 
   /* definition and creation of Motor_Task */
-  osThreadDef(Motor_Task, Motor_Handler, osPriorityIdle, 0, 256);
+  osThreadDef(Motor_Task, Motor_Handler, osPriorityIdle, 0, 128);
   Motor_TaskHandle = osThreadCreate(osThread(Motor_Task), NULL);
+
+  /* definition and creation of wifi_module */
+  osThreadDef(wifi_module, wifi_module_Handler, osPriorityIdle, 0, 128);
+  wifi_moduleHandle = osThreadCreate(osThread(wifi_module), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -278,6 +286,26 @@ void Motor_Handler(void const * argument)
     osDelay(THREAD_PERIOD_MOTOR_TASK);
   }
   /* USER CODE END Motor_Handler */
+}
+
+/* USER CODE BEGIN Header_wifi_module_Handler */
+/**
+* @brief Function implementing the wifi_module thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_wifi_module_Handler */
+void wifi_module_Handler(void const * argument)
+{
+  /* USER CODE BEGIN wifi_module_Handler */
+	wifi_protocol_init();
+  /* Infinite loop */
+  for(;;)
+  {
+		wifi_uart_service();
+    osDelay(50);
+  }
+  /* USER CODE END wifi_module_Handler */
 }
 
 /* Private application code --------------------------------------------------*/

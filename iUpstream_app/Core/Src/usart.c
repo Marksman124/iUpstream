@@ -25,6 +25,7 @@
 #include "subsystem.h"
 #include "dev.h"
 #include "debug_protocol.h"	///////////////////////	串口调试
+#include "mcu_api.h"	///////////////////////	wifi模组
 
 //串口1中断服务程序
 //注意,读取USARTx->SR能避免莫名其妙的错误
@@ -545,35 +546,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 	if (huart->Instance == USART2) //如果是串口2
 	{
-		if ((USART2_RX_STA & 0x8000) == 0) //接收未完成
-		{
-			if (USART2_RX_STA & 0x4000) //接收到了0x0d
-			{
-				if (aRxBuffer2[0] != 0x0a)
-					USART2_RX_STA = 0; //接收错误,重新开始
-				else
-					USART2_RX_STA |= 0x8000; //接收完成了
-			}
-			else //还没收到0X0D
-			{
-				if (aRxBuffer2[0] == 0x0d)
-					USART2_RX_STA |= 0x4000;
-				else
-				{
-					USART2_RX_BUF[USART2_RX_STA & 0X3FFF] = aRxBuffer2[0];
-					USART2_RX_STA++;
-					if (USART2_RX_STA > (USART_REC_LEN - 1))
-						USART2_RX_STA = 0; //接收数据错误,重新开始接收
-				}
-			}
-		}
-
-		if (USART2_RX_STA & 0x8000)
-		{
-			flag = 1;
-			memcpy(data, USART2_RX_BUF, USART2_RX_STA & 0x3fff);
-			USART2_RX_STA = 0;
-		}
+		uart_receive_input(aRxBuffer2[0]);
 	}
 
 	if (huart->Instance == USART3) //如果是串口3

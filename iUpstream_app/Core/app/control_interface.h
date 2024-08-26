@@ -22,7 +22,7 @@ extern "C" {
 #include "stdint.h"
 #include "state_machine.h"
 
-#include "wifi.h"							// wifi 模组
+#include "wifi_thread.h"							// wifi 模组
 #include "bluetooth.h"				// bluetooth 模组
 #include "display.h"					// 显示 模块
 

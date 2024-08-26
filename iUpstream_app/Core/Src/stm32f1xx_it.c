@@ -283,19 +283,6 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-#if MODBUS_USART == 2
-	if(__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_RXNE)!= RESET) 
-		{
-			prvvUARTRxISR();//接收中断
-		}
-
-	if(__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_TXE)!= RESET) 
-		{
-			prvvUARTTxReadyISR();//发送中断
-		}
-	
-  HAL_NVIC_ClearPendingIRQ(USART2_IRQn);
-#endif
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
@@ -309,35 +296,10 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-#if (MOTOR_MODULE_HUART == 3)
-	DEBUG_LED2_ON();
-	uint8_t temp=0;
-	if((__HAL_UART_GET_FLAG(&huart3,UART_FLAG_IDLE) != RESET))//如果是接收完成中断，idle标志被置位
-	{
-		__HAL_UART_CLEAR_IDLEFLAG(&huart3);//清除标志位
-		HAL_UART_DMAStop(&huart3); //  停止DMA传输，防止
-		temp  =  __HAL_DMA_GET_COUNTER(huart3.hdmarx);// 获取DMA中未传输的数据个数   
-		Motor_RxData(MOTOR_RS485_RX_BUFF_SIZE-temp);
-		
-		memset(Motor_DMABuff,0,MOTOR_RS485_RX_BUFF_SIZE);    				//清空缓存区
-		HAL_UARTEx_ReceiveToIdle_DMA(&huart3, Motor_DMABuff, MOTOR_RS485_RX_BUFF_SIZE); // 接收完毕后重启
-		__HAL_DMA_DISABLE_IT(&hdma_usart3_rx, DMA_IT_HT);		   // 手动关闭DMA_IT_HT中断
-	 }
-	DEBUG_LED2_OFF();
-#elif MODBUS_USART == 3
-	if(__HAL_UART_GET_IT_SOURCE(&huart3, UART_IT_RXNE)!= RESET) 
-		{
-			prvvUARTRxISR();//接收中断
-		}
 
-	if(__HAL_UART_GET_IT_SOURCE(&huart3, UART_IT_TXE)!= RESET) 
-		{
-			prvvUARTTxReadyISR();//发送中断
-		}
-	
-  HAL_NVIC_ClearPendingIRQ(USART3_IRQn);
-#endif
-	HAL_UART_IRQHandler(&huart3);
+  /* USER CODE END USART3_IRQn 0 */
+  HAL_UART_IRQHandler(&huart3);
+  /* USER CODE BEGIN USART3_IRQn 1 */
 
   /* USER CODE END USART3_IRQn 1 */
 }

@@ -55,9 +55,12 @@ extern "C" {
 
 // 软件版本
 #define	MACRO_SOFTWARE_VERSION_UINT32								0x00000003		//0.3
-
+// 硬件版本
+#define	MACRO_HARDWAR_VERSION_UINT32								0x00030000		//3.0
 // 软件版本  驱动板
 #define	MACRO_DEVICES_VERSION_UINT32								0x00010000		//1.0
+// 硬件版本  驱动板
+#define	MACRO_DEVICES_HARDWAR_VERSION_UINT32								0x00030000		//3.0
 //线程 最小生命周期
 #define THREAD_LIFECYCLE_PERIOD_MIX									10						//ms
 /*==============================================================================================================*/
