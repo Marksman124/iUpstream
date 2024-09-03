@@ -13,6 +13,7 @@
 #include "display.h"
 #include "tm1621.h"
 #include "key.h"
+#include "wifi.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -206,15 +207,13 @@ void Lcd_Display(uint16_t speed, uint16_t time, uint8_t status_para, uint8_t mod
 	Display_Show_Min(GET_TIME_MINUTE_DIGIT(time));
 	Display_Show_Sec(GET_TIME_SECOND_DIGIT(time));
 	// mode
-	if(mode == 0)
-	{
-		if(System_Mode_Free())
-			Display_Show_Mode(0);
-		else
-			Display_Hide_Mode(0xFF);
-	}
-	else
+	if(System_Mode_Free())
+		Display_Show_Mode(0);
+	else if(System_Mode_Train())
 		Display_Show_Mode(mode);
+	else
+		Display_Hide_Mode(0xFF);
+	
 	
 	Lcd_Display_Symbol(status_para);
 	return;
@@ -251,6 +250,9 @@ void Lcd_No_Speed(uint16_t time, uint8_t status_para, uint8_t mode)
 ***********************************************************************/
 void Lcd_Show(void)
 {
+	if((ERROR_DISPLAY_STATUS == Get_System_State_Machine())||(System_Self_Testing_State == 0xAA))
+		return;
+	
 	//背光
 	TM1621_BLACK_ON();
 	
@@ -262,6 +264,38 @@ void Lcd_Show(void)
 	//
 	Lcd_Display(*p_OP_ShowNow_Speed, *p_OP_ShowNow_Time, LCD_Show_Bit,*p_PMode_Now);
 	
+	TM1621_LCD_Redraw();
+	taskEXIT_CRITICAL();
+}
+
+/***********************************************************************
+*		显示 升级
+*
+*
+***********************************************************************/
+void Lcd_Show_Upgradation(uint8_t sum, uint8_t num)
+{
+	uint8_t schedule=0;
+	
+	//背光
+	TM1621_BLACK_ON();
+	
+
+	taskENTER_CRITICAL();
+	//当前包
+	schedule = (num*100)/sum;
+	Display_Show_Speed(schedule);
+	TM1621_Show_Symbol(TM1621_COORDINATE_PERCENTAGE, 		1);
+	//总包数
+	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH, (sum/10)%10);
+	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  	sum%10);
+	
+	//界面
+	TM1621_display_Letter(TM1621_COORDINATE_MIN_HIGH, 	'U');
+	TM1621_display_Letter(TM1621_COORDINATE_MIN_LOW, 		'P');
+	TM1621_display_Letter(TM1621_COORDINATE_SEC_HIGH,  	'd');
+	TM1621_display_Letter(TM1621_COORDINATE_SEC_LOW,   	'E');
+
 	TM1621_LCD_Redraw();
 	taskEXIT_CRITICAL();
 }
@@ -415,6 +449,10 @@ void To_Train_Mode(uint8_t num)
 void System_Self_Testing_Porgram(void)
 {
 	System_Self_Testing_State = 0xAA;
+	//wifi 测试
+	
+	mcu_start_wifitest();
+	
 	Led_Button_On(0);	// 按键
 	// 屏幕
 	TM1621_BLACK_ON();
@@ -423,4 +461,31 @@ void System_Self_Testing_Porgram(void)
 	TM1621_Show_Repeat_All();//全部循环
 	//
 }
+
+extern TaskHandle_t Breath_Light_TaHandle;
+extern TaskHandle_t Rs485_Modbus_TaHandle;
+extern TaskHandle_t Main_TaskHandle;
+extern TaskHandle_t Key_Button_TaskHandle;
+extern TaskHandle_t Motor_TaskHandle;
+extern TaskHandle_t wifi_moduleHandle;
+
+void Freertos_TaskSuspend_All(void)
+{
+	// 暂停任务
+	osThreadSuspend(Breath_Light_TaHandle);
+	osThreadSuspend(Rs485_Modbus_TaHandle);
+	osThreadSuspend(Main_TaskHandle);
+	osThreadSuspend(Motor_TaskHandle);
+}
+
+	
+void Freertos_TaskResume_All(void)
+{
+	// 恢复任务
+	osThreadResume(Breath_Light_TaHandle);
+	osThreadResume(Rs485_Modbus_TaHandle);
+	osThreadResume(Main_TaskHandle);
+	osThreadResume(Motor_TaskHandle);
+}
+
 

@@ -41,7 +41,7 @@
 
 #include "macro_definition.h"				// 统一宏定义
 #include "wifi_thread.h"				// wifi模组
-
+#include "mcu_api.h"						// wifi模组
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -158,11 +158,11 @@ void MX_FREERTOS_Init(void) {
   Key_Button_TaskHandle = osThreadCreate(osThread(Key_Button_Task), NULL);
 
   /* definition and creation of Motor_Task */
-  osThreadDef(Motor_Task, Motor_Handler, osPriorityIdle, 0, 128);
+  osThreadDef(Motor_Task, Motor_Handler, osPriorityIdle, 0, 256);
   Motor_TaskHandle = osThreadCreate(osThread(Motor_Task), NULL);
 
   /* definition and creation of wifi_module */
-  osThreadDef(wifi_module, wifi_module_Handler, osPriorityIdle, 0, 128);
+  osThreadDef(wifi_module, wifi_module_Handler, osPriorityHigh, 0, 640);
   wifi_moduleHandle = osThreadCreate(osThread(wifi_module), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -170,7 +170,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_THREADS */
 
 }
-
+	
 /* USER CODE BEGIN Header_Breath_Light_Handler */
 /**
   * @brief  Function implementing the Breath_Light_Ta thread.
@@ -207,12 +207,14 @@ void Rs485_Modbus_Handler(void const * argument)
   /* USER CODE BEGIN Rs485_Modbus_Handler */
 	Modbus_Init();
 	App_Data_Init();
+	BT_Modbus_Config_Init();
 	//osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */
   while(1)
   {
 		Modbus_Handle_Task();
 		
+		BT_Read_Handler();
 		osDelay(THREAD_PERIOD_RS485_MODBUS_TASK);
   }
   /* USER CODE END Rs485_Modbus_Handler */
@@ -235,6 +237,7 @@ void Main_Handler(void const * argument)
   /* Infinite loop */
   while(1)
   {
+		BT_MsTimeout();
 		
 		App_Timing_Handler();
 		
@@ -259,6 +262,8 @@ void Key_Button_Handler(void const * argument)
   /* Infinite loop */
   while(1)
   {
+		HAL_IWDG_Refresh(&hiwdg);
+		
 		App_Key_Handler();
 		
 		osDelay(THREAD_PERIOD_KEY_BUTTON_TASK);
@@ -298,12 +303,13 @@ void Motor_Handler(void const * argument)
 void wifi_module_Handler(void const * argument)
 {
   /* USER CODE BEGIN wifi_module_Handler */
-	wifi_protocol_init();
+	wifi_Module_Init();
   /* Infinite loop */
   for(;;)
   {
-		wifi_uart_service();
-    osDelay(50);
+		Wifi_Module_Handler();
+		HAL_IWDG_Refresh(&hiwdg);
+    osDelay(THREAD_PERIOD_WIFI_TASK);
   }
   /* USER CODE END wifi_module_Handler */
 }

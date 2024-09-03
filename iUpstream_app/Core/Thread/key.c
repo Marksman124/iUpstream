@@ -17,6 +17,7 @@
 #include "display.h"
 #include "Breath_light.h"
 #include "debug_protocol.h"
+#include "wifi.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -134,7 +135,8 @@ void on_pushButton_clicked(void)
 {
 	if((*p_System_State_Machine == POWER_OFF_STATUS) || System_is_Pause() || System_is_Stop())
 			return;
-
+	if(PMode_Now == 5)//冲浪
+			return;
 	Clean_Timing_Timer_Cnt();
 	Set_Temp_Slow_Down_Speed(0);//设置速度后重新计算
 	
@@ -236,7 +238,6 @@ void on_pushButton_4_Short_Press(void)
 	Clean_Timing_Timer_Cnt();
 	if(*p_System_State_Machine == POWER_OFF_STATUS)//关机中 执行开机
 	{
-			System_Power_On();
 			return;
 	}
 
@@ -303,13 +304,15 @@ void on_pushButton_1_Long_Press(void)
 {
 	if((*p_System_State_Machine == POWER_OFF_STATUS) || System_is_Pause() || System_is_Stop())
 			return;
+	if(PMode_Now == 5)//冲浪
+			return;
 	
-	if(Key_Long_Press_cnt[0] == KEY_LONG_PRESS_TIME)
-	{
-		//长按可设 高精度转速
-		if(Special_Status_Get(SPECIAL_BIT_SPEED_100_GEAR) == 0)
-			Special_Status_Add(SPECIAL_BIT_SPEED_100_GEAR);
-	}
+//	if(Key_Long_Press_cnt[0] == KEY_LONG_PRESS_TIME)
+//	{
+//		//长按可设 高精度转速
+//		if(Special_Status_Get(SPECIAL_BIT_SPEED_100_GEAR) == 0)
+//			Special_Status_Add(SPECIAL_BIT_SPEED_100_GEAR);
+//	}
 	
 	if(Special_Status_Get(SPECIAL_BIT_SPEED_100_GEAR))
 	{
@@ -336,8 +339,19 @@ void on_pushButton_3_Long_Press(void)
 //================================== ④ 开机键  短按
 void on_pushButton_4_Long_Press(void)
 {
+	if(*p_System_State_Machine == POWER_OFF_STATUS)//关机中 执行开机
+	{
+			System_Power_On();
+	}
+	else
+	{
     System_Power_Off();
+	}
+	
+	//Key_Long_Press_cnt[3] = 0;
+	
 }
+
 //================================== ① + ②  组合键
 //   wifi配对
 void on_pushButton_1_2_Long_Press(void)
@@ -417,14 +431,16 @@ void Led_Button_On(uint8_t para)
 }
 
 //特殊按键规则
-void Special_Button_Rules()
+void Special_Button_Rules(uint8_t key_value)
 {
+	if(Get_Upgradation_Static() == UPDATE_START_CMD)
+		return;
 	
 	//关机下 计数 8次
-	if( Key_Multiple_Clicks_Old != Key_IO_Hardware)
+	if( Key_Multiple_Clicks_Old != key_value)
 	{
 		Key_Multiple_Clicks_cnt = 0;
-		Key_Multiple_Clicks_Old = Key_IO_Hardware;
+		Key_Multiple_Clicks_Old = key_value;
 		Key_Multiple_Clicks_time =  Key_Handler_Timer;
 	}
 	Key_Multiple_Clicks_cnt ++;
@@ -433,13 +449,16 @@ void Special_Button_Rules()
 		if(Key_Multiple_Clicks_cnt >= KEY_MULTIPLE_CLICKS_MAX)
 		{
 			// 自测
-			if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_1)
+			if(key_value == KEY_VALUE_BIT_BUTTON_1)
+			{
 				System_Self_Testing_State = 0xAA;
+				Breath_light_Max();
+			}
 			// 菜单
-			else if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_2)
+			else if(key_value == KEY_VALUE_BIT_BUTTON_2)
 				To_Operation_Menu();
 			// 恢复出厂
-			else if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_3)
+			else if(key_value == KEY_VALUE_BIT_BUTTON_3)
 				Restore_Factory_Settings();
 		}
 	}
@@ -480,9 +499,7 @@ void Buzzer_Click_Handler(void)
 //  20 ms
 void App_Key_Task(void)
 {
-	uint8_t i;
-	uint8_t debug_buffer[32]={0};
-	
+	uint8_t i;	
 	Key_Handler_Timer ++;
 	
 		//进入睡眠
@@ -498,51 +515,60 @@ void App_Key_Task(void)
 				Key_For_Sleep_time = Key_Handler_Timer;// 睡眠计时
 				TM1621_Set_light_Mode(0);
 				
-				if(Key_IO_Old == Key_IO_Ordering_Value[i])
+				Key_Long_Press_cnt[i]++;
+				
+				if(Key_Long_Press_cnt[i] == KEY_LONG_PRESS_TIME)//长按
 				{
-					if(++Key_Long_Press_cnt[i] >= KEY_LONG_PRESS_TIME)//长按
-					{
-						//测试发送串口
-					sprintf((char*)debug_buffer,"[按键长按]: %d\n",Key_IO_Ordering_Value[i]);
-					UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
-						
-						if(OPERATION_MENU_STATUS == *p_System_State_Machine)
-							p_Operation_Long_Press[i]();
-						else if(ERROR_DISPLAY_STATUS == *p_System_State_Machine)
-							p_Fault_Long_Press[i]();
-						else
-							p_Funtion_Long_Press[i]();
-					}
-				}
-				else
-				{
-					if(Key_Long_Press_cnt[i] == 0)
-					{
-						Buzzer_Click_On();
-					}
+					Buzzer_Click_On();
+					
+					if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_1)
+						Key_Long_Press_cnt[i] --;
+				
 					//测试发送串口
-					sprintf((char*)debug_buffer,"[按键点击]: %d\n",i);
-					UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
+					DEBUG_PRINT("[按键长按]: %d\n",Key_IO_Ordering_Value[i]);
 					
 					if(OPERATION_MENU_STATUS == *p_System_State_Machine)
-						p_Operation_Button[i]();
+						p_Operation_Long_Press[i]();
 					else if(ERROR_DISPLAY_STATUS == *p_System_State_Machine)
-						p_Fault_Button[i]();
+						p_Fault_Long_Press[i]();
 					else
-						p_Funtion_Button[i]();
-					
-					//关机下 计数 8次
-					if(POWER_OFF_STATUS == *p_System_State_Machine)
-					{
-						Special_Button_Rules();
-					}
-					
-					Key_Long_Press_cnt[i] = 0;
+						p_Funtion_Long_Press[i]();
 				}
 			}
 			else
 			{
-				Key_Long_Press_cnt[i] = 0;
+				if(Key_IO_Old == Key_IO_Ordering_Value[i])//已经按下
+				{
+					if(Key_Long_Press_cnt[i] >= KEY_LONG_PRESS_TIME)//
+					{
+						//测试发送串口
+						DEBUG_PRINT("[按键短按]: %d\n",Key_IO_Ordering_Value[i]);
+					}
+					else
+					{
+						Buzzer_Click_On();
+						//测试发送串口
+						DEBUG_PRINT("[按键点击]: %d\n",i);
+						
+						if(OPERATION_MENU_STATUS == *p_System_State_Machine)
+							p_Operation_Button[i]();
+						else if(ERROR_DISPLAY_STATUS == *p_System_State_Machine)
+							p_Fault_Button[i]();
+						else
+							p_Funtion_Button[i]();
+						
+						//关机下 计数 8次
+						if(POWER_OFF_STATUS == *p_System_State_Machine)
+						{
+							Special_Button_Rules(Key_IO_Ordering_Value[i]);
+						}
+						
+						Key_Long_Press_cnt[i] = 0;
+					}
+					
+				}
+				else
+					Key_Long_Press_cnt[i] = 0;
 			}
 		}
 		
@@ -620,6 +646,8 @@ uint8_t Key_Get_IO_Input(void)
 //	开机 进入自由模式
 void System_Power_On(void)
 {
+	Out_Of_Upgradation();
+	Freertos_TaskResume_All();
 	// 检查 属性
 	Check_Data_Init();
 

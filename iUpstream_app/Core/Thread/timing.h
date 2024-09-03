@@ -113,7 +113,6 @@ uint8_t If_Fault_Recovery_Max(void);
 //-------------------- 清除 自动关机计时器 ----------------------------
 void Clean_Automatic_Shutdown_Timer(void);
 
-
 /* Private defines -----------------------------------------------------------*/
 //电机电流低
 extern uint16_t Check_Motor_Current_Cnt;

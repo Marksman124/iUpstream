@@ -197,7 +197,8 @@ void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-	HAL_UART_Receive_IT(&huart2, (uint8_t *)aRxBuffer2, 1);
+	 // __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+    HAL_UART_Receive_IT(&huart2, (uint8_t *)aRxBuffer2, 1); // 开始接收一个字节
   /* USER CODE END USART2_Init 2 */
 
 }
@@ -311,7 +312,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_NVIC_SetPriority(UART5_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(UART5_IRQn);
   /* USER CODE BEGIN UART5_MspInit 1 */
-
   /* USER CODE END UART5_MspInit 1 */
   }
   else if(uartHandle->Instance==USART1)
@@ -368,7 +368,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(RS485_B_GPIO_Port, &GPIO_InitStruct);
 
     /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
+    HAL_NVIC_SetPriority(USART2_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
@@ -547,6 +547,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if (huart->Instance == USART2) //如果是串口2
 	{
 		uart_receive_input(aRxBuffer2[0]);
+		HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer2, 1);
 	}
 
 	if (huart->Instance == USART3) //如果是串口3
@@ -620,7 +621,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if (huart->Instance == UART5) //如果是串口5
 	{
 		__HAL_UART_CLEAR_IDLEFLAG(&huart5);
-		Usart_IRQ_CallBack(aRxBuffer4[0]);
+		Usart_IRQ_CallBack(aRxBuffer5[0]);
 	}
 }
 

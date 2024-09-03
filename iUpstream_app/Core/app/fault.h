@@ -52,6 +52,7 @@ typedef enum
 #define FAULT_MOTOR_DRIVER									0x80
 #define FAULT_MOTOR_LOSS										0x100
 
+#define FAULT_WIFI_TEST_ERROR								0x200
 //-------------- 按键组合响应 总数 -------------------
 #define CALL_OUT_NUMBER_MAX						8
 

@@ -49,7 +49,7 @@ uint32_t Dev_BaudRate_Get(uint8_t usart_num)
 	}
 	else if(usart_num == WIFI_USART)	// wifi
 	{
-		return 115200;
+		return 9600;
 	}
 	else if(usart_num == DRIVER_USART)	// Çý¶¯°å
 	{

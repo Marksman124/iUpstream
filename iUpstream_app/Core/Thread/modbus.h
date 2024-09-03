@@ -129,7 +129,7 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 
 #define MB_MOTOR_FAULT_STATUS					          	( 0x09 )	// 	电机 	故障状态
 #define MB_MOS_TEMPERATURE					          		( 0x0A )	//	mos 	温度
-#define MB_MOTOR_TEMPERATURE					          	( 0x0B )	//	电机	温度
+#define MB_BOX_TEMPERATURE					          		( 0x0B )	//	电箱	温度
 #define MB_MOTOR_CURRENT					          			( 0x0C )	// 	电机 	电流
 #define MB_MOTOR_REALITY_SPEED					          ( 0x0E )	//	电机 	实际 转速
 #define MB_MOTOR_BUS_VOLTAGE					          	( 0x10 )	//	母线 	电压

@@ -35,8 +35,8 @@
 static uint8_t Timing_Timer_Cnt = 0;
 
 // 任务计时器
+static uint32_t Timing_Thread_Task_Cnt = 0;
 static uint32_t Timing_Half_Second_Cnt = 0;
-
 static uint32_t WIFI_Distribution_Timing_Cnt=0;		// wifi状态图标 计时器
 static uint32_t BT_Distribution_Timing_Cnt=0;			// 蓝牙状态图标 计时器
 static uint32_t System_Fault_Timing_Cnt=0;				// 故障恢复 计时器
@@ -56,6 +56,9 @@ uint16_t Check_Motor_Current_Cnt=0;
 //电机转速不符
 uint16_t Check_Motor_Speed_Cnt=0;
 
+//  刷新屏幕
+static uint8_t LCD_Refresh_State= 0;
+
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -71,6 +74,18 @@ void App_Timing_Init(void)
 void Clean_Timing_Timer_Cnt(void)
 {
 	Timing_Timer_Cnt = 0;
+}
+
+// 停止刷新
+void LCD_Refresh_Set(uint8_t value)
+{
+	LCD_Refresh_State = value;
+}
+
+// 停止刷新
+uint8_t LCD_Refresh_Get(void)
+{
+	return LCD_Refresh_State;
 }
 
 void Speed_Save_Flash(Operating_Parameters op_node,uint8_t system_state)
@@ -295,16 +310,19 @@ void Running_State_Handler(void)
 	else if(*p_System_State_Machine == TRAINING_MODE_RUNNING)					// 训练
 	{
 		*p_OP_ShowNow_Time = (*p_OP_ShowNow_Time + 1);
-		if(*p_PMode_Now == 5)//冲浪
+		if(*p_PMode_Now == SURFING_MODE_NUMBER_ID)//冲浪
 		{
 			if(*p_OP_ShowNow_Time >= 6000)
 			{
 				*p_OP_ShowNow_Time = 0;
 			}
-			if((*p_OP_ShowNow_Time % 10) == 0)
+			
+			if((OP_ShowNow.time < 10))
+				Data_Set_Current_Speed(30);//注意,需要在切完运行状态后再设置速度,如"暂停"
+			else if(((OP_ShowNow.time-10) % (Temp_Data_P5_100_Time+Temp_Data_P5_0_Time)) == 0)
 				Data_Set_Current_Speed(100);//注意,需要在切完运行状态后再设置速度,如"暂停"
-			else if((*p_OP_ShowNow_Time % 10) == 6)
-				Data_Set_Current_Speed(20);//注意,需要在切完运行状态后再设置速度,如"暂停"
+			else if(((OP_ShowNow.time-10) % (Temp_Data_P5_100_Time+Temp_Data_P5_0_Time)) == Temp_Data_P5_100_Time)
+				Data_Set_Current_Speed(30);//注意,需要在切完运行状态后再设置速度,如"暂停"
 		}
 		else if(Is_Mode_Legal(*p_PMode_Now))
 		{
@@ -439,16 +457,22 @@ void Pause_State_Handler(void)
 	{
 		System_Power_Off();
 	}
-//	if(*p_OP_ShowNow_Time > 0)
-//	{
-//		*p_OP_ShowNow_Time --;
-//		Lcd_Show();
-//	}
 	Lcd_Show();
 	if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
 		Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
 }
-
+// 菜单 状态基  0.5秒进一次
+void Operation_State_Handler(void)
+{
+	Timing_Timer_Cnt++;
+	// 3秒 闪烁
+	if(Timing_Timer_Cnt > 60)
+	{
+		System_Power_Off();
+		if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
+			Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
+	}
+}
 // 停止 状态基  1秒进一次
 void Stop_State_Handler(void)
 {
@@ -488,9 +512,15 @@ void Initial_State_Handler(void)
 	if(Timing_Timer_Cnt < 6)
 	{
 		if(( (Timing_Timer_Cnt % 2) == 1)&&(Timing_Timer_Cnt > 1))
+		{
+			LCD_Refresh_Set(1);
 			Lcd_Speed_Off();
+		}
 		else
+		{
+			LCD_Refresh_Set(0);
 			Lcd_Show();
+		}
 	}
 	else
 	{
@@ -534,82 +564,155 @@ void Initial_State_Handler(void)
 // 定时任务主线程
 void App_Timing_Task(void)
 {
-	if((System_is_Power_Off())||(System_is_Operation()))
+	if(System_is_Power_Off())
 		return;
 	
-	Timing_Half_Second_Cnt ++;
-//	if(Timing_Half_Second_Cnt > 10000)
-//		Timing_Half_Second_Cnt = 0;
+	Timing_Thread_Task_Cnt++;
 	
-	WIFI_State_Handler();
-	BT_State_Handler();
-
-	if((Timing_Half_Second_Cnt % 2) == 1)
+	if(Timing_Thread_Task_Cnt >= TIMING_THREAD_HALF_SECOND) //半秒
 	{
-		// 时间 : 闪烁  半秒
-		if(System_is_Normal_Operation())
+		Timing_Thread_Task_Cnt = 0;
+		Timing_Half_Second_Cnt ++;
+//		if(Timing_Half_Second_Cnt > 10000)
+//		Timing_Half_Second_Cnt = 0;
+		
+		WIFI_State_Handler();
+		BT_State_Handler();
+		
+		
+		static uint8_t half_second_state=0;
+		if(half_second_state == 1)
 		{
-			LCD_Show_Bit |= STATUS_BIT_COLON;
-			TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		1);
-			TM1621_LCD_Redraw();
-		}
-	}
-	else
-	{
-		if(Motor_is_Start()==0)
-		{
+			half_second_state = 0;
 			// 时间 : 闪烁  半秒
-			LCD_Show_Bit &= ~STATUS_BIT_COLON;
-			TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		0);
-			TM1621_LCD_Redraw();
-		}
-		//故障检测
-		if(If_System_Is_Error())
-		{
-			Fault_State_Handler();
+			if(System_is_Normal_Operation())
+			{
+				LCD_Show_Bit |= STATUS_BIT_COLON;
+				TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		1);
+				TM1621_LCD_Redraw();
+			}
 		}
 		else
 		{
-			System_Fault_Timing_Cnt = 0;
-			
-			if(ERROR_DISPLAY_STATUS == Get_System_State_Machine())// && (If_Fault_Recovery_Max() == 0))
+			half_second_state = 1;
+
+			if(Motor_is_Start()==0)
 			{
-				Clean_Fault_State();
-				Lcd_Show();
+				// 时间 : 闪烁  半秒
+				LCD_Show_Bit &= ~STATUS_BIT_COLON;
+				TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		0);
+				TM1621_LCD_Redraw();
 			}
-			
-			if(System_is_Initial())
+			//故障检测
+			if(If_System_Is_Error())
 			{
-				Initial_State_Handler();
+				Fault_State_Handler();
 			}
-			else if(System_is_Starting())
+			else
 			{
-				Starting_State_Handler();
-			}
-			else if(System_is_Running())
-			{
-				Running_State_Handler();
-			}
-			else if(System_is_Pause())//暂停
-			{
-				Pause_State_Handler();
-			}
-			else if(System_is_Stop())//结束
-			{
-				Stop_State_Handler();
+				System_Fault_Timing_Cnt = 0;
+				
+				if(ERROR_DISPLAY_STATUS == Get_System_State_Machine())// && (If_Fault_Recovery_Max() == 0))
+				{
+					Clean_Fault_State();
+					Lcd_Show();
+				}
+				
+				if(System_is_Initial())
+				{
+					Initial_State_Handler();
+				}
+				else if(System_is_Starting())
+				{
+					Starting_State_Handler();
+				}
+				else if(System_is_Running())
+				{
+					Running_State_Handler();
+				}
+				else if(System_is_Pause())//暂停
+				{
+					Pause_State_Handler();
+				}
+				else if(System_is_Stop())//结束
+				{
+					Stop_State_Handler();
+				}
+				else if(System_is_Operation())//菜单
+				{
+					Operation_State_Handler();
+				}
 			}
 		}
 	}
+	
+	if(LCD_Refresh_Get()== 0)
+		Lcd_Show();
+//	{
+//		if(Motor_is_Start()==0)
+//		{
+//			// 时间 : 闪烁  半秒
+//			LCD_Show_Bit &= ~STATUS_BIT_COLON;
+//			TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		0);
+//			TM1621_LCD_Redraw();
+//		}
+//		//故障检测
+//		if(If_System_Is_Error())
+//		{
+//			Fault_State_Handler();
+//		}
+//		else
+//		{
+//			System_Fault_Timing_Cnt = 0;
+//			
+//			if(ERROR_DISPLAY_STATUS == Get_System_State_Machine())// && (If_Fault_Recovery_Max() == 0))
+//			{
+//				Clean_Fault_State();
+//				Lcd_Show();
+//			}
+//			
+//			if(System_is_Initial())
+//			{
+//				Initial_State_Handler();
+//			}
+//			else if(System_is_Starting())
+//			{
+//				Starting_State_Handler();
+//			}
+//			else if(System_is_Running())
+//			{
+//				Running_State_Handler();
+//			}
+//			else if(System_is_Pause())//暂停
+//			{
+//				Pause_State_Handler();
+//			}
+//			else if(System_is_Stop())//结束
+//			{
+//				Stop_State_Handler();
+//			}
+//		}
+//	}
 }
 
 // 定时任务主线程
 void App_Timing_Handler(void)
 {
+//	static uint16_t restart_cnt=0;
+//	
+//	if(System_Restart_State == 0xAA)
+//	{
+//		if(restart_cnt++ > 10)
+//		{
+//			SysSoftReset();// 软件复位
+//		}
+//	}
 	
 	if(System_Self_Testing_State == 0xAA)
 	{
 		System_Self_Testing_Porgram();
-		System_Power_Off();
+		//System_Power_Off();
+		System_Power_On();
 		System_Self_Testing_State = 0;
 	}
 	else
@@ -684,3 +787,6 @@ void Clean_Automatic_Shutdown_Timer(void)
 {
 	 Automatic_Shutdown_Timing_Cnt = Timing_Half_Second_Cnt;
 }
+
+
+

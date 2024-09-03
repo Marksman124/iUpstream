@@ -176,18 +176,21 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
             break;
 
         case MB_REG_WRITE:
-					taskENTER_CRITICAL();
-            while( usNRegs > 0 )
-            {
-							usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-							usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-							iRegIndex++;
-              usNRegs--;
-            }
-						taskEXIT_CRITICAL();
-						if(Check_Need_CallOut(usAddress))
+						if(If_Accept_External_Control())
 						{
-							HoldingCallOut(usAddress);
+							taskENTER_CRITICAL();
+							while( usNRegs > 0 )
+							{
+								usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+								usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+								iRegIndex++;
+								usNRegs--;
+							}
+							taskEXIT_CRITICAL();
+							if(Check_Need_CallOut(usAddress))
+							{
+								HoldingCallOut(usAddress);
+							}
 						}
 						break;
         }
@@ -465,15 +468,16 @@ void Get_Mapping_Register(void)
 	//p_Motor_Pole_Number = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_DISTRIBUTION_NETWORK_CONTROL);
 	p_Motor_Pole_Number = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_MOTOR_POLE_NUMBER);
 	
-	
+	//驱动板软件版本
+	p_Driver_Software_Version = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER , MB_DRIVER_SOFTWARE_VERSION);
 	//系统 故障状态
 	p_System_Fault_Static = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER , MB_SYSTEM_FAULT_STATUS);
 	//电机 故障状态
 	p_Motor_Fault_Static = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_FAULT_STATUS);
 	//mos 温度
 	p_Mos_Temperature = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOS_TEMPERATURE);
-	//电机 温度
-	p_Motor_Temperature = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_TEMPERATURE);
+	//电箱 温度
+	p_Box_Temperature = Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_BOX_TEMPERATURE);
 	//电机 电流
 	p_Motor_Current = (uint32_t*)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER,MB_MOTOR_CURRENT);
 	//电机 实际 转速

@@ -30,7 +30,7 @@ extern "C" {
 
 /* USER CODE BEGIN Includes */
 #define USART_REC_LEN  			100  	//定义最大接收字节数 200
-#define RXBUFFERSIZE   20 //缓存大小
+#define RXBUFFERSIZE   1 //缓存大小
 
 #define MODBUS_RS485_TX_EN_PORT			GPIOC
 #define MODBUS_RS485_TX_EN_PIN			GPIO_PIN_6

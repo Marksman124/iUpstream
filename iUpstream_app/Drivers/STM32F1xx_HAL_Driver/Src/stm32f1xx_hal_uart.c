@@ -2644,7 +2644,6 @@ __weak void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
   *                the configuration information for the specified UART module.
   * @retval None
   */
-/* ?D????“a?“???|“∟“ao?ㄓ“oy?那??“2?????|“∟“aoverrun??“a?“? */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     uint8_t i = 0;
@@ -2654,18 +2653,18 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 			__HAL_UART_CLEAR_OREFLAG(huart);
         HAL_UART_Receive_IT(huart,(uint8_t *)&i,1);
 			
-			if (huart->Instance == USART3) //““?1?“o?????“23
+			if (huart->Instance == USART3)
 			{
-				memset(Motor_DMABuff,0,MOTOR_RS485_RX_BUFF_SIZE);    				//?????o?????
-				__HAL_UART_CLEAR_IDLEFLAG(huart);               //??3y?角“o????
-				HAL_UART_Receive_DMA(huart,Motor_DMABuff,MOTOR_RS485_RX_BUFF_SIZE);  //?aDMA?“?“o??那?“oy?Y???““?rx_buffer“oy?芍“|?D??那
+				memset(Motor_DMABuff,0,MOTOR_RS485_RX_BUFF_SIZE);
+				__HAL_UART_CLEAR_IDLEFLAG(huart);
+				HAL_UART_Receive_DMA(huart,Motor_DMABuff,MOTOR_RS485_RX_BUFF_SIZE);
 
 			}
-			else if (huart->Instance == UART4) //““?1?“o?????“24
+			else if (huart->Instance == UART4)
 			{
-				memset(Debug_Read_Buffer,0,DEBUG_PROTOCOL_RX_MAX);    				//?????o?????
-				__HAL_UART_CLEAR_IDLEFLAG(huart);               //??3y?角“o????
-				HAL_UART_Receive_DMA(huart,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);  //?aDMA?“?“o??那?“oy?Y???““?rx_buffer“oy?芍“|?D??那
+				memset(Debug_Read_Buffer,0,DEBUG_PROTOCOL_RX_MAX);
+				__HAL_UART_CLEAR_IDLEFLAG(huart);
+				HAL_UART_Receive_DMA(huart,Debug_Read_Buffer,DEBUG_PROTOCOL_RX_MAX);
 
 			}
 //			else

@@ -1141,11 +1141,6 @@
               <FileType>1</FileType>
               <FilePath>..\Core\app\my_modbus.c</FilePath>
             </File>
-            <File>
-              <FileName>wifi_thread.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\app\wifi_thread.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -1180,6 +1175,11 @@
               <FileName>macro_definition.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Core\Thread\macro_definition.h</FilePath>
+            </File>
+            <File>
+              <FileName>wifi_thread.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Thread\wifi_thread.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -17,6 +17,7 @@
 #include "key.h"
 #include "ntc_3950.h"
 #include "timing.h"
+#include "wifi.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -67,8 +68,8 @@ static uint32_t Chassis_TEMP_Timer_cnt= 0;	//高温 计数器
 
 uint16_t Fault_Label[16] = {0x001,0x002,0x003,0x004,
 															0x101,0x102,
-															0x201,0x202,0x203,
-															0x301,0x302,0x303,0x304,0x305,0x306,0x307};
+															0x201,0x202,0x203,0x204,
+															0x301,0x302,0x303,0x304,0x305,0x306};
 
 uint8_t Fault_Number_Sum = 0;	// 故障总数
 uint8_t Fault_Number_Cnt = 0;	// 当前故障
@@ -111,10 +112,12 @@ void App_Fault_Init(void)
 uint8_t If_System_Is_Error(void)
 {
 	float Temperature;
-	uint8_t debug_buffer[32]={0};
 	//uint8_t motor_fault=0;
 	uint16_t system_fault=0;
 
+	if(System_is_Operation())//菜单
+		return 0;
+			
 	//电机故障  含驱动板通讯故障
 	system_fault = Get_Motor_Fault_State();
 	//添加本地故障  新增功能 
@@ -145,9 +148,19 @@ uint8_t If_System_Is_Error(void)
 #else
 	Temperature = Get_External_Temp();
 #endif
-		
-	sprintf((char*)debug_buffer,"机箱温度：%0.3f °C \n",Temperature);
-	UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
+	if(*p_Box_Temperature != Temperature)
+	{
+		*p_Box_Temperature = (Temperature*10);
+		//*p_Box_Temperature = -100; //测试负数
+		mcu_dp_value_update(DPID_GET_BOX_TEMPERATURE,*p_Box_Temperature); //VALUE型数据上报;
+	}
+	DEBUG_PRINT("机箱温度：%0.3f °C \n",Temperature);
+	// wifi故障 
+	if(WIFI_Rssi < WIFI_RSSI_ERROR_VAULE)
+	{
+		//wifi模组
+		system_fault |= FAULT_WIFI_TEST_ERROR;
+	}
 	
 	// 机箱 温度
 	if(Temperature == -100)
@@ -203,7 +216,9 @@ uint8_t If_System_Is_Error(void)
 			}
 		}
 		else
+		{
 			*p_System_Fault_Static = system_fault;
+		}
 	}
 
 	
@@ -286,7 +301,7 @@ void To_Fault_Menu(void)
 	
 	Lcd_Fault_Display(Fault_Number_Sum, Fault_Number_Cnt, Get_Fault_Number_Now(*p_MB_Fault_State,Fault_Number_Cnt));
 	
-	//Clean_Automatic_Shutdown_Timer();  //自动关机
+	Clean_Automatic_Shutdown_Timer();  //自动关机
 }
 // 故障界面 更新
 void Update_Fault_Menu(void)

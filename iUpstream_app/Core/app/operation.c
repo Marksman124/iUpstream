@@ -260,14 +260,16 @@ void To_Operation_Menu(void)
 {
 	// 操作 菜单
 	App_Operation_Init();
-	
+	Clean_Timing_Timer_Cnt();
 	//功能暂停, 电机关闭
 	Set_System_State_Machine(OPERATION_MENU_STATUS);
-
+#ifdef OPERATION_P5_ACCELERATION
+	Operation_State_Machine = OPERATION_P5_ACCELERATION;		//	状态机	
+  Operation_Menu_Value = Temp_Data_P5_Acceleration;		//	菜单值	
+#else
 	Operation_State_Machine = OPERATION_ADDR_SET;		//	状态机	
-
   Operation_Menu_Value = Operation_Addr_Value;		//	菜单值	
-	
+#endif
 	Lcd_Show_Operation( Operation_State_Machine, Operation_Menu_Value);
 	
 }
@@ -281,7 +283,37 @@ void To_Operation_Menu(void)
 // ① 档位键
 static void on_Button_1_clicked(void)
 {
+	Clean_Timing_Timer_Cnt();
 	button_cnt = 0;
+#ifdef OPERATION_P5_ACCELERATION
+	if(Operation_State_Machine == OPERATION_P5_ACCELERATION)
+	{
+		if(Temp_Data_P5_Acceleration < 4)
+			(Temp_Data_P5_Acceleration)++;
+		else
+			Temp_Data_P5_Acceleration = 1;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_Acceleration);
+	}
+	else if(Operation_State_Machine == OPERATION_P5_100_TIME)
+	{
+		if(Temp_Data_P5_100_Time < 60)
+			(Temp_Data_P5_100_Time)++;
+		else
+			Temp_Data_P5_100_Time = 1;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_100_Time);
+	}
+	else if(Operation_State_Machine == OPERATION_P5_0_TIME)
+	{
+		if(Temp_Data_P5_0_Time < 60)
+			(Temp_Data_P5_0_Time)++;
+		else
+			Temp_Data_P5_0_Time = 1;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_0_Time);
+	}
+#endif
 	//------- 地址
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
@@ -354,6 +386,36 @@ static void on_Button_1_clicked(void)
 static void on_Button_2_clicked(void)
 {
 	button_cnt = 0;
+	Clean_Timing_Timer_Cnt();
+#ifdef OPERATION_P5_ACCELERATION
+	if(Operation_State_Machine == OPERATION_P5_ACCELERATION)
+	{
+		if(Temp_Data_P5_Acceleration > 1)
+			(Temp_Data_P5_Acceleration)--;
+		else
+			Temp_Data_P5_Acceleration = 4;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_Acceleration);
+	}
+	else if(Operation_State_Machine == OPERATION_P5_100_TIME)
+	{
+		if(Temp_Data_P5_100_Time > 1)
+			(Temp_Data_P5_100_Time)--;
+		else
+			Temp_Data_P5_100_Time = 60;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_100_Time);
+	}
+	else if(Operation_State_Machine == OPERATION_P5_0_TIME)
+	{
+		if(Temp_Data_P5_0_Time > 1)
+			(Temp_Data_P5_0_Time)--;
+		else
+			Temp_Data_P5_0_Time = 60;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_0_Time);
+	}
+#endif
 	//------- 地址
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
@@ -427,9 +489,25 @@ static void on_Button_2_clicked(void)
 // ③ 模式键
 static void on_Button_3_clicked(void)
 {
+	Clean_Timing_Timer_Cnt();
 	button_cnt = 0;
 	switch(Operation_State_Machine)
 	{
+#ifdef OPERATION_P5_ACCELERATION
+		case OPERATION_P5_ACCELERATION:
+			Operation_State_Machine += 1;
+			Lcd_Show_Operation( Operation_State_Machine, (Temp_Data_P5_100_Time));
+		break;
+		case OPERATION_P5_100_TIME:
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+			Operation_State_Machine += 1;
+			Lcd_Show_Operation( Operation_State_Machine, (Temp_Data_P5_0_Time));
+		break;
+		case OPERATION_P5_0_TIME:
+			Operation_State_Machine = OPERATION_ADDR_SET;
+			Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
+		break;
+#endif
 		case OPERATION_ADDR_SET:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
 			Operation_State_Machine = OPERATION_BAUD_RATE;
@@ -471,12 +549,17 @@ static void on_Button_3_clicked(void)
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_BREATH_LIGHT_MAX, Operation_Breath_Light_Max );
 #endif
 			Operation_State_Machine = OPERATION_DEIVES_VERSION;
-			Lcd_Show_Operation( Operation_State_Machine, (*p_Motor_Temperature));
+			//Lcd_Show_Operation( Operation_State_Machine, (DEVICES_VERSION_HIGH*100 + DEVICES_VERSION_LOW));
+		Lcd_Show_Operation( Operation_State_Machine, (*p_Driver_Software_Version));
 		break;
-		
 		default:
+#ifdef OPERATION_P5_ACCELERATION
+			Operation_State_Machine = OPERATION_P5_ACCELERATION;
+			Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_Acceleration);
+#else
 			Operation_State_Machine = OPERATION_ADDR_SET;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
+#endif
 		break;
 	}
 }
@@ -520,19 +603,39 @@ static void on_Button_2_4_Short_Press(void)
 //------------------- 按键回调   长按 ----------------------------
 
 static void on_Button_1_Long_Press(void)
-{	
+{
+#ifdef OPERATION_P5_ACCELERATION
+	if(Operation_State_Machine == OPERATION_P5_100_TIME)
+	{
+		if(Temp_Data_P5_100_Time < 60)
+			(Temp_Data_P5_100_Time)++;
+		else
+			Temp_Data_P5_100_Time = 1;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_100_Time);
+	}
+	else if(Operation_State_Machine == OPERATION_P5_0_TIME)
+	{
+		if(Temp_Data_P5_0_Time < 60)
+			(Temp_Data_P5_0_Time)++;
+		else
+			Temp_Data_P5_0_Time = 1;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_0_Time);
+	}
+#endif
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
 		if(Operation_Addr_Value < 255)
 		{
-			button_cnt++;
-			if(button_cnt > 5)
-			{
-				(Operation_Addr_Value) += 5;
-			}
-			else if(button_cnt > 10)
-				(Operation_Addr_Value) += 10;
-			else
+//			button_cnt++;
+//			if(button_cnt > 5)
+//			{
+//				(Operation_Addr_Value) += 5;
+//			}
+//			else if(button_cnt > 10)
+//				(Operation_Addr_Value) += 10;
+//			else
 				(Operation_Addr_Value)++;
 			
 			if(Operation_Addr_Value > 255)
@@ -597,20 +700,40 @@ static void on_Button_1_Long_Press(void)
 
 static void on_Button_2_Long_Press(void)
 {
+#ifdef OPERATION_P5_ACCELERATION
+	if(Operation_State_Machine == OPERATION_P5_100_TIME)
+	{
+		if(Temp_Data_P5_100_Time > 1)
+			(Temp_Data_P5_100_Time)--;
+		else
+			Temp_Data_P5_100_Time = 60;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_100_Time);
+	}
+	else if(Operation_State_Machine == OPERATION_P5_0_TIME)
+	{
+		if(Temp_Data_P5_0_Time > 1)
+			(Temp_Data_P5_0_Time)--;
+		else
+			Temp_Data_P5_0_Time = 60;
+		
+		Lcd_Show_Operation( Operation_State_Machine, Temp_Data_P5_0_Time);
+	}
+#endif
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
 		if(Operation_Addr_Value > 0)
 		{
-			button_cnt++;
-			if(button_cnt > 5)
-			{
-				(Operation_Addr_Value) -= 5;
-			}
-			else if(button_cnt > 10)
-			{
-				(Operation_Addr_Value) -= 10;
-			}
-			else
+//			button_cnt++;
+//			if(button_cnt > 5)
+//			{
+//				(Operation_Addr_Value) -= 5;
+//			}
+//			else if(button_cnt > 10)
+//			{
+//				(Operation_Addr_Value) -= 10;
+//			}
+//			else
 				(Operation_Addr_Value)--;
 			
 		}

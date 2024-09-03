@@ -23,6 +23,14 @@ extern "C" {
 #define DEBUG_PROTOCOL_RX_MAX			64
 #define DEBUG_PROTOCOL_TX_MAX			256
 
+extern uint8_t debug_buffer[128];
+
+// 定义DEBUG_PRINT宏，用于条件编译调试信息
+#ifdef UART_PRINTF_LOG
+  #define DEBUG_PRINT(fmt, ...) 	printf((char*)debug_buffer,"DEBUG: " fmt "\n", ##__VA_ARGS__);UART_Send_Debug(debug_buffer,strlen((char*)debug_buffer));
+#else
+  #define DEBUG_PRINT(fmt, ...)
+#endif
 
 extern uint8_t Debug_Read_Buffer[DEBUG_PROTOCOL_RX_MAX];
 

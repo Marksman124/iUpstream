@@ -25,8 +25,12 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+Operating_Parameters OP_ShowNow;
+
 Operating_Parameters* p_OP_ShowLater;
 
+// 训练模式 当前状态
+uint8_t PMode_Now = 0;
 
 uint8_t Period_Now = 0;
 
@@ -40,6 +44,7 @@ Operating_Parameters OP_Init_PMode[TRAINING_MODE_NUMBER_MAX][TRAINING_MODE_PERIO
 {{45,180},{55,360}, {45,480},{70,720},{45,780},{55,1020},{45,1200}},
 {{70,300},{80,540}, {70,600},{85,840},{70,900},{80,1200},{70,1500}},
 {{45,420},{65,1440},{45,1800}},
+{{30,00}},
 };
 
 //--------------------------- 系统属性
@@ -55,11 +60,13 @@ Operating_Parameters* p_OP_Free_Mode;
 Operating_Parameters* p_OP_Timing_Mode;
 
 Operating_Parameters (*p_OP_PMode)[TRAINING_MODE_PERIOD_MAX] = OP_Init_PMode;
-	
+
+uint16_t* p_Driver_Software_Version;			//驱动板软件版本
+
 uint16_t* p_System_Fault_Static;			//故障状态
 uint16_t* p_Motor_Fault_Static;				//故障状态
 uint16_t* p_Mos_Temperature;					//mos 温度
-uint16_t* p_Motor_Temperature;				//电机 温度
+uint16_t* p_Box_Temperature;					//电箱 温度
 uint32_t* p_Motor_Current;						//电机 电流
 uint32_t* p_Motor_Reality_Speed;			//电机 实际 转速
 uint16_t* p_Motor_Bus_Voltage;				//母线 电压
@@ -71,6 +78,13 @@ uint16_t* p_Motor_Pole_Number;				//电机极数
 uint16_t* p_Breath_Light_Max;					//光圈亮度  
 	
 uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX]={0};//电机状态
+
+//================= 临时变量  全局 ================================
+uint16_t Temp_Data_P5_Acceleration = 2;				//P5 加速度
+uint16_t Temp_Data_P5_100_Time = 15;					//P5 100% 时间	秒
+uint16_t Temp_Data_P5_0_Time = 15;						//P5 0% 	时间	秒
+
+uint8_t WIFI_Rssi = 0xFF;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -268,3 +282,12 @@ void Set_Pmode_Period_Now(uint16_t value)
 	Period_Now = value;
 }
 
+
+//------------------- 是否接收外部控制 ----------------------------
+uint8_t If_Accept_External_Control(void)
+{
+	if(ERROR_DISPLAY_STATUS != Get_System_State_Machine())
+		return 1;
+	else
+		return 0;
+}

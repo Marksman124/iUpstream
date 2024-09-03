@@ -46,9 +46,10 @@ typedef struct Operating_Parameters
 
 //-------------- 训练模式 最大值 -------------------
 
-#define TRAINING_MODE_NUMBER_MAX						4
+#define TRAINING_MODE_NUMBER_MAX						5
 #define TRAINING_MODE_PERIOD_MAX						50
-
+//冲浪模式 --》 P5
+#define SURFING_MODE_NUMBER_ID							5
 //------------------- 合法范围 ----------------------------
 #define SPEED_LEGAL_MIN						20
 #define SPEED_LEGAL_MAX						100
@@ -88,11 +89,18 @@ extern void Data_Set_Current_Speed(uint8_t speed);
 extern void Data_Set_Current_Time(uint16_t time);
 //------------------- 设置 训练时段 ----------------------------
 extern void Set_Pmode_Period_Now(uint16_t value);
-
+//------------------- 是否接收外部控制 ----------------------------
+extern uint8_t If_Accept_External_Control(void);
 
 /* Private defines -----------------------------------------------------------*/
 
+extern Operating_Parameters OP_ShowNow;
+
 extern Operating_Parameters* p_OP_ShowLater;
+
+
+// 训练模式 当前状态
+extern uint8_t PMode_Now;
 
 extern uint8_t Period_Now;
 
@@ -116,10 +124,12 @@ extern Operating_Parameters* p_OP_Timing_Mode;
 
 extern Operating_Parameters (*p_OP_PMode)[TRAINING_MODE_PERIOD_MAX];
 
+extern uint16_t* p_Driver_Software_Version;			//驱动板软件版本
+
 extern uint16_t* p_System_Fault_Static;			//故障状态
 extern uint16_t* p_Motor_Fault_Static;			//故障状态
 extern uint16_t* p_Mos_Temperature;					//mos 温度
-extern uint16_t* p_Motor_Temperature;				//电机 温度
+extern uint16_t* p_Box_Temperature;				//电机 温度
 extern uint32_t* p_Motor_Current;						//电机 电流
 extern uint32_t* p_Motor_Reality_Speed;			//电机 实际 转速
 extern uint16_t* p_Motor_Bus_Voltage;				//母线 电压
@@ -133,6 +143,14 @@ extern uint16_t* p_Breath_Light_Max;				//光圈亮度
 extern uint8_t Motor_State_Storage[MOTOR_PROTOCOL_ADDR_MAX];//电机状态
 
 extern uint8_t System_Self_Testing_State;
+
+//================= 临时变量  全局 ================================
+extern uint16_t Temp_Data_P5_Acceleration;			//P5 加速度
+extern uint16_t Temp_Data_P5_100_Time;					//P5 100% 时间	秒
+extern uint16_t Temp_Data_P5_0_Time;						//P5 0% 	时间	秒
+
+extern uint8_t WIFI_Rssi;
+
 
 #ifdef __cplusplus
 }

@@ -44,6 +44,9 @@ uint8_t Chassis_Temperature_Debug=0;
 uint8_t Debug_Protocol_Mode	=	0;
 uint8_t Debug_Send_Buffer[DEBUG_PROTOCOL_TX_MAX];
 uint8_t Debug_Read_Buffer[DEBUG_PROTOCOL_RX_MAX];
+
+uint8_t debug_buffer[128]={0};
+
 /* USER CODE END PV */
 
 extern DMA_HandleTypeDef hdma_uart4_rx;

@@ -54,7 +54,7 @@ extern "C" {
 #define	MACRO_SYSTEM_PRODUCT_MODEL_CODE								(1200)		//
 
 // 软件版本
-#define	MACRO_SOFTWARE_VERSION_UINT32								0x00000003		//0.3
+#define	MACRO_SOFTWARE_VERSION_UINT32								0x00030003		//0.3
 // 硬件版本
 #define	MACRO_HARDWAR_VERSION_UINT32								0x00030000		//3.0
 // 软件版本  驱动板
@@ -103,7 +103,7 @@ extern "C" {
 //线程周期
 #define KEY_THREAD_LIFECYCLE								(2*THREAD_LIFECYCLE_PERIOD_MIX)	// 任务生命周期 200ms
 
-#define KEY_LONG_PRESS_TIME									(3000/KEY_THREAD_LIFECYCLE)			//长按时间 3s
+#define KEY_LONG_PRESS_TIME									(2000/KEY_THREAD_LIFECYCLE)			//长按时间 2s
 #define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
 //-------------- 蜂鸣器 长度 -------------------
 //******************  调试模式 **************************
@@ -135,30 +135,34 @@ extern "C" {
 #define TIMING_THREAD_TURN_ON					1
 
 #if(TIMING_THREAD_TURN_ON)
-#define TIMING_THREAD_LIFECYCLE				(50*THREAD_LIFECYCLE_PERIOD_MIX)				// ms
+#define TIMING_THREAD_LIFECYCLE				(5*THREAD_LIFECYCLE_PERIOD_MIX)				// ms
 
+//半秒周期数
+#define TIMING_THREAD_HALF_SECOND			(500/TIMING_THREAD_LIFECYCLE)				// 0.5 s
+//1秒周期数
+#define TIMING_THREAD_ONE_SECOND			(1000/(TIMING_THREAD_HALF_SECOND*TIMING_THREAD_LIFECYCLE))				// 1 s
 //******************  调试模式 **************************
 #ifdef SYSTEM_DEBUG_MODE
 //配网时长
-#define WIFI_DISTRIBUTION_TIME_CALLOUT				(6*(1000/TIMING_THREAD_LIFECYCLE))				// 6 s
-#define BT_DISTRIBUTION_TIME_CALLOUT					(6*(1000/TIMING_THREAD_LIFECYCLE))				// 6 s
+#define WIFI_DISTRIBUTION_TIME_CALLOUT				(6*TIMING_THREAD_ONE_SECOND)				// 6 s
+#define BT_DISTRIBUTION_TIME_CALLOUT					(6*TIMING_THREAD_ONE_SECOND)				// 6 s
 //故障自恢复
-#define SYSTEM_FAULT_TIME_CALLOUT							(20*(1000/TIMING_THREAD_LIFECYCLE))				// 20 s
+#define SYSTEM_FAULT_TIME_CALLOUT							(20*TIMING_THREAD_ONE_SECOND)				// 20 s
 #define SYSTEM_FAULT_RECOVERY_MAX							(3)				// 3 次故障
-#define SYSTEM_FAULT_RECOVERY_TIME						(60*(1000/TIMING_THREAD_LIFECYCLE))				// 1 分钟  60 s
+#define SYSTEM_FAULT_RECOVERY_TIME						(60*TIMING_THREAD_ONE_SECOND)				// 1 分钟  60 s
 //自动关机
-#define AUTOMATIC_SHUTDOWN_TIME								(600*(1000/TIMING_THREAD_LIFECYCLE))				// 10 min
+#define AUTOMATIC_SHUTDOWN_TIME								(600*TIMING_THREAD_ONE_SECOND)				// 10 min
 
 #else
 //配网时长
-#define WIFI_DISTRIBUTION_TIME_CALLOUT				(60*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
-#define BT_DISTRIBUTION_TIME_CALLOUT					(60*(1000/TIMING_THREAD_LIFECYCLE))				// 60 s
+#define WIFI_DISTRIBUTION_TIME_CALLOUT				(60*TIMING_THREAD_ONE_SECOND)				// 60 s
+#define BT_DISTRIBUTION_TIME_CALLOUT					(60*TIMING_THREAD_ONE_SECOND)				// 60 s
 //故障自恢复
-#define SYSTEM_FAULT_TIME_CALLOUT							(120*(1000/TIMING_THREAD_LIFECYCLE))				// 120 s
+#define SYSTEM_FAULT_TIME_CALLOUT							(120*TIMING_THREAD_ONE_SECOND)				// 120 s
 #define SYSTEM_FAULT_RECOVERY_MAX							(3)				// 3 次故障
-#define SYSTEM_FAULT_RECOVERY_TIME						(3600*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+#define SYSTEM_FAULT_RECOVERY_TIME						(3600*TIMING_THREAD_ONE_SECOND)				// 1 小时内  3600 s
 //自动关机
-#define AUTOMATIC_SHUTDOWN_TIME								(3600*(1000/TIMING_THREAD_LIFECYCLE))				// 1 小时内  3600 s
+#define AUTOMATIC_SHUTDOWN_TIME								(1800*TIMING_THREAD_ONE_SECOND)				// 0.5 小时内  1800 s
 
 #endif
 //自动关机 时间
@@ -241,6 +245,11 @@ extern "C" {
 //#define	MOTOR_CURRENT_MIX									(1000)				//10A
 //电机转速误差范围
 //#define	MOTOR_SPEED_VIBRATION_RANGE					(20*MOTOR_POLE_NUMBER)				//乘以电机极数
+
+
+//电机加速度
+#define	MOTOR_ACCELERATION										(1)
+
 //-------------------------------------------------------------------------------------------------
 //-------------- MOS 温度报警值 90°C -------------------
 #define MOS_TEMP_ALARM_VALUE								(90)
@@ -269,6 +278,26 @@ extern "C" {
 #endif
 /*==============================================================================================================*/
 /*==============================================================================================================*/
+
+
+
+/*========================================== <wifi_thread.h> macro ==================================================*/
+/*==============================================================================================================*/
+#define WIFI_THREAD_TURN_ON					1
+
+#if(WIFI_THREAD_TURN_ON)
+#define WIFI_THREAD_LIFECYCLE							(2*THREAD_LIFECYCLE_PERIOD_MIX)				// ms 暂时不用
+
+//wifi 故障 判断值
+#define WIFI_RSSI_ERROR_VAULE										(60)
+
+#endif
+/*==============================================================================================================*/
+/*==============================================================================================================*/
+
+
+
+
 #ifdef __cplusplus
 }
 #endif

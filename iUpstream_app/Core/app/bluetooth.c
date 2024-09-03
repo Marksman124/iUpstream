@@ -43,6 +43,12 @@ void SerialWrite(unsigned char *buff,int length)
 	HAL_UART_Transmit(&huart5,buff,length,1000);
 }
 
+//串口发送接口
+void BT_Read_Data_Bit(unsigned char vaule)
+{
+	MsSerialRead(&Ms_BT_Modbus,&vaule,1);
+}
+
 //接收中断调用
 void Usart_IRQ_CallBack(uint8_t data)
 {
@@ -54,7 +60,7 @@ void Usart_IRQ_CallBack(uint8_t data)
 void BT_Modbus_Config_Init(void)
 {
 	//初始化对象
-	MsInit(&Ms_BT_Modbus,21,10,SerialWrite);
+	MsInit(&Ms_BT_Modbus,21,1,SerialWrite);
 	//设置01寄存器的参数，不设置的话会返回无效的功能错误码
 	//MsConfigureRegister(&Ms_BT_Modbus,0x01,buff01,sizeof(buff01));
 	//MsConfigureRegister(&Ms_BT_Modbus,0x0F,buff01,sizeof(buff01));
@@ -64,7 +70,13 @@ void BT_Modbus_Config_Init(void)
 	MsConfigureRegister(&Ms_BT_Modbus,0x05,Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,0),REG_HOLDING_NREGS);
 	
 }
-
+/*******************************************************************************
+*功能：超时计数，放到定时器中运行，一般放到1ms中断足够满足要求
+*******************************************************************************/
+void BT_MsTimeout(void)
+{
+	MsTimeout(&Ms_BT_Modbus);
+}
 
 //------------------- 设置wifi状态机 ----------------------------
 void BT_Set_Machine_State(BT_STATE_MODE_E para)
@@ -85,7 +97,7 @@ BT_STATE_MODE_E BT_Get_Machine_State(void)
 //------------------- 接收处理函数 ----------------------------
 void BT_Read_Handler(void)
 {
-
+	MsProcess(&Ms_BT_Modbus);
 }
 
 //------------------- 进入配网 ----------------------------

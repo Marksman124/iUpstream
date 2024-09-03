@@ -32,6 +32,12 @@ extern "C" {
 
 //typedef enum 
 //{
+
+//#define	OPERATION_P5_ACCELERATION				(1)			//	加速度
+//#define	OPERATION_P5_100_TIME						(OPERATION_P5_ACCELERATION+1)			//	100% 时间
+//#define	OPERATION_P5_0_TIME							(OPERATION_P5_100_TIME+1)			//	0% 时间
+
+
 #define OPERATION_ADDR_SET							(1)																//	地址设置
 #define	OPERATION_BAUD_RATE							(OPERATION_ADDR_SET+1)						//	波特率
 //#define	OPERATION_SPEED_MODE					(OPERATION_BAUD_RATE+1)						//	转速方式： 0：转速  1：功率
@@ -43,7 +49,6 @@ extern "C" {
 //#define	OPERATION_BREATH_LIGHT_MAX			(OPERATION_DISPLAY_VERSION+1)			//	光圈亮度
 
 #define	OPERATION_DEIVES_VERSION				(OPERATION_DISPLAY_VERSION+1)			//	驱动板 版本号
-
 #define	OPERATION_STATE_END							(OPERATION_DEIVES_VERSION+1)			//	结束
 //} OPERATION_STATE_MODE_E;
 
