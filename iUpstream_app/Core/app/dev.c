@@ -116,10 +116,14 @@ void Set_Baud_Rate(uint16_t rate)
 	MB_Flash_Buffer_Write();
 }
 
-void Set_Software_Version(uint32_t version)
+void Set_Software_Version(void)
 {
-	*p_Software_Version_high = version>>16;
-	*p_Software_Version_low = version;
+	uint32_t version_u32=0;
+	
+	version_u32 = get_uint3_version(SOFTWARE_VERSION_UINT32);
+	
+	*p_Software_Version_high = version_u32>>16;
+	*p_Software_Version_low = version_u32;
 	
 	// дflash
 	//STMFLASH_Write(USER_FLASH_ADDR_SOFTWARE_VERSION, (uint16_t*)p_Software_Version, 2);

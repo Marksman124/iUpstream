@@ -15,6 +15,7 @@
 #include "math.h"
 #include "fault.h"
 #include "timing.h"
+
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -348,14 +349,16 @@ void Motor_State_Analysis(void)
 {
 	//static uint32_t Rx_cnt= 0;
 	uint16_t result_fault=0;
-	
+	short int Temperature=0;
 	Motor_Rx_Timer_cnt = 0;
 	//驱动板 通讯故障 恢复
 	Motor_Fault_State &= ~FAULT_MOTOR_LOSS;
-	
+
 	//
 	// 滤波后的mosfet温度
-	*p_Mos_Temperature = Motor_State_Storage[MOTOR_ADDR_MOSFET_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_MOSFET_TEMP_OFFSET+1];
+	Temperature = Motor_State_Storage[MOTOR_ADDR_MOSFET_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_MOSFET_TEMP_OFFSET+1];
+	memcpy(p_Mos_Temperature, &Temperature, 2);
+	
 	// 滤波后的电机温度 改用 软件版本
 	*p_Driver_Software_Version = Motor_State_Storage[MOTOR_ADDR_MOTOR_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_MOTOR_TEMP_OFFSET+1];
 	// 电机平均电流
@@ -374,7 +377,7 @@ void Motor_State_Analysis(void)
 	Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET+1]};
 	
 	sprintf((char*)debug_send_buffer,"\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t\t\t%d\n母线电压:\t%d.%d\n电机故障:\t\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
-			*p_Mos_Temperature/10,*p_Mos_Temperature%10,*p_Driver_Software_Version/10,*p_Driver_Software_Version%10,*p_Motor_Current/100,*p_Motor_Current%100,
+			Temperature/10,Temperature%10,*p_Driver_Software_Version/10,*p_Driver_Software_Version%10,*p_Motor_Current/100,*p_Motor_Current%100,
 			*p_Motor_Reality_Speed,*p_Motor_Bus_Voltage/10,*p_Motor_Bus_Voltage%10,*p_Motor_Fault_Static,
 			ntc_tmp[0]/10,ntc_tmp[0]%10,ntc_tmp[1]/10,ntc_tmp[1]%10,ntc_tmp[2]/10,ntc_tmp[2]%10);
 	
@@ -398,7 +401,7 @@ void Motor_State_Analysis(void)
 	
 	// 高温降速	mos
 
-	if(*p_Mos_Temperature >= (MOS_TEMP_ALARM_VALUE*10))				//-------------  停机
+	if(Temperature >= (MOS_TEMP_ALARM_VALUE*10))				//-------------  停机
 	{
 		if(Motor_TEMP_Timer_cnt < (MOTOR_TEMP_TIMER_MAX*2))
 			Motor_TEMP_Timer_cnt ++;
@@ -407,7 +410,7 @@ void Motor_State_Analysis(void)
 			Motor_Fault_State |= FAULT_TEMPERATURE_MOS;
 		}
 	}
-	else if(*p_Mos_Temperature >= (MOS_TEMP_REDUCE_SPEED*10))				//-------------  降速
+	else if(Temperature >= (MOS_TEMP_REDUCE_SPEED*10))				//-------------  降速
 	{
 		if(Motor_TEMP_Timer_cnt < MOTOR_TEMP_TIMER_MAX)
 			Motor_TEMP_Timer_cnt ++;
@@ -418,7 +421,7 @@ void Motor_State_Analysis(void)
 				Set_Temp_Slow_Down_State(1);
 		}
 	}
-	else if(*p_Mos_Temperature <= (MOS_TEMP_RESTORE_SPEED*10))				//-------------  恢复
+	else if(Temperature <= (MOS_TEMP_RESTORE_SPEED*10))				//-------------  恢复
 	{
 		if(Motor_TEMP_Timer_cnt > 0)
 			Motor_TEMP_Timer_cnt = 0;

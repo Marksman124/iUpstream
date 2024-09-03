@@ -712,8 +712,11 @@ void Restore_Factory_Settings(void)
 	
 	// wifi 恢复
 	
+	TM1621_Show_All();
+	osDelay(2000);
+	System_Power_Off();
 	// 返回 自由模式 初始状态
-	To_Free_Mode(1);
+	//To_Free_Mode(1);
 	
 }
 

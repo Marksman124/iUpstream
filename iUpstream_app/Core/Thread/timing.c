@@ -507,11 +507,11 @@ void Initial_State_Handler(void)
 		}
 		return;
 	}
-	Timing_Timer_Cnt++;
+	
 	// 3√Î …¡À∏
-	if(Timing_Timer_Cnt < 6)
+	if(Timing_Timer_Cnt < 3)
 	{
-		if(( (Timing_Timer_Cnt % 2) == 1)&&(Timing_Timer_Cnt > 1))
+		if((Timing_Timer_Cnt % 2) == 1)
 		{
 			LCD_Refresh_Set(1);
 			Lcd_Speed_Off();
@@ -558,6 +558,8 @@ void Initial_State_Handler(void)
 //		}
 		Timing_Timer_Cnt = 0;
 	}
+	
+	Timing_Timer_Cnt++;
 }
 
 

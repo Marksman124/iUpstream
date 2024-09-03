@@ -491,6 +491,7 @@ static void on_Button_3_clicked(void)
 {
 	Clean_Timing_Timer_Cnt();
 	button_cnt = 0;
+	
 	switch(Operation_State_Machine)
 	{
 #ifdef OPERATION_P5_ACCELERATION
@@ -536,7 +537,8 @@ static void on_Button_3_clicked(void)
 		case OPERATION_SHIELD_MENU:
 			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
 			Operation_State_Machine = OPERATION_DISPLAY_VERSION;
-			Lcd_Show_Operation( Operation_State_Machine, (SOFTWARE_VERSION_HIGH*100 + SOFTWARE_VERSION_LOW));
+			
+			Lcd_Show_Operation( Operation_State_Machine, ((*p_Software_Version_high)*100 + (*p_Software_Version_low)));
 		break;
 		
 		case OPERATION_DISPLAY_VERSION:

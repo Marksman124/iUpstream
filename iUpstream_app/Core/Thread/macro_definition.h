@@ -26,7 +26,7 @@ extern "C" {
 /*========================================== <main.h> macro ====================================================*/
 
 //******************  调试模式 **************************
-//#define SYSTEM_DEBUG_MODE					1
+#define SYSTEM_DEBUG_MODE					1
 #define UART_PRINTF_LOG						1
 //#define UART_DEBUG_SEND_CTRL			1
 //*******************************************************
@@ -54,13 +54,16 @@ extern "C" {
 #define	MACRO_SYSTEM_PRODUCT_MODEL_CODE								(1200)		//
 
 // 软件版本
-#define	MACRO_SOFTWARE_VERSION_UINT32								0x00030003		//0.3
+#define	MACRO_SOFTWARE_VERSION_UINT32									"1.0.1"
+
 // 硬件版本
-#define	MACRO_HARDWAR_VERSION_UINT32								0x00030000		//3.0
+//#define	MACRO_HARDWAR_VERSION_UINT32								0x00030000		//3.0
 // 软件版本  驱动板
-#define	MACRO_DEVICES_VERSION_UINT32								0x00010000		//1.0
+//#define	MACRO_DEVICES_VERSION_UINT32								0x00010000		//1.0
 // 硬件版本  驱动板
-#define	MACRO_DEVICES_HARDWAR_VERSION_UINT32								0x00030000		//3.0
+//#define	MACRO_DEVICES_HARDWAR_VERSION_UINT32								0x00030000		//3.0
+
+
 //线程 最小生命周期
 #define THREAD_LIFECYCLE_PERIOD_MIX									10						//ms
 /*==============================================================================================================*/

@@ -250,8 +250,11 @@ void Lcd_No_Speed(uint16_t time, uint8_t status_para, uint8_t mode)
 ***********************************************************************/
 void Lcd_Show(void)
 {
-	if((ERROR_DISPLAY_STATUS == Get_System_State_Machine())||(System_Self_Testing_State == 0xAA))
-		return;
+
+	if(System_is_Operation() || System_is_Error() || System_is_Power_Off()||(System_Self_Testing_State == 0xAA))
+	{
+			return ;
+	}
 	
 	//±³¹â
 	TM1621_BLACK_ON();

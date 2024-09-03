@@ -12,6 +12,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "data.h"
 #include "modbus.h"
+#include <stdlib.h>
+#include <string.h>
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -291,3 +293,30 @@ uint8_t If_Accept_External_Control(void)
 	else
 		return 0;
 }
+
+//------------------- 获取软件版本号  字符串转 uint32 ----------------------------
+uint32_t get_uint3_version(char * buffer)
+{
+	char str[32];
+	char *tmp;
+	uint32_t version = 0;
+	
+	strncpy(str, (const char *)buffer, strlen(buffer));
+	
+	tmp = strtok(str, ".");
+	if (tmp != NULL) {
+			version = (uint8_t)atoi(tmp)<<16;
+
+			// 软件子版本号初始化
+			tmp = strtok(NULL, ".");
+			if (tmp != NULL) {
+					tmp = strtok(NULL, ".");
+					if (tmp != NULL) {
+							version |= (uint8_t)atoi(tmp);
+					}
+			}
+	}
+	return version;
+}
+
+

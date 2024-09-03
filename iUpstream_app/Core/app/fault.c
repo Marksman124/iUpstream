@@ -114,7 +114,8 @@ uint8_t If_System_Is_Error(void)
 	float Temperature;
 	//uint8_t motor_fault=0;
 	uint16_t system_fault=0;
-
+	short int vaule;
+		
 	if(System_is_Operation())//菜单
 		return 0;
 			
@@ -147,18 +148,16 @@ uint8_t If_System_Is_Error(void)
 	}
 #else
 	Temperature = Get_External_Temp();
+	vaule = Temperature * 10;
 #endif
-	if(*p_Box_Temperature != Temperature)
+	if(*p_Box_Temperature != vaule)
 	{
-		*p_Box_Temperature = (Temperature*10);
-		//*p_Box_Temperature = -100; //测试负数
-		mcu_dp_value_update(DPID_GET_BOX_TEMPERATURE,*p_Box_Temperature); //VALUE型数据上报;
+		memcpy(p_Box_Temperature, &vaule, 2);
 	}
 	DEBUG_PRINT("机箱温度：%0.3f °C \n",Temperature);
 	// wifi故障 
 	if(WIFI_Rssi < WIFI_RSSI_ERROR_VAULE)
 	{
-		//wifi模组
 		system_fault |= FAULT_WIFI_TEST_ERROR;
 	}
 	

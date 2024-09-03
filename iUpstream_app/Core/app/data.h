@@ -91,6 +91,10 @@ extern void Data_Set_Current_Time(uint16_t time);
 extern void Set_Pmode_Period_Now(uint16_t value);
 //------------------- 是否接收外部控制 ----------------------------
 extern uint8_t If_Accept_External_Control(void);
+//------------------- 获取软件版本号  字符串转 uint32 ----------------------------
+extern uint32_t get_uint3_version(char * buffer);
+
+
 
 /* Private defines -----------------------------------------------------------*/
 

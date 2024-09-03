@@ -40,7 +40,7 @@ extern uint16_t Read_Baud_Rate(void);
 extern uint32_t Read_Software_Version(void);
 extern void Set_Local_Address(uint16_t addr);
 extern void Set_Baud_Rate(uint16_t rate);
-extern void Set_Software_Version(uint32_t version);
+extern void Set_Software_Version(void);
 
 
 

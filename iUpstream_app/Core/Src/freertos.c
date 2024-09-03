@@ -231,7 +231,7 @@ void Main_Handler(void const * argument)
 {
   /* USER CODE BEGIN Main_Handler */
 	
-	Set_Software_Version(SOFTWARE_VERSION_UINT32);
+	Set_Software_Version();
 	App_Timing_Init();
 	osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */

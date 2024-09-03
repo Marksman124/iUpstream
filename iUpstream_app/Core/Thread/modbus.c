@@ -181,8 +181,17 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
 							taskENTER_CRITICAL();
 							while( usNRegs > 0 )
 							{
-								usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-								usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+								//×´Ì¬»ú
+								if((iRegIndex == MB_SYSTEM_WORKING_STATUS) && ( *(++pucRegBuffer) > TRAINING_MODE_STOP ))
+								{
+									pucRegBuffer++;
+									pucRegBuffer++;
+								}
+								else
+								{
+									usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+									usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+								}
 								iRegIndex++;
 								usNRegs--;
 							}
