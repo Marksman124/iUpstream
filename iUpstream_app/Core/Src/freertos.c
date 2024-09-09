@@ -208,7 +208,7 @@ void Rs485_Modbus_Handler(void const * argument)
 	Modbus_Init();
 	App_Data_Init();
 	BT_Modbus_Config_Init();
-	osDelay(5000);
+	osDelay(2000);
 	BT_Module_AT_Init();
   /* Infinite loop */
   while(1)

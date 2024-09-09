@@ -35,6 +35,8 @@ typedef struct
 	void (*SerialWrite)(unsigned char *buff,int length);
 }ModbusSlaveObj_t;
 
+void Chenk_BT_State(unsigned char* p_buffer, unsigned char len);
+
 //主循环运行
 void MsProcess(ModbusSlaveObj_t * pObj);
 //对象初始化

@@ -13,6 +13,7 @@
 #include "bluetooth.h"
 #include "my_modbus.h"
 #include "modbus.h"
+#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -28,7 +29,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-static BT_STATE_MODE_E BT_State_Machine=0;
+static BT_STATE_MODE_E BT_State_Machine = BT_NO_CONNECT;
 //串口接收
 uint8_t BT_Uart_Read_Buffer;
 //声明一个对象
@@ -78,9 +79,9 @@ void Usart_IRQ_CallBack(uint8_t data)
 // AT 指令 设 名称
 void BT_Set_Name(void)
 {
-	char buff[32]={0};
+	char buff[32]={"AT+BLENAME=inverjet\r\n"};
 	
-	sprintf(buff,"AT+BLENAME=inverjet\r\n");
+	//sprintf(buff,"AT+BLENAME=inverjet\r\n");
 	
 	SerialWrite((uint8_t*)buff,strlen(buff));
 }
@@ -102,17 +103,43 @@ void BT_Set_MTU(uint8_t data)
 	
 	SerialWrite((uint8_t*)buff,strlen(buff));
 }
+// AT 指令 进入透传
+void BT_Set_TRANSENTER(uint8_t data)
+{
+	char buff[32]={0};
+	
+	if(data == 0)//退出
+	{
+		SerialWrite((uint8_t*)"+++",3);
+	}
+	else
+	{
+		sprintf(buff,"AT+TRANSENTER\r\n");
+	
+		SerialWrite((uint8_t*)buff,strlen(buff));
+	}
+}
 //
 void BT_Module_AT_Init(void)
 {
-	BT_Set_Name();
+	BT_Set_TRANSENTER(0);
+	osDelay(1000);
+	BT_Set_MTU(243);
 	osDelay(2000);
+	BT_Set_TRANSENTER(1);//进入透传
+}
+//
+void BT_Module_AT_ReInit(void)
+{
+	SerialWrite((uint8_t*)"+++",3);
+	osDelay(1000);
+	BT_Set_Name();
+	osDelay(1000);
 	BT_Set_Mode(0);
 	osDelay(5000);
 	BT_Set_MTU(243);
 	//osDelay(2000);
 }
-
 //------------------- 蓝牙 Modbus 配置初始化 ----------------------------
 void BT_Modbus_Config_Init(void)
 {
@@ -162,6 +189,7 @@ void BT_Get_In_Distribution(void)
 {
 	BT_Set_Machine_State( BT_DISTRIBUTION );
 	
+	BT_Module_AT_ReInit();
 }
 
 //------------------- 进入故障 ----------------------------

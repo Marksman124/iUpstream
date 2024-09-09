@@ -528,6 +528,7 @@ void Initial_State_Handler(void)
 	}
 	else
 	{
+		LCD_Refresh_Set(0);
 		Update_OP_Data();	// 保存最新转速
 
 		if(*p_System_State_Machine == TIMING_MODE_INITIAL)

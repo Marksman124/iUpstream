@@ -18,6 +18,48 @@ unsigned long BT_Pack_Sum=0;
 
 unsigned char BT_OTA_Buffer[MODBUS_SLAVE_TX_RX_MAX_LEN]={0};
 
+#define BT_MODLE_AT_MSG_LENGTH									23	
+
+/* 连接成功  +EVENT:BLE_CONNECTED > */ 
+const unsigned char connected_table[BT_MODLE_AT_MSG_LENGTH] = {
+	0x2B, 0x45, 0x56, 0x45, 0x4E, 0x54, 0x3A, 0x42, 0x4C, 0x45, 
+	0x5F, 0x43, 0x4F, 0x4E, 0x4E, 0x45, 0x43, 0x54, 0x45, 0x44, 
+	0x0D, 0x0A, 0x3E};
+
+/* 断开连接  +EVENT:BLE_DISCONNECT */ 
+const unsigned char disconnected_table[BT_MODLE_AT_MSG_LENGTH] = {
+	0x2B, 0x45, 0x56, 0x45, 0x4E, 0x54, 0x3A, 0x42, 0x4C, 0x45,
+	0x5F, 0x44, 0x49, 0x53, 0x43, 0x4F, 0x4E, 0x4E, 0x45, 0x43, 
+	0x54, 0x0D, 0x0A};
+
+/* 进入透传  AT+TRANSENTER> */ 
+const unsigned char transenter_table[16] = {
+	0x41, 0x54, 0x2B, 0x54, 0x52, 0x41, 0x4E, 0x53, 0x45, 0x4E, 
+	0x54, 0x45, 0x52, 0x0D, 0x0A, 0x3E};
+
+	
+void Chenk_BT_State(unsigned char* p_buffer, unsigned char len)
+{
+	if(len == BT_MODLE_AT_MSG_LENGTH)
+	{
+		if(memcmp(p_buffer,disconnected_table,BT_MODLE_AT_MSG_LENGTH) == 0)
+		{
+			BT_Set_Machine_State(BT_NO_CONNECT);
+		}
+		else if(memcmp(p_buffer,connected_table,BT_MODLE_AT_MSG_LENGTH) == 0)
+		{
+			BT_Set_Machine_State(BT_WORKING);
+		}
+	}
+	else if(len == 16)
+	{
+		if(memcmp(p_buffer,transenter_table,16) == 0)
+		{
+			BT_Set_Machine_State(BT_WORKING);
+		}
+	}
+}
+
 /*******************************************************************************
 *功能：解锁接收队列
 *******************************************************************************/
@@ -602,6 +644,7 @@ void MsProcess(ModbusSlaveObj_t * pObj)
     {
         return;
     }
+		
 		if(BT_OTA_Mode == 0xAA)
 		{
 			if((pObj->rxWriteIdx == 8)&&(pObj->rxBuff[0] == 0x15)&&(pObj->rxBuff[1] == 0x01)
@@ -643,11 +686,15 @@ void MsProcess(ModbusSlaveObj_t * pObj)
 		}
 		else
 		{
+
 			if(pObj->rxWriteIdx < 4)
 			{
 					_MsRxQueueUnLock(pObj);
 					return;
 			}
+			
+			Chenk_BT_State(pObj->rxBuff , pObj->rxWriteIdx);
+			
 			if(pObj->slaveId != pObj->rxBuff[0])
 			{
 					_MsRxQueueUnLock(pObj);
@@ -665,6 +712,7 @@ void MsProcess(ModbusSlaveObj_t * pObj)
 					_MsRxQueueUnLock(pObj);
 					return;
 			}
+			BT_Set_Machine_State(BT_WORKING);
 			switch(pObj->rxBuff[1])
 			{
 			case 0x01:

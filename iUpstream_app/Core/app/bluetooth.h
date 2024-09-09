@@ -67,9 +67,15 @@ extern BT_STATE_MODE_E BT_Get_Machine_State(void);
 
 //------------------- 蓝牙 Modbus 配置初始化 ----------------------------
 extern void BT_Modbus_Config_Init(void);
-
+// AT 指令 设 MTU
+extern void BT_Set_MTU(uint8_t data);
+// AT 指令 进入透传
+extern void BT_Set_TRANSENTER(uint8_t data);
 //
 extern void BT_Module_AT_Init(void);
+//重新初始化
+extern void BT_Module_AT_ReInit(void);
+
 //------------------- 接收处理函数 ----------------------------
 extern void BT_Read_Handler(void);
 
