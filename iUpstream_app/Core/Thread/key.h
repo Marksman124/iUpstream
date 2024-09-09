@@ -120,6 +120,10 @@ extern void App_Key_Handler(void);
 extern uint8_t Key_Get_IO_Input(void);
 //------------------- 功能接口 ----------------------------
 
+extern void Buzzer_Click_On(void);
+
+extern void Buzzer_Click_Long_On(void);
+
 //	开机 进入自由模式
 extern void System_Power_On(void);
 //	关机

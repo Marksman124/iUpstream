@@ -208,13 +208,19 @@ void Rs485_Modbus_Handler(void const * argument)
 	Modbus_Init();
 	App_Data_Init();
 	BT_Modbus_Config_Init();
-	//osDelay(POWER_ON_WAITE_TIME_TASK);
+	osDelay(5000);
+	BT_Module_AT_Init();
   /* Infinite loop */
   while(1)
   {
+		HAL_IWDG_Refresh(&hiwdg);
+		
+		BT_MsTimeout();
+		
 		Modbus_Handle_Task();
 		
 		BT_Read_Handler();
+		
 		osDelay(THREAD_PERIOD_RS485_MODBUS_TASK);
   }
   /* USER CODE END Rs485_Modbus_Handler */
@@ -237,7 +243,7 @@ void Main_Handler(void const * argument)
   /* Infinite loop */
   while(1)
   {
-		BT_MsTimeout();
+		HAL_IWDG_Refresh(&hiwdg);
 		
 		App_Timing_Handler();
 		

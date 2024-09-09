@@ -35,6 +35,15 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 
+/* 蜂鸣器 参数  ------------------------------------------------------------*/
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define BUZZER_FREQUENCY					1
+#else
+#define BUZZER_FREQUENCY					1
+#endif
+//*******************************************************
+
 #if(LCD_BACK_LIGHT_PWM_CTRL)
 //PWM 控制
 #define TM1621_BLACK_ON()			TM1621_light_On();

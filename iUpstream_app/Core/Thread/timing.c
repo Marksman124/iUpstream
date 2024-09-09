@@ -211,6 +211,8 @@ void CallOut_Fault_State(void)
 	Clean_Fault_State();
 	System_Fault_Timing_Cnt = 0;
 	Check_Motor_Current_Cnt = 0;
+	
+	System_Wifi_State_Clean();
 	Lcd_Show();
 }
 
@@ -468,6 +470,8 @@ void Operation_State_Handler(void)
 	// 3秒 闪烁
 	if(Timing_Timer_Cnt > 60)
 	{
+		//保存 flash
+		Memset_OPMode();//存flash
 		System_Power_Off();
 		if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
 			Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
@@ -509,7 +513,7 @@ void Initial_State_Handler(void)
 	}
 	
 	// 3秒 闪烁
-	if(Timing_Timer_Cnt < 3)
+	if(Timing_Timer_Cnt < 2)
 	{
 		if((Timing_Timer_Cnt % 2) == 1)
 		{
@@ -525,8 +529,6 @@ void Initial_State_Handler(void)
 	else
 	{
 		Update_OP_Data();	// 保存最新转速
-		if(*p_System_State_Machine <= TIMING_MODE_STOP)	// 定时
-			Memset_OPMode();//存flash
 
 		if(*p_System_State_Machine == TIMING_MODE_INITIAL)
 		{

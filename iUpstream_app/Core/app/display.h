@@ -131,6 +131,7 @@ extern void Freertos_TaskSuspend_All(void);
 
 extern void Freertos_TaskResume_All(void);
 
+extern void Freertos_TaskSuspend_RS485(void);
 /* Private defines -----------------------------------------------------------*/
 
 extern uint8_t LCD_Show_Bit;

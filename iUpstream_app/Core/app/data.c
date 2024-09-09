@@ -205,16 +205,18 @@ uint8_t Memset_OPMode(void)
 //存储 新属性
 void Update_OP_Data(void)
 {
-	
-	if(*p_System_State_Machine <= FREE_MODE_STOP)	// 自由
+	if(System_Mode_Free())	// 自由
 	{
 		p_OP_Free_Mode->speed = *p_OP_ShowNow_Speed;
 		p_OP_Free_Mode->time = 0;
+		Memset_OPMode();//存flash
 	}
-	else if(*p_System_State_Machine <= TIMING_MODE_STOP)	// 定时
+	else if(System_Mode_Time())	// 定时
 	{
 		p_OP_Timing_Mode->speed = *p_OP_ShowNow_Speed;
-		p_OP_Timing_Mode->time = *p_OP_ShowNow_Time;
+		if((*p_OP_ShowNow_Time % 900)==0)
+			p_OP_Timing_Mode->time = *p_OP_ShowNow_Time;
+		Memset_OPMode();//存flash
 	}
 //	else if(*p_System_State_Machine <= TRAINING_MODE_STOP)	// 训练  训练不保存
 //	{
@@ -319,4 +321,10 @@ uint32_t get_uint3_version(char * buffer)
 	return version;
 }
 
-
+//------------------- 清除wifi标志 ----------------------------
+void System_Wifi_State_Clean(void)
+{
+	WIFI_Rssi = 0xFF;
+}
+	
+	

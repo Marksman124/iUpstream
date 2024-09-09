@@ -120,7 +120,8 @@ uint32_t Key_Long_Press_cnt[KEY_CALL_OUT_NUMBER_MAX]={0};	// 长按 计数器
 
 uint8_t System_Self_Testing_State = 0;
 
-uint8_t Key_Buzzer_cnt = 0;
+uint8_t Key_Buzzer_cnt = 0; //蜂鸣器计时
+uint8_t Key_Buzzer_Type = 0;	//蜂鸣器长短 类型
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -211,7 +212,13 @@ void on_pushButton_3_clicked(void)
 		return;
 	
 	Clean_Timing_Timer_Cnt();
-	if(System_Mode_Train())
+	
+	if(System_Mode_Free())
+	{
+			To_Train_Mode(1);
+			Fun_Change_Mode();
+	}
+	else if(System_Mode_Train())
 	{
 			if(*p_PMode_Now >= TRAINING_MODE_NUMBER_MAX)
 			{
@@ -224,7 +231,7 @@ void on_pushButton_3_clicked(void)
 	}
 	else
 	{
-			To_Train_Mode(1);
+			To_Free_Mode(0);
 			Fun_Change_Mode();
 	}
 
@@ -341,10 +348,12 @@ void on_pushButton_4_Long_Press(void)
 {
 	if(*p_System_State_Machine == POWER_OFF_STATUS)//关机中 执行开机
 	{
+			Buzzer_Click_Long_On();
 			System_Power_On();
 	}
 	else
 	{
+		Buzzer_Click_Long_On();
     System_Power_Off();
 	}
 	
@@ -451,15 +460,22 @@ void Special_Button_Rules(uint8_t key_value)
 			// 自测
 			if(key_value == KEY_VALUE_BIT_BUTTON_1)
 			{
+				Buzzer_Click_Long_On();
 				System_Self_Testing_State = 0xAA;
 				Breath_light_Max();
 			}
 			// 菜单
 			else if(key_value == KEY_VALUE_BIT_BUTTON_2)
+			{
+				Buzzer_Click_Long_On();
 				To_Operation_Menu();
+			}
 			// 恢复出厂
 			else if(key_value == KEY_VALUE_BIT_BUTTON_3)
+			{
+				Buzzer_Click_Long_On();
 				Restore_Factory_Settings();
+			}
 		}
 	}
 	else
@@ -471,6 +487,17 @@ void Special_Button_Rules(uint8_t key_value)
 
 void Buzzer_Click_On(void)
 {
+	if(System_is_Power_Off())
+		return;
+	
+	Key_Buzzer_cnt = 1;
+	Key_Buzzer_Type = 0;
+}
+
+
+void Buzzer_Click_Long_On(void)
+{
+	Key_Buzzer_Type = 1;
 	Key_Buzzer_cnt = 1;
 }
 
@@ -486,8 +513,20 @@ void Buzzer_Click_Handler(void)
 		}
 		else if(Key_Buzzer_cnt > (KEY_BUZZER_TIME+2))
 		{
-			TM1621_Buzzer_Off();
-			Key_Buzzer_cnt = 0;
+			if(Key_Buzzer_Type == 0)
+			{
+				TM1621_Buzzer_Off();
+				Key_Buzzer_cnt = 0;
+			}
+			else
+			{
+				if(Key_Buzzer_cnt > (KEY_BUZZER_TIME_LONG+2))
+				{
+					TM1621_Buzzer_Off();
+					Key_Buzzer_cnt = 0;
+					Key_Buzzer_Type = 0;
+				}
+			}
 		}
 		
 		if(Key_Buzzer_cnt > 0)
@@ -594,7 +633,7 @@ void App_Key_Handler(void)
 			{
 				if(Key_IO_Hardware > 0)
 				{
-					Buzzer_Click_On();
+					Buzzer_Click_Long_On();
 					
 					Key_IO_Old |= Key_IO_Hardware;
 					Led_Button_On(Key_IO_Old);	// 按键
@@ -646,6 +685,7 @@ uint8_t Key_Get_IO_Input(void)
 //	开机 进入自由模式
 void System_Power_On(void)
 {
+	
 	Out_Of_Upgradation();
 	Freertos_TaskResume_All();
 	// 检查 属性
@@ -682,6 +722,8 @@ void System_Power_Off(void)
 	
 	//退出100档位模式
 	Special_Status_Delete(SPECIAL_BIT_SPEED_100_GEAR);
+	
+	Breath_light_Off();
 }
 
 //	开机画面

@@ -40,13 +40,32 @@ ModbusSlaveObj_t Ms_BT_Modbus;
 //串口发送接口
 void SerialWrite(unsigned char *buff,int length)
 {
-	HAL_UART_Transmit(&huart5,buff,length,1000);
+	HAL_UART_Transmit(&huart5,buff,length,0xFFFF);
 }
 
-//串口发送接口
+//串口接收接口
 void BT_Read_Data_Bit(unsigned char vaule)
 {
-	MsSerialRead(&Ms_BT_Modbus,&vaule,1);
+	//MsSerialRead(&Ms_BT_Modbus,&vaule,1);
+	if(Ms_BT_Modbus.rxWriteLock)
+	{
+			return;
+	}
+
+	Ms_BT_Modbus.rxTimerEnable = 1;
+	Ms_BT_Modbus.rxTimerCnt = 0;
+
+	Ms_BT_Modbus.rxBuff[Ms_BT_Modbus.rxWriteIdx] =vaule;
+	if(Ms_BT_Modbus.rxWriteIdx < (MODBUS_SLAVE_TX_RX_MAX_LEN - 1))
+	{
+			Ms_BT_Modbus.rxWriteIdx++;
+	}
+	else
+	{
+		Ms_BT_Modbus.rxWriteIdx = 0;
+	}
+	
+		
 }
 
 //接收中断调用
@@ -54,6 +73,44 @@ void Usart_IRQ_CallBack(uint8_t data)
 {
 	BT_Uart_Read_Buffer = data;
 	MsSerialRead(&Ms_BT_Modbus,&BT_Uart_Read_Buffer,1);
+}
+
+// AT 指令 设 名称
+void BT_Set_Name(void)
+{
+	char buff[32]={0};
+	
+	sprintf(buff,"AT+BLENAME=inverjet\r\n");
+	
+	SerialWrite((uint8_t*)buff,strlen(buff));
+}
+// AT 指令 设 从机模式
+void BT_Set_Mode(uint8_t data)
+{
+	char buff[32]={0};
+	
+	sprintf(buff,"AT+BLEMODE=%d\r\n",data);
+	
+	SerialWrite((uint8_t*)buff,strlen(buff));
+}
+// AT 指令 设 MTU
+void BT_Set_MTU(uint8_t data)
+{
+	char buff[32]={0};
+	
+	sprintf(buff,"AT+BLEMTU=%d\r\n",data);
+	
+	SerialWrite((uint8_t*)buff,strlen(buff));
+}
+//
+void BT_Module_AT_Init(void)
+{
+	BT_Set_Name();
+	osDelay(2000);
+	BT_Set_Mode(0);
+	osDelay(5000);
+	BT_Set_MTU(243);
+	//osDelay(2000);
 }
 
 //------------------- 蓝牙 Modbus 配置初始化 ----------------------------
@@ -96,7 +153,7 @@ BT_STATE_MODE_E BT_Get_Machine_State(void)
 
 //------------------- 接收处理函数 ----------------------------
 void BT_Read_Handler(void)
-{
+{	
 	MsProcess(&Ms_BT_Modbus);
 }
 

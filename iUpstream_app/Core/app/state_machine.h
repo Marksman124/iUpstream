@@ -37,7 +37,7 @@ typedef enum
 	FREE_MODE_STOP,						//	5		结束
 	//定时模式
   TIMING_MODE_INITIAL,			//	6		初始状态
-	TIMING_MODE_STARTING,			//			启动中
+	TIMING_MODE_STARTING,			//			C
   TIMING_MODE_RUNNING,			//			运行中
 	TIMING_MODE_SUSPEND,			//			暂停
 	TIMING_MODE_STOP,					//	10	结束

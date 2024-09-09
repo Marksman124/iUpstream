@@ -297,7 +297,7 @@ void Lcd_Show_Upgradation(uint8_t sum, uint8_t num)
 	TM1621_display_Letter(TM1621_COORDINATE_MIN_HIGH, 	'U');
 	TM1621_display_Letter(TM1621_COORDINATE_MIN_LOW, 		'P');
 	TM1621_display_Letter(TM1621_COORDINATE_SEC_HIGH,  	'd');
-	TM1621_display_Letter(TM1621_COORDINATE_SEC_LOW,   	'E');
+	TM1621_display_Letter(TM1621_COORDINATE_SEC_LOW,   	'A');
 
 	TM1621_LCD_Redraw();
 	taskEXIT_CRITICAL();
@@ -489,6 +489,16 @@ void Freertos_TaskResume_All(void)
 	osThreadResume(Rs485_Modbus_TaHandle);
 	osThreadResume(Main_TaskHandle);
 	osThreadResume(Motor_TaskHandle);
+	osThreadResume(wifi_moduleHandle);
 }
 
 
+void Freertos_TaskSuspend_RS485(void)
+{
+	// ÔÝÍ£ÈÎÎñ
+	osThreadSuspend(Breath_Light_TaHandle);
+	//osThreadSuspend(Rs485_Modbus_TaHandle);
+	osThreadSuspend(Main_TaskHandle);
+	osThreadSuspend(Motor_TaskHandle);
+	osThreadSuspend(wifi_moduleHandle);
+}

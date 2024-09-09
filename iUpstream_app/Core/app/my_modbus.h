@@ -2,7 +2,7 @@
 #ifndef _MODBUSSLAVE_H
 #define _MODBUSSLAVE_H
 
-#define MODBUS_SLAVE_TX_RX_MAX_LEN  255
+#define MODBUS_SLAVE_TX_RX_MAX_LEN  256
 
 typedef struct
 {

@@ -93,7 +93,8 @@ extern void Set_Pmode_Period_Now(uint16_t value);
 extern uint8_t If_Accept_External_Control(void);
 //------------------- 获取软件版本号  字符串转 uint32 ----------------------------
 extern uint32_t get_uint3_version(char * buffer);
-
+//------------------- 清除wifi标志 ----------------------------
+extern void System_Wifi_State_Clean(void);
 
 
 /* Private defines -----------------------------------------------------------*/

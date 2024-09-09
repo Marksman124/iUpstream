@@ -1,10 +1,23 @@
 
 #include "my_modbus.h"
 #include <string.h>
-
+#include "data.h"
+#include "iap.h"
+#include "modbus.h"
+#include "key.h"
 
 #define _MsGetUint16(A,B)  (unsigned short)((A[B] << 8) | A[B + 1])
 #define _MsGetInt16(A,B)   (short)((A[B] << 8) | A[B + 1])
+	
+
+unsigned char BT_OTA_Mode=0;
+
+unsigned long BT_OTA_Pack_Len=0;					// 总长度
+
+unsigned long BT_Pack_Sum=0;
+
+unsigned char BT_OTA_Buffer[MODBUS_SLAVE_TX_RX_MAX_LEN]={0};
+
 /*******************************************************************************
 *功能：解锁接收队列
 *******************************************************************************/
@@ -13,6 +26,7 @@ void _MsRxQueueUnLock(ModbusSlaveObj_t * pObj)
     pObj->rxWriteLock = 0;
     pObj->rxWriteIdx = 0;
     pObj->rxRecvLen = 0;
+		memset(pObj->rxBuff,0,MODBUS_SLAVE_TX_RX_MAX_LEN);
 }
 /*******************************************************************************
 *功能：超时计数，放到定时器中运行，一般放到1ms中断足够满足要求
@@ -285,6 +299,20 @@ MsState _MsAnalyzeCmd10(ModbusSlaveObj_t *pObj)
 		pObj->reg10Ptr[addr + i] = _MsGetInt16(pObj->rxBuff,7 + j);
 		j += 2;
 	}
+	
+	if(addr == MB_SYSTEM_WORKING_MODE) //	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
+	{
+		if(*p_PMode_Now > 0)//P模式
+		{
+			Set_Pmode_Period_Now(0);
+		}
+		if(*p_System_State_Machine == 0)//状态机
+		{
+			System_Power_Off();
+		}
+		//Ctrl_Set_System_Mode(usRegHoldingBuf[MB_SYSTEM_WORKING_MODE]);
+	}
+			
 	pObj->txBuff[0] = pObj->rxBuff[0];
 	pObj->txBuff[1] = pObj->rxBuff[1];
 	pObj->txBuff[2] = pObj->rxBuff[2];
@@ -459,6 +487,22 @@ MsState _MsAnalyzeCmd06(ModbusSlaveObj_t *pObj)
 		return MS_Illegal_function;
 	}
 	pObj->reg06Ptr[addr] = _MsGetInt16(pObj->rxBuff,4);
+	
+	if(addr == MB_SYSTEM_WORKING_MODE) //	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
+	{
+		if(*p_PMode_Now > 0)//P模式
+		{
+			Set_Pmode_Period_Now(0);
+		}
+	}
+	else if(addr == MB_SYSTEM_WORKING_STATUS)
+	{
+		if(*p_System_State_Machine == 0)//状态机
+		{
+			System_Power_Off();
+		}
+	}
+	
 	pObj->txBuff[0] = pObj->rxBuff[0];
 	pObj->txBuff[1] = pObj->rxBuff[1];
 	pObj->txBuff[2] = pObj->rxBuff[2];
@@ -548,74 +592,130 @@ void MsProcess(ModbusSlaveObj_t * pObj)
 {
 	MsState res;
 	unsigned short crc;
+	
+	unsigned long write_addr=0;						// flash 写入地址
+	unsigned long sign=0;
+	unsigned long len=0;
+	static unsigned char first_error=0;
+	
     if(!pObj->rxWriteLock)
     {
         return;
     }
-    if(pObj->rxWriteIdx < 4)
-    {
-        _MsRxQueueUnLock(pObj);
-        return;
-    }
-    if(pObj->slaveId != pObj->rxBuff[0])
-    {
-        _MsRxQueueUnLock(pObj);
-        return;
-    }
-    if(_MsCRC16(pObj->rxBuff,pObj->rxWriteIdx) != 0)
-    {
-		res = MS_CRC_check_failure;
-		pObj->txBuff[1] += 128; 
-		pObj->txBuff[2]  = res;
-		crc = _MsCRC16(&pObj->txBuff[0],3);
-		pObj->txBuff[3] = crc & 0xFF;
-		pObj->txBuff[4] = (crc >> 8) & 0xFF;
-		pObj->SerialWrite(pObj->txBuff,5);
-        _MsRxQueueUnLock(pObj);
-        return;
-    }
-    switch(pObj->rxBuff[1])
-    {
-		case 0x01:
-			res = _MsAnalyzeCmd01(pObj);
-			break;
-		case 0x02:
-			res = _MsAnalyzeCmd02(pObj);
-			break;
-		case 0x03:
-			res = _MsAnalyzeCmd03(pObj);
-			break;
-		case 0x04:
-			res = _MsAnalyzeCmd04(pObj);
-			break;
-		case 0x05:
-			res = _MsAnalyzeCmd05(pObj);
-			break;
-		case 0x06:
-			res = _MsAnalyzeCmd06(pObj);
-			break;
-		case 0x10:
-			res = _MsAnalyzeCmd10(pObj);
-			break;
-		case 0x0F:
-			res = _MsAnalyzeCmd0F(pObj);
-			break;
-		default :
-			res = MS_Illegal_function;
-			break;
-    }
-	if(res == MS_OK)
-	{
-		pObj->SerialWrite(pObj->txBuff,pObj->sendCount);
+		if(BT_OTA_Mode == 0xAA)
+		{
+			if((pObj->rxWriteIdx == 8)&&(pObj->rxBuff[0] == 0x15)&&(pObj->rxBuff[1] == 0x01)
+				&&(pObj->rxBuff[2] == 0x00)&&(pObj->rxBuff[3] == 0x00)&&(pObj->rxBuff[4] == 0x00)
+			&&(pObj->rxBuff[5] == 0x01)&&(pObj->rxBuff[6] == 0xBB)&&(pObj->rxBuff[7] == 0xBB)) {
+					//固件数据发送完成
+					STMFLASH_Write(BOOT_FLASH_ADDR_OTA_PACK_LEN,(uint16_t*)&BT_OTA_Pack_Len,2); // 写包长度 (含crc)
+					sign = PRODUCT_BOOT_PASSWORD;
+					STMFLASH_Write(BOOT_FLASH_ADDR_OTA_PASSWORD,(uint16_t*)&sign,2); // 进入OTA 
+
+					SysSoftReset();// 软件复位
+				
+			}else {
+				//固件数据处理
+				if(memcmp(BT_OTA_Buffer,pObj->rxBuff,pObj->rxWriteIdx) == 0)
+				{
+					_MsRxQueueUnLock(pObj);
+					first_error ++;
+				}
+				else
+				{
+					len = pObj->rxWriteIdx;
+					memcpy(BT_OTA_Buffer,pObj->rxBuff,len);
+					
+//					if((BT_OTA_Pack_Len + len) > BT_Pack_Sum)
+//					{
+//						len =  BT_Pack_Sum - BT_OTA_Pack_Len;
+//					}
+					_MsRxQueueUnLock(pObj);
+					taskENTER_CRITICAL();
+					write_addr = (FLASH_APP_PATCH_ADDR + BT_OTA_Pack_Len);
+					iap_write_appbin(write_addr,BT_OTA_Buffer,len/2);
+					BT_OTA_Pack_Len += (len);
+					taskEXIT_CRITICAL();
+					
+					Lcd_Show_Upgradation(100,BT_OTA_Pack_Len*100/BT_Pack_Sum);
+				}
+			}
+		}
+		else
+		{
+			if(pObj->rxWriteIdx < 4)
+			{
+					_MsRxQueueUnLock(pObj);
+					return;
+			}
+			if(pObj->slaveId != pObj->rxBuff[0])
+			{
+					_MsRxQueueUnLock(pObj);
+					return;
+			}
+			if(_MsCRC16(pObj->rxBuff,pObj->rxWriteIdx) != 0)
+			{
+			res = MS_CRC_check_failure;
+			pObj->txBuff[1] += 128; 
+			pObj->txBuff[2]  = res;
+			crc = _MsCRC16(&pObj->txBuff[0],3);
+			pObj->txBuff[3] = crc & 0xFF;
+			pObj->txBuff[4] = (crc >> 8) & 0xFF;
+			pObj->SerialWrite(pObj->txBuff,5);
+					_MsRxQueueUnLock(pObj);
+					return;
+			}
+			switch(pObj->rxBuff[1])
+			{
+			case 0x01:
+				res = _MsAnalyzeCmd01(pObj);
+			//进入升级
+			BT_OTA_Mode = 0xAA;
+			BT_OTA_Pack_Len = 0;
+			first_error = 0;
+			BT_Pack_Sum = pObj->rxBuff[2]<<24 | pObj->rxBuff[3]<<16| pObj->rxBuff[4]<<8| pObj->rxBuff[5];
+			Lcd_Show_Upgradation(100,0);
+			Freertos_TaskSuspend_RS485();
+				break;
+			case 0x02:
+				res = _MsAnalyzeCmd02(pObj);
+				break;
+			case 0x03:
+				res = _MsAnalyzeCmd03(pObj);
+				break;
+			case 0x04:
+				res = _MsAnalyzeCmd04(pObj);
+				break;
+			case 0x05:
+				res = _MsAnalyzeCmd05(pObj);
+				break;
+			case 0x06:
+				res = _MsAnalyzeCmd06(pObj);
+				break;
+			case 0x10:
+				res = _MsAnalyzeCmd10(pObj);
+				break;
+			case 0x0F:
+				res = _MsAnalyzeCmd0F(pObj);
+				break;
+			default :
+				res = MS_Illegal_function;
+				break;
+			}
+			if(res == MS_OK)
+			{
+				pObj->SerialWrite(pObj->txBuff,pObj->sendCount);
+			}
+			else
+			{
+				pObj->txBuff[1] += 128; 
+				pObj->txBuff[2]  = res;
+				crc = _MsCRC16(&pObj->txBuff[0],3);
+				pObj->txBuff[3] = crc & 0xFF;
+				pObj->txBuff[4] = (crc >> 8) & 0xFF;
+				pObj->SerialWrite(pObj->txBuff,5);
+			}
+			 _MsRxQueueUnLock(pObj);
 	}
-	else
-	{
-		pObj->txBuff[1] += 128; 
-		pObj->txBuff[2]  = res;
-		crc = _MsCRC16(&pObj->txBuff[0],3);
-		pObj->txBuff[3] = crc & 0xFF;
-		pObj->txBuff[4] = (crc >> 8) & 0xFF;
-		pObj->SerialWrite(pObj->txBuff,5);
-	}
-	 _MsRxQueueUnLock(pObj);
+
 }

@@ -446,7 +446,7 @@ TM1621_Show_Off
 */ 
 void TM1621_Buzzer_On(void)
 {	
-	Buzzer_IO_PwmOut(50);
+	Buzzer_IO_PwmOut(BUZZER_FREQUENCY);
 	//TM1621_Write_CMD(TONEON);
 }
 
@@ -474,18 +474,12 @@ void TM1621_Buzzer_Click(void)
 {
 	TM1621_Buzzer_Off();
 	//-------------- 蜂鸣器 长度 -------------------
-//******************  调试模式 **************************
-#ifdef SYSTEM_DEBUG_MODE
-	TM1621_Buzzer_On();
-	__NOP();
-	TM1621_Buzzer_Off();
-#else
+
 	TM1621_Buzzer_On();
 	//用定时器不稳定, 在线程循环里计时
 	//TM1621_Buzzer_Delay(BUZZER_VOLUME_MAX);
-
 	//TM1621_Buzzer_Off();
-#endif
+
 //*******************************************************
 }
 
