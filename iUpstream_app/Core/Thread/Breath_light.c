@@ -93,7 +93,7 @@ void App_Breath_light_Handler(void)
 		if(Breath_light_direction == 0)
 		{
 			if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)
-				Light_Brightness += (LIGHT_BRIGHTNESS_STEP/2);
+				Light_Brightness += (LIGHT_BRIGHTNESS_STEP_LOW);
 			else
 				Breath_light_direction = 1;
 		}
@@ -101,8 +101,8 @@ void App_Breath_light_Handler(void)
 		{
 			if(Light_Brightness > LIGHT_BRIGHTNESS_MIX)
 			{
-				if( Light_Brightness > (LIGHT_BRIGHTNESS_STEP/2) )
-					Light_Brightness -= (LIGHT_BRIGHTNESS_STEP/2);
+				if( Light_Brightness > (LIGHT_BRIGHTNESS_STEP_LOW) )
+					Light_Brightness -= (LIGHT_BRIGHTNESS_STEP_LOW);
 				else
 					Light_Brightness = LIGHT_BRIGHTNESS_MIX;
 			}
@@ -116,8 +116,8 @@ void App_Breath_light_Handler(void)
 	{
 		if(Light_Brightness > LIGHT_BRIGHTNESS_MIX)
 		{
-			if( Light_Brightness > ( LIGHT_BRIGHTNESS_STEP/2) )
-				Light_Brightness -= ( LIGHT_BRIGHTNESS_STEP/2);
+			if( Light_Brightness > ( LIGHT_BRIGHTNESS_STEP_LOW) )
+				Light_Brightness -= ( LIGHT_BRIGHTNESS_STEP_LOW);
 			else
 				Light_Brightness = LIGHT_BRIGHTNESS_MIX;
 		}
@@ -126,15 +126,15 @@ void App_Breath_light_Handler(void)
 	{
 		if(Light_Brightness < LIGHT_BRIGHTNESS_MAX)
 		{
-			if((LIGHT_BRIGHTNESS_MAX - Light_Brightness) > (LIGHT_BRIGHTNESS_STEP/2))
-				Light_Brightness += (LIGHT_BRIGHTNESS_STEP/2);
+			if((LIGHT_BRIGHTNESS_MAX - Light_Brightness) > (LIGHT_BRIGHTNESS_STEP_LOW))
+				Light_Brightness += (LIGHT_BRIGHTNESS_STEP_LOW);
 			else
 				Light_Brightness = LIGHT_BRIGHTNESS_MAX;
 		}
 		else
 		{
-			if((Light_Brightness - LIGHT_BRIGHTNESS_MAX) > (LIGHT_BRIGHTNESS_STEP/2))
-				Light_Brightness -= (LIGHT_BRIGHTNESS_STEP/2);
+			if((Light_Brightness - LIGHT_BRIGHTNESS_MAX) > (LIGHT_BRIGHTNESS_STEP_LOW))
+				Light_Brightness -= (LIGHT_BRIGHTNESS_STEP_LOW);
 			else
 				Light_Brightness = LIGHT_BRIGHTNESS_MAX;
 		}

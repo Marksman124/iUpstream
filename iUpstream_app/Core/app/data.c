@@ -55,6 +55,11 @@ uint16_t* p_PMode_Now;								// 当前模式
 uint16_t* p_OP_ShowNow_Speed;					// 当前速度
 uint16_t* p_OP_ShowNow_Time;					// 当前时间
 
+uint32_t* p_System_Runing_Second_Cnt;		// 系统时间
+
+uint32_t* p_System_Sleeping_Second_Cnt;		// 无人操作时间
+
+System_Ctrl_Mode_Type_enum Ctrl_Mode_Type = CTRL_FROM_KEY;				// 控制方式
 
 // 各模式 属性
 Operating_Parameters* p_OP_Free_Mode;
@@ -87,6 +92,8 @@ uint16_t Temp_Data_P5_100_Time = 15;					//P5 100% 时间	秒
 uint16_t Temp_Data_P5_0_Time = 15;						//P5 0% 	时间	秒
 
 uint8_t WIFI_Rssi = 0xFF;
+
+uint16_t* p_Analog_key_Value;					// 虚拟按键
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -137,7 +144,9 @@ void Check_Data_Init(void)
 		}
 	}
 	
-	
+	*p_System_Runing_Second_Cnt = 0; //运行时间
+	*p_System_Sleeping_Second_Cnt = 0;// 无人操作时间
+	*p_Analog_key_Value = 0;	//虚拟按键
 }
 
 
@@ -328,3 +337,16 @@ void System_Wifi_State_Clean(void)
 }
 	
 	
+//------------------- 设置控制方式 ----------------------------
+void Set_Ctrl_Mode_Type(System_Ctrl_Mode_Type_enum type)
+{
+	Ctrl_Mode_Type = type;
+}
+	
+//------------------- 获取控制方式 ----------------------------
+System_Ctrl_Mode_Type_enum Get_Ctrl_Mode_Type(void)
+{
+	return Ctrl_Mode_Type;
+}
+
+

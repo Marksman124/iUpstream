@@ -258,6 +258,7 @@ void Lcd_Show_Operation(uint8_t type, uint16_t num)
 // 进入操作菜单
 void To_Operation_Menu(void)
 {
+	Set_Software_Version();
 	// 操作 菜单
 	App_Operation_Init();
 	Clean_Timing_Timer_Cnt();

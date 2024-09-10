@@ -37,6 +37,13 @@ typedef struct Operating_Parameters
 	uint16_t time;
 }Operating_Parameters;
 
+typedef enum 
+{
+	CTRL_FROM_KEY = 0,				//	按键
+	CTRL_FROM_WIFI,						//	wifi
+	CTRL_FROM_BT,							//	蓝牙
+	CTRL_FROM_RS485,					//	modbus 485	
+} System_Ctrl_Mode_Type_enum;
 
 /* Exported constants --------------------------------------------------------*/
 
@@ -96,6 +103,13 @@ extern uint32_t get_uint3_version(char * buffer);
 //------------------- 清除wifi标志 ----------------------------
 extern void System_Wifi_State_Clean(void);
 
+//------------------- 设置控制方式 ----------------------------
+extern void Set_Ctrl_Mode_Type(System_Ctrl_Mode_Type_enum type);
+//------------------- 获取控制方式 ----------------------------
+extern System_Ctrl_Mode_Type_enum Get_Ctrl_Mode_Type(void);
+
+
+
 
 /* Private defines -----------------------------------------------------------*/
 
@@ -122,6 +136,12 @@ extern uint16_t* p_PMode_Now;									// 当前模式
 extern uint16_t* p_OP_ShowNow_Speed;					// 当前速度
 extern uint16_t* p_OP_ShowNow_Time;						// 当前时间
 
+extern uint32_t* p_System_Runing_Second_Cnt;		// 系统时间
+
+extern uint32_t* p_System_Sleeping_Second_Cnt;		// 系统时间
+
+
+extern System_Ctrl_Mode_Type_enum Ctrl_Mode_Type;				// 控制方式  0:按键   1:wifi 2:bt
 // 各模式 属性
 extern Operating_Parameters* p_OP_Free_Mode;
 
@@ -156,6 +176,7 @@ extern uint16_t Temp_Data_P5_0_Time;						//P5 0% 	时间	秒
 
 extern uint8_t WIFI_Rssi;
 
+extern uint16_t* p_Analog_key_Value;					// 虚拟按键
 
 #ifdef __cplusplus
 }

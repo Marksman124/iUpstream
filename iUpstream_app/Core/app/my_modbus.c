@@ -352,7 +352,17 @@ MsState _MsAnalyzeCmd10(ModbusSlaveObj_t *pObj)
 		{
 			System_Power_Off();
 		}
+		if(Motor_is_Start())
+		{
+			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);//光圈自动判断
+			Motor_Speed_Target_Set(*p_OP_ShowNow_Speed);
+		}
+		else
+		{
+			Motor_Speed_Target_Set(0);
+		}
 		//Ctrl_Set_System_Mode(usRegHoldingBuf[MB_SYSTEM_WORKING_MODE]);
+		Set_Ctrl_Mode_Type(CTRL_FROM_BT);//标记控制来源
 	}
 			
 	pObj->txBuff[0] = pObj->rxBuff[0];
@@ -474,8 +484,8 @@ MsState _MsAnalyzeCmd04(ModbusSlaveObj_t *pObj)
 	}
 	for(i = 0;i < count;i++)
 	{
-		 pObj->txBuff[idx++] = pObj->reg03Ptr[addr + i] >> 8;
-		 pObj->txBuff[idx++] = pObj->reg03Ptr[addr + i] & 0xFF;
+		 pObj->txBuff[idx++] = pObj->reg04Ptr[addr + i] >> 8;
+		 pObj->txBuff[idx++] = pObj->reg04Ptr[addr + i] & 0xFF;
 	}
 	addr =  _MsCRC16(pObj->txBuff,idx);
 	pObj->txBuff[idx++] = (addr >> 0) & 0xFF;

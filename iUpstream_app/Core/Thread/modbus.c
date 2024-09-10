@@ -29,7 +29,7 @@ USHORT   usRegInputBuf[REG_INPUT_NREGS+1];
 
 USHORT		MB_Data_Addr_Need_CallOut[] = {
 	MB_SLAVE_NODE_ADDRESS,MB_SLAVE_BAUD_RATE,MB_DISTRIBUTION_NETWORK_CONTROL,
-	MB_SYSTEM_WORKING_MODE,MB_SYSTEM_WORKING_STATUS,
+	MB_SYSTEM_WORKING_MODE,MB_SYSTEM_WORKING_STATUS,MB_MOTOR_CURRENT_SPEED,
 	//MB_MOTOR_CURRENT_SPEED,MB_MOTOR_CURRENT_TIME,
 };
 
@@ -99,7 +99,30 @@ HoldingCallOut( USHORT usAddress )
 		{
 			System_Power_Off();
 		}
+		if(Motor_is_Start())
+		{
+			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);//光圈自动判断
+			Motor_Speed_Target_Set(*p_OP_ShowNow_Speed);
+		}
+		else
+		{
+			Motor_Speed_Target_Set(0);
+		}
 		//Ctrl_Set_System_Mode(usRegHoldingBuf[MB_SYSTEM_WORKING_MODE]);
+		Set_Ctrl_Mode_Type(CTRL_FROM_RS485);//标记控制来源
+	}
+	else if(usAddress == MB_MOTOR_CURRENT_SPEED) //	系统工作模式  高位::0：P1\2\3  低位:0：自由:1：定时:2：训练
+	{
+		if(Motor_is_Start())
+		{
+			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);//光圈自动判断
+			Motor_Speed_Target_Set(*p_OP_ShowNow_Speed);
+		}
+		else
+		{
+			Motor_Speed_Target_Set(0);
+		}
+		Set_Ctrl_Mode_Type(CTRL_FROM_RS485);//标记控制来源
 	}
 //	else if(usAddress == MB_SYSTEM_WORKING_STATUS) //	系统工作状态  0:暂停,   1:暂停恢复,   2:重新开始,  3:结束
 //	{
@@ -504,6 +527,16 @@ void Get_Mapping_Register(void)
 	p_OP_ShowNow_Speed = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_MOTOR_CURRENT_SPEED);
 	// 当前时间
 	p_OP_ShowNow_Time = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_MOTOR_CURRENT_TIME);
+	
+	
+	//--------------------------- 调试 使用
+	p_System_Runing_Second_Cnt = (uint32_t *)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER, MB_SYSTEM_RUNNING_TIME);		// 系统时间
+	
+	p_System_Sleeping_Second_Cnt = (uint32_t *)Get_DataAddr_Pointer(MB_FUNC_READ_INPUT_REGISTER, MB_SYSTEM_SLEEP_TIME);		// 无人操作
+	
+	//--------------------------- 
+	p_Analog_key_Value = Get_DataAddr_Pointer(MB_FUNC_READ_HOLDING_REGISTER,MB_ANALOG_KEY_VALUE);
+	
 }
 
 

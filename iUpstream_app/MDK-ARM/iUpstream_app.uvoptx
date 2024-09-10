@@ -152,60 +152,71 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>58</LineNumber>
+          <LineNumber>325</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134257168</Address>
+          <Address>134277664</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\Core\app\my_modbus.c</Filename>
+          <Filename>..\Core\Thread\timing.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\iUpstream_app\../Core/app/my_modbus.c\58</Expression>
+          <Expression>\\iUpstream_app\../Core/Thread/timing.c\325</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>322</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134277622</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\Core\Thread\timing.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\iUpstream_app\../Core/Thread/timing.c\322</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BT_Uart_Read_Buffer</ItemText>
+          <ItemText>Timing_Half_Second_Cnt</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Ms_BT_Modbus</ItemText>
+          <ItemText>WIFI_Distribution_Timing_Cnt</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BT_OTA_Pack_Len</ItemText>
+          <ItemText>WIFI_State_Machine</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BT_pack_cnt</ItemText>
+          <ItemText>p_Analog_key_Value</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BT_Pack_Sum</ItemText>
+          <ItemText>Key_IO_Hardware</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BT_OTA_Buffer</ItemText>
+          <ItemText>p_Analog_key_Value</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BT_OTA_Pack_Len</ItemText>
-        </Ww>
-        <Ww>
-          <count>7</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>len</ItemText>
+          <ItemText>usRegInputBuf</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>

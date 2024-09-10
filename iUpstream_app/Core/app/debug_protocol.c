@@ -61,7 +61,37 @@ extern DMA_HandleTypeDef hdma_uart4_rx;
 
 /* Private user code ---------------------------------------------------------*/
 
+/*
+******************************************************************************
+Add_Ctrl_Log	
 
+添加控制 日志
+
+0：按键   1：wifi  2：bt
+******************************************************************************
+*/
+void Add_Ctrl_Log(void)
+{
+	static uint8_t Log_Cnt = 0;
+	uint16_t value=0;
+	
+	System_Ctrl_Mode_Type_enum mode = Get_Ctrl_Mode_Type();//控制来源
+
+	uint8_t addr = MB_SYSTEM_LAST_KEY_VALUE + (Log_Cnt * 5);
+	
+	value = (uint8_t)mode | (Log_Cnt<<8) ;
+	
+	Set_DataAddr_Value( MB_FUNC_READ_INPUT_REGISTER,  addr,  	value);
+	Set_DataAddr_Value( MB_FUNC_READ_INPUT_REGISTER,  addr+1,  * p_System_State_Machine);		// 状态机
+	Set_DataAddr_Value( MB_FUNC_READ_INPUT_REGISTER,  addr+2,  * p_PMode_Now);							// 当前模式
+	Set_DataAddr_Value( MB_FUNC_READ_INPUT_REGISTER,  addr+3,  * p_OP_ShowNow_Speed);				// 当前速度
+	Set_DataAddr_Value( MB_FUNC_READ_INPUT_REGISTER,  addr+4,  * p_OP_ShowNow_Time);				// 当前时间
+	
+	if(Log_Cnt < 10)
+		Log_Cnt ++;
+	else
+		Log_Cnt = 0;
+}
 
 void Set_Debug_Protocol_Mode(uint8_t mode)
 {

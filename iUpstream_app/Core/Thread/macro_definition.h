@@ -93,6 +93,13 @@ extern "C" {
 //步进
 #define LIGHT_BRIGHTNESS_STEP							((LIGHT_BRIGHTNESS_MAX-LIGHT_BRIGHTNESS_MIX)/BREATH_LIGHT_GEAR_POSITION)
 
+//---------- 暂停下 5秒周期
+//档位
+#define BREATH_LIGHT_GEAR_POSITION_LOW				(2500/BREATH_LIGHT_THREAD_LIFECYCLE)				// 档位 75
+//步进
+#define LIGHT_BRIGHTNESS_STEP_LOW							((LIGHT_BRIGHTNESS_MAX-LIGHT_BRIGHTNESS_MIX)/BREATH_LIGHT_GEAR_POSITION_LOW)
+
+
 #endif
 /*==============================================================================================================*/
 /*==============================================================================================================*/
@@ -109,14 +116,17 @@ extern "C" {
 #define KEY_LONG_PRESS_TIME									(2000/KEY_THREAD_LIFECYCLE)			//长按时间 2s
 #define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
 //-------------- 蜂鸣器 长度 -------------------
-//******************  调试模式 **************************
-#ifdef SYSTEM_DEBUG_MODE
-#define KEY_BUZZER_TIME								(1)					//周期  KEY_THREAD_LIFECYCLE 倍数
-#define KEY_BUZZER_TIME_LONG					(1)					//周期  KEY_THREAD_LIFECYCLE 倍数
-#else
 #define KEY_BUZZER_TIME								(8)					//周期  KEY_THREAD_LIFECYCLE 倍数
 #define KEY_BUZZER_TIME_LONG					(16)					//周期  KEY_THREAD_LIFECYCLE 倍数
+
+/* 蜂鸣器 音量  50最大  ------------------------------------------------------------*/
+//******************  调试模式 **************************
+#ifdef SYSTEM_DEBUG_MODE
+#define BUZZER_FREQUENCY					1
+#else
+#define BUZZER_FREQUENCY					5					//50
 #endif
+//*******************************************************
 
 #define KEY_VALUE_SHAKE_TIME					(2)		//去抖动 次数
 

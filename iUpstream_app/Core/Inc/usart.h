@@ -70,7 +70,6 @@ extern uint16_t USART5_RX_STA;         		//接收状态标记
 extern UART_HandleTypeDef huart5; //UART句柄
 extern uint8_t aRxBuffer5[RXBUFFERSIZE];     //HAL库USART接收Buffer
 
-extern uint8_t Key_Form_Usart;
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart4;

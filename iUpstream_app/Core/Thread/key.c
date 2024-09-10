@@ -261,6 +261,7 @@ void on_pushButton_4_Short_Press(void)
 	}
 	else	// 其它 --> 暂停
 	{
+		p_OP_ShowLater->speed = *p_OP_ShowNow_Speed;
 		Arbitrarily_To_Pause();
 		Data_Set_Current_Speed(0);//注意,需要在切完运行状态后再设置速度,如"暂停"
 	}
@@ -551,6 +552,7 @@ void App_Key_Task(void)
 		{
 			if(Key_IO_Hardware == Key_IO_Ordering_Value[i])
 			{
+				*p_System_Sleeping_Second_Cnt = 0;
 				Key_For_Sleep_time = Key_Handler_Timer;// 睡眠计时
 				TM1621_Set_light_Mode(0);
 				
@@ -594,7 +596,10 @@ void App_Key_Task(void)
 						else if(ERROR_DISPLAY_STATUS == *p_System_State_Machine)
 							p_Fault_Button[i]();
 						else
+						{
 							p_Funtion_Button[i]();
+							Set_Ctrl_Mode_Type(CTRL_FROM_KEY);//标记控制来源
+						}
 						
 						//关机下 计数 8次
 						if(POWER_OFF_STATUS == *p_System_State_Machine)
@@ -620,37 +625,64 @@ void App_Key_Handler(void)
 {
 	static uint8_t io_shake=0;
 	static uint8_t io_shake_cnt=0;
+	uint8_t i;
 	
-	io_shake = Key_Get_IO_Input();
-	if(Key_IO_Hardware == io_shake)
+	if(*p_Analog_key_Value > 0)
 	{
-		if(++io_shake_cnt >= KEY_VALUE_SHAKE_TIME)
+		if(*p_Analog_key_Value & 0x8000)
 		{
-			Buzzer_Click_Handler();
-			
-			//自测模式
-			if(System_Self_Testing_State == 0xAA)
+			//长按
+			Key_IO_Hardware = (*p_Analog_key_Value & 0xFF);
+			for(i=0; i<KEY_CALL_OUT_NUMBER_MAX; i++)
 			{
-				if(Key_IO_Hardware > 0)
+				if(Key_IO_Hardware == Key_IO_Ordering_Value[i])
 				{
-					Buzzer_Click_Long_On();
-					
-					Key_IO_Old |= Key_IO_Hardware;
-					Led_Button_On(Key_IO_Old);	// 按键
+					Key_Long_Press_cnt[i] = KEY_LONG_PRESS_TIME-1;
 				}
 			}
-			else//正常使用
-			{
-				App_Key_Task();
-			}
+			
 		}
+		
+		else
+		{
+			Key_IO_Hardware = *p_Analog_key_Value;
+		}
+		
+		App_Key_Task();
+		*p_Analog_key_Value = 0;
 	}
 	else
 	{
-		Key_IO_Hardware = io_shake;
-		io_shake_cnt = 0;
+		io_shake = Key_Get_IO_Input();
+		if(Key_IO_Hardware == io_shake)
+		{
+			if(++io_shake_cnt >= KEY_VALUE_SHAKE_TIME)
+			{
+				Buzzer_Click_Handler();
+				
+				//自测模式
+				if(System_Self_Testing_State == 0xAA)
+				{
+					if(Key_IO_Hardware > 0)
+					{
+						Buzzer_Click_Long_On();
+						
+						Key_IO_Old |= Key_IO_Hardware;
+						Led_Button_On(Key_IO_Old);	// 按键
+					}
+				}
+				else//正常使用
+				{
+					App_Key_Task();
+				}
+			}
+		}
+		else
+		{
+			Key_IO_Hardware = io_shake;
+			io_shake_cnt = 0;
+		}
 	}
-
 	
 }
 
@@ -662,8 +694,6 @@ uint8_t Key_Get_IO_Input(void)
 	GPIO_PinState read_io;
 	uint8_t i;
 	
-	result = Key_Form_Usart;
-	Key_Form_Usart = 0;
 	for(i=0; i<KEY_IO_NUMBER_MAX; i++) // KEY_IO_NUMBER_MAX
 	{
 		read_io = HAL_GPIO_ReadPin(Key_Gpio_Pin_Array[i].port, Key_Gpio_Pin_Array[i].pin);

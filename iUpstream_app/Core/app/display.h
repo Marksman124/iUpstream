@@ -127,7 +127,7 @@ extern void To_Train_Mode(uint8_t num);
 extern void System_Self_Testing_Porgram(void);
 
 
-extern void Freertos_TaskSuspend_All(void);
+extern void Freertos_TaskSuspend_Wifi(void);
 
 extern void Freertos_TaskResume_All(void);
 

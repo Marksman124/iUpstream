@@ -127,7 +127,7 @@ void WIFI_State_Handler(void)
 		//超时配网恢复
 		if( (Timing_Half_Second_Cnt - WIFI_Distribution_Timing_Cnt) > WIFI_DISTRIBUTION_TIME_CALLOUT)
 		{
-			Timing_Half_Second_Cnt = 0;
+			WIFI_Distribution_Timing_Cnt = 0;
 			WIFI_Set_Machine_State(WIFI_NO_CONNECT);
 			LCD_Show_Bit &= ~STATUS_BIT_WIFI;
 		}
@@ -175,7 +175,7 @@ void BT_State_Handler(void)
 		//超时配网恢复
 		if( (Timing_Half_Second_Cnt - BT_Distribution_Timing_Cnt) > BT_DISTRIBUTION_TIME_CALLOUT)
 		{
-			Timing_Half_Second_Cnt = 0;
+			BT_Distribution_Timing_Cnt = 0;
 			BT_Set_Machine_State(BT_NO_CONNECT);
 			LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
 		}
@@ -193,7 +193,7 @@ void BT_State_Handler(void)
 		}
 		Lcd_Show();
 	}
-	else if(BT_Get_Machine_State() == WIFI_WORKING)
+	else if(BT_Get_Machine_State() == BT_WORKING)
 	{
 		LCD_Show_Bit |= STATUS_BIT_BLUETOOTH;
 	}
@@ -319,11 +319,11 @@ void Running_State_Handler(void)
 				*p_OP_ShowNow_Time = 0;
 			}
 			
-			if((OP_ShowNow.time < 10))
+			if((*p_OP_ShowNow_Time < 10))
 				Data_Set_Current_Speed(30);//注意,需要在切完运行状态后再设置速度,如"暂停"
-			else if(((OP_ShowNow.time-10) % (Temp_Data_P5_100_Time+Temp_Data_P5_0_Time)) == 0)
+			else if(((*p_OP_ShowNow_Time-10) % (Temp_Data_P5_100_Time+Temp_Data_P5_0_Time)) == 0)
 				Data_Set_Current_Speed(100);//注意,需要在切完运行状态后再设置速度,如"暂停"
-			else if(((OP_ShowNow.time-10) % (Temp_Data_P5_100_Time+Temp_Data_P5_0_Time)) == Temp_Data_P5_100_Time)
+			else if(((*p_OP_ShowNow_Time-10) % (Temp_Data_P5_100_Time+Temp_Data_P5_0_Time)) == Temp_Data_P5_100_Time)
 				Data_Set_Current_Speed(30);//注意,需要在切完运行状态后再设置速度,如"暂停"
 		}
 		else if(Is_Mode_Legal(*p_PMode_Now))
@@ -528,7 +528,10 @@ void Initial_State_Handler(void)
 	}
 	else
 	{
-		LCD_Refresh_Set(0);
+		LCD_Refresh_Set(0);//恢复刷新
+		
+		Add_Ctrl_Log();
+		
 		Update_OP_Data();	// 保存最新转速
 
 		if(*p_System_State_Machine == TIMING_MODE_INITIAL)
@@ -589,6 +592,9 @@ void App_Timing_Task(void)
 		if(half_second_state == 1)
 		{
 			half_second_state = 0;
+			*p_System_Runing_Second_Cnt += 1;
+			*p_System_Sleeping_Second_Cnt += 1;
+			
 			// 时间 : 闪烁  半秒
 			if(System_is_Normal_Operation())
 			{

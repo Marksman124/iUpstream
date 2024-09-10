@@ -289,6 +289,13 @@ void Lcd_Show_Upgradation(uint8_t sum, uint8_t num)
 	schedule = (num*100)/sum;
 	Display_Show_Speed(schedule);
 	TM1621_Show_Symbol(TM1621_COORDINATE_PERCENTAGE, 		1);
+	TM1621_Show_Symbol(TM1621_COORDINATE_BLUETOOTH, 		1);
+	
+	TM1621_Show_Symbol(TM1621_COORDINATE_TIME_COLON, 		0);
+	TM1621_Show_Symbol(TM1621_COORDINATE_DECIMAL_POINT, 0);
+	TM1621_Show_Symbol(TM1621_COORDINATE_WIFI, 					0);
+	
+	
 	//总包数
 	TM1621_display_number(TM1621_COORDINATE_MODE_HIGH, (sum/10)%10);
 	TM1621_display_number(TM1621_COORDINATE_MODE_LOW,  	sum%10);
@@ -403,7 +410,7 @@ void To_Free_Mode(uint8_t mode)
 	*p_OP_ShowNow_Speed = p_OP_ShowLater->speed;
 	*p_OP_ShowNow_Time  = p_OP_ShowLater->time;
 	
-	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
+	LCD_Show_Bit |= STATUS_BIT_PERCENTAGE;
 	*p_PMode_Now = 0;
 	Lcd_Show();
 }
@@ -419,7 +426,7 @@ void To_Timing_Mode(void)
 	*p_OP_ShowNow_Speed = p_OP_ShowLater->speed;
 	*p_OP_ShowNow_Time  = p_OP_ShowLater->time;
 	
-	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
+	LCD_Show_Bit |= STATUS_BIT_PERCENTAGE;
 	*p_PMode_Now = 0;
 	Lcd_Show();
 }
@@ -441,7 +448,7 @@ void To_Train_Mode(uint8_t num)
 	*p_OP_ShowNow_Speed = p_OP_PMode[num-1][0].speed;
 	*p_OP_ShowNow_Time = 0;//p_OP_PMode[num-1][TRAINING_MODE_PERIOD_MAX-1].time;
 	
-	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
+	LCD_Show_Bit |= STATUS_BIT_PERCENTAGE;
 	
 	
 	Lcd_Show();
@@ -472,25 +479,16 @@ extern TaskHandle_t Key_Button_TaskHandle;
 extern TaskHandle_t Motor_TaskHandle;
 extern TaskHandle_t wifi_moduleHandle;
 
-void Freertos_TaskSuspend_All(void)
+void Freertos_TaskSuspend_Wifi(void)
 {
 	// 暂停任务
 	osThreadSuspend(Breath_Light_TaHandle);
 	osThreadSuspend(Rs485_Modbus_TaHandle);
 	osThreadSuspend(Main_TaskHandle);
 	osThreadSuspend(Motor_TaskHandle);
+	//osThreadSuspend(wifi_moduleHandle);
 }
 
-	
-void Freertos_TaskResume_All(void)
-{
-	// 恢复任务
-	osThreadResume(Breath_Light_TaHandle);
-	osThreadResume(Rs485_Modbus_TaHandle);
-	osThreadResume(Main_TaskHandle);
-	osThreadResume(Motor_TaskHandle);
-	osThreadResume(wifi_moduleHandle);
-}
 
 
 void Freertos_TaskSuspend_RS485(void)
@@ -502,3 +500,18 @@ void Freertos_TaskSuspend_RS485(void)
 	osThreadSuspend(Motor_TaskHandle);
 	osThreadSuspend(wifi_moduleHandle);
 }
+
+
+
+
+void Freertos_TaskResume_All(void)
+{
+	// 恢复任务
+	osThreadResume(Breath_Light_TaHandle);
+	osThreadResume(Rs485_Modbus_TaHandle);
+	osThreadResume(Main_TaskHandle);
+	osThreadResume(Motor_TaskHandle);
+	osThreadResume(wifi_moduleHandle);
+}
+
+

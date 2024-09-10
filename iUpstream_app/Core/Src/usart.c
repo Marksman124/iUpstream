@@ -69,7 +69,6 @@ uint8_t aRxBuffer5[RXBUFFERSIZE];	 //HALø‚USARTΩ” ’Buffer
 uint8_t data[200];
 uint8_t flag = 0;
 
-uint8_t Key_Form_Usart = 0;
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart4;
@@ -578,7 +577,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if (USART3_RX_STA & 0x8000)
 		{
 			flag = 1;
-			Key_Form_Usart = USART3_RX_BUF[0];
+			*p_Analog_key_Value = USART3_RX_BUF[0];
 			//To_Debug_Protocol_Analysis(USART3_RX_BUF, USART3_RX_STA & 0x3fff);
 			memset(USART3_RX_BUF, 0, USART3_RX_STA & 0x3fff);
 			USART3_RX_STA = 0;

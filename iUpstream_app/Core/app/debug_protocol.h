@@ -39,8 +39,13 @@ extern uint8_t Chassis_Temperature_Debug;
 #endif
 
 /* Exported functions prototypes ---------------------------------------------*/
+
+void Add_Ctrl_Log(void);
+
 void UART_Send_Debug(uint8_t * p_buff, uint8_t len);
+
 void To_Debug_Protocol_Analysis(uint8_t len);
+
 void Debug_Protocol_Init(void);
 // ÷ÿ∆Ù
 void Debug_Usart_Restar(void);

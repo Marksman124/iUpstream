@@ -104,8 +104,8 @@ void Clean_Motor_OffLine_Timer(void)
 //------------------- 主循环函数  ----------------------------
 void App_Motor_Handler(void)
 {
-	//if(*p_Speed_Mode == 0)//r
-	Motor_Rx_Timer_cnt++;
+	//通信故障计数器
+	//Motor_Rx_Timer_cnt++;  //test 测试先不报故障 记得删  wuqingguang 2024-09-09
 	if(Motor_Timer_Cnt < 10000)
 		Motor_Timer_Cnt ++;
 	else

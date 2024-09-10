@@ -237,6 +237,7 @@ static unsigned char dp_download_system_working_mode_handle(const unsigned char 
         case 4:
         case 5:
 					*p_PMode_Now = system_working_mode;
+					Set_Ctrl_Mode_Type(CTRL_FROM_WIFI);//标记控制来源
 					Set_Pmode_Period_Now(0);
         break;
         
@@ -270,6 +271,7 @@ static unsigned char dp_download_system_working_status_handle(const unsigned cha
 		if(system_working_status <= TRAINING_MODE_STOP)
 		{
 			*p_System_State_Machine = system_working_status;
+			Set_Ctrl_Mode_Type(CTRL_FROM_WIFI);//标记控制来源
 			Set_Pmode_Period_Now(0);
 			if(System_is_Power_Off())//状态机
 			{
@@ -309,6 +311,7 @@ static unsigned char dp_download_motor_current_speed_handle(const unsigned char 
 		if(If_Accept_External_Control())
 		{
 			*p_OP_ShowNow_Speed = motor_current_speed;
+			Set_Ctrl_Mode_Type(CTRL_FROM_WIFI);//标记控制来源
 			if(Motor_is_Start())
 			{
 				Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);//光圈自动判断
@@ -347,6 +350,7 @@ static unsigned char dp_download_motor_current_time_handle(const unsigned char v
 		if(If_Accept_External_Control())
 		{
 			*p_OP_ShowNow_Time = motor_current_time;
+			Set_Ctrl_Mode_Type(CTRL_FROM_WIFI);//标记控制来源
 		}
     //There should be a report after processing the DP
     ret = mcu_dp_value_update(DPID_MOTOR_CURRENT_TIME,*p_OP_ShowNow_Time);
@@ -699,7 +703,7 @@ void upgrade_package_choose(unsigned long package_sz)
 	Out_Of_Upgradation();
 	System_Power_Off();
 	Lcd_Show_Upgradation(pack_sum,0);
-	Freertos_TaskSuspend_All();
+	Freertos_TaskSuspend_Wifi();
 	
 }
 
