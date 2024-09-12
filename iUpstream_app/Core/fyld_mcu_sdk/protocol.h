@@ -259,6 +259,9 @@ BLE_test_result内部有#err提示,完成函数后请删除该#err
                         1:dp数据点序列号重新定义
           **此为自动生成代码,如在开发平台有相关修改请重新下载MCU_SDK**         
 ******************************************************************************/
+//驱动板故障(只上报)
+//备注:
+#define DPID_DEVICE_ERROR_CODE 4
 //读系统故障(只上报)
 //备注:
 #define DPID_GET_SYSTEM_FAULT_STATUS 5
@@ -277,6 +280,18 @@ BLE_test_result内部有#err提示,完成函数后请删除该#err
 //母线电压(只上报)
 //备注:
 #define DPID_MOTOR_BUS_VOLTAGE 10
+//下发实际转速(只上报)
+//备注:
+#define DPID_SEND_REALITY_SPEED 11
+//系统运行时间(只上报)
+//备注:
+#define DPID_SYSTEM_RUNNING_TIME 16
+//无操作时间(只上报)
+//备注:
+#define DPID_NO_OPERATION_TIME 17
+//休眠时间(只上报)
+//备注:
+#define DPID_SYSTEM_SLEEPING_TIME 18
 //工作模式(可下发可上报)
 //备注:
 #define DPID_SYSTEM_WORKING_MODE 21

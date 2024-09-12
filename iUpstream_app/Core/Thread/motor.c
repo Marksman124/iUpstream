@@ -153,7 +153,6 @@ void App_Motor_Handler(void)
 uint8_t Motor_Speed_Update(void)
 {
 	uint8_t result=1;
-	uint32_t rpm=0;
 	uint8_t Motor_Acceleration=0;
 	
 	if((*p_System_State_Machine == TRAINING_MODE_RUNNING)&&(PMode_Now == 5)&&(OP_ShowNow.time > 10))					// ÑµÁ· P5
@@ -187,9 +186,9 @@ uint8_t Motor_Speed_Update(void)
 	if((Motor_Speed_Now == 0)&&(result == 0))
 		return result;
 	
-	rpm = Motor_Speed_To_Rpm(Motor_Speed_Now);
+	*p_Send_Reality_Speed = Motor_Speed_To_Rpm(Motor_Speed_Now);
 	//·¢ËÍ Çý¶¯°å
-	Motor_Speed_Send(rpm);
+	Motor_Speed_Send(*p_Send_Reality_Speed);
 	
 	if(result == 1)
 	{

@@ -552,7 +552,7 @@ void App_Key_Task(void)
 		{
 			if(Key_IO_Hardware == Key_IO_Ordering_Value[i])
 			{
-				*p_System_Sleeping_Second_Cnt = 0;
+				*p_No_Operation_Second_Cnt = 0;
 				Key_For_Sleep_time = Key_Handler_Timer;// 睡眠计时
 				TM1621_Set_light_Mode(0);
 				
@@ -562,7 +562,7 @@ void App_Key_Task(void)
 				{
 					Buzzer_Click_On();
 					
-					if(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_1)
+					if((Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_1)||(Key_IO_Hardware == KEY_VALUE_BIT_BUTTON_2))
 						Key_Long_Press_cnt[i] --;
 				
 					//测试发送串口

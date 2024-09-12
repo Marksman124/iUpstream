@@ -27,7 +27,7 @@ uint16_t* p_Software_Version_low;		//	软件版本 低
 uint16_t* p_Baud_Rate;							//	波特率
 uint32_t Modbus_BaudRate_Table[] = 	{2400,4800,9600,19200,115200};
 #define MODBUS_BAUDRATE_TABLE_LEN		(sizeof(Modbus_BaudRate_Table)/sizeof(Modbus_BaudRate_Table[0]))
-#define MODBUS_BAUDRATE_DEFAULT			2
+
 
 
 uint32_t Dev_BaudRate_Get(uint8_t usart_num)

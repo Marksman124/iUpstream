@@ -27,7 +27,7 @@ extern "C" {
 
 //******************  调试模式 **************************
 //#define SYSTEM_DEBUG_MODE					1
-#define UART_PRINTF_LOG						1
+//#define UART_PRINTF_LOG						1
 //#define UART_DEBUG_SEND_CTRL			1
 //*******************************************************
 
@@ -64,8 +64,6 @@ extern "C" {
 //#define	MACRO_DEVICES_HARDWAR_VERSION_UINT32								0x00030000		//3.0
 
 
-//线程 最小生命周期
-#define THREAD_LIFECYCLE_PERIOD_MIX									10						//ms
 /*==============================================================================================================*/
 /*==============================================================================================================*/
 	
@@ -75,7 +73,7 @@ extern "C" {
 
 #if(BREATH_LIGHT_THREAD_TURN_ON)
 //线程周期
-#define BREATH_LIGHT_THREAD_LIFECYCLE				(2*THREAD_LIFECYCLE_PERIOD_MIX)				// ms
+#define BREATH_LIGHT_THREAD_LIFECYCLE				(20)				// ms
 //光圈 pwm 通道号
 #define BREATH_LIGHT_PWM_CHANNEL						(TIM_CHANNEL_1)
 
@@ -111,7 +109,7 @@ extern "C" {
 
 #if(KEY_THREAD_TURN_ON)
 //线程周期
-#define KEY_THREAD_LIFECYCLE								(2*THREAD_LIFECYCLE_PERIOD_MIX)	// 任务生命周期 200ms
+#define KEY_THREAD_LIFECYCLE								(20)	// 任务生命周期 200ms
 
 #define KEY_LONG_PRESS_TIME									(2000/KEY_THREAD_LIFECYCLE)			//长按时间 2s
 #define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
@@ -124,7 +122,7 @@ extern "C" {
 #ifdef SYSTEM_DEBUG_MODE
 #define BUZZER_FREQUENCY					1
 #else
-#define BUZZER_FREQUENCY					5					//50
+#define BUZZER_FREQUENCY					50					//50
 #endif
 //*******************************************************
 
@@ -150,12 +148,12 @@ extern "C" {
 #define TIMING_THREAD_TURN_ON					1
 
 #if(TIMING_THREAD_TURN_ON)
-#define TIMING_THREAD_LIFECYCLE				(THREAD_LIFECYCLE_PERIOD_MIX)				// ms
+#define TIMING_THREAD_LIFECYCLE				(29)				// ms
 
 //半秒周期数
-#define TIMING_THREAD_HALF_SECOND			(500/TIMING_THREAD_LIFECYCLE)				// 0.5 s
+#define TIMING_THREAD_HALF_SECOND			(476/TIMING_THREAD_LIFECYCLE)				// 0.5 s
 //1秒周期数
-#define TIMING_THREAD_ONE_SECOND			(1000/(TIMING_THREAD_HALF_SECOND*TIMING_THREAD_LIFECYCLE))				// 1 s
+#define TIMING_THREAD_ONE_SECOND			(2)				// 1 s
 //******************  调试模式 **************************
 #ifdef SYSTEM_DEBUG_MODE
 //配网时长
@@ -184,11 +182,13 @@ extern "C" {
 
 
 //-------------------------------------------------------------------------------------------------
+//*********************************************************************************************
 //-------------- 机箱温度报警值 90°C -------------------
-#define AMBIENT_TEMP_ALARM_VALUE								80
+#define AMBIENT_TEMP_ALARM_VALUE									(80)
 //-------------- 机箱温度 降速 70°C -------------------
-#define AMBIENT_TEMP_REDUCE_SPEED									70		// 降档 温度
-#define AMBIENT_TEMP_RESTORE_SPEED								65		// 恢复 温度
+#define AMBIENT_TEMP_REDUCE_SPEED									(70)		// 降档 温度
+#define AMBIENT_TEMP_RESTORE_SPEED								(65)		// 恢复 温度
+//*********************************************************************************************
 //-------------------------------------------------------------------------------------------------
 
 //-------------- 降速检查时间 -------------------
@@ -214,7 +214,7 @@ extern "C" {
 #define MODBUS_THREAD_TURN_ON					1
 
 #if(MODBUS_THREAD_TURN_ON)
-#define MODBUS_THREAD_LIFECYCLE							(2*THREAD_LIFECYCLE_PERIOD_MIX)				// ms 暂时不用
+#define MODBUS_THREAD_LIFECYCLE							(20)				// ms 暂时不用
 
 #endif
 /*==============================================================================================================*/
@@ -227,7 +227,7 @@ extern "C" {
 #define MOTOR_THREAD_TURN_ON					1
 
 #if(MOTOR_THREAD_TURN_ON)
-#define MOTOR_THREAD_LIFECYCLE						(2*THREAD_LIFECYCLE_PERIOD_MIX)				// 任务生命周期 50ms
+#define MOTOR_THREAD_LIFECYCLE						(20)				// 任务生命周期 50ms
 
 // 命令 周期 200ms 
 #define MOTOR_POLLING_PERIOD							(200/MOTOR_THREAD_LIFECYCLE)
@@ -266,11 +266,13 @@ extern "C" {
 #define	MOTOR_ACCELERATION										(1)
 
 //-------------------------------------------------------------------------------------------------
+//*********************************************************************************************
 //-------------- MOS 温度报警值 90°C -------------------
 #define MOS_TEMP_ALARM_VALUE								(90)
 //-------------- MOS 温度 降速 80°C -------------------
 #define MOS_TEMP_REDUCE_SPEED								(80)		// 降档 温度
 #define MOS_TEMP_RESTORE_SPEED							(75)		// 恢复 温度
+//*********************************************************************************************
 //-------------------------------------------------------------------------------------------------
 
 
@@ -301,7 +303,9 @@ extern "C" {
 #define WIFI_THREAD_TURN_ON					1
 
 #if(WIFI_THREAD_TURN_ON)
-#define WIFI_THREAD_LIFECYCLE							(2*THREAD_LIFECYCLE_PERIOD_MIX)				// ms 暂时不用
+#define WIFI_THREAD_LIFECYCLE							(20)				// ms 暂时不用
+
+#define WIFI_DATE_UPLOAD_TIME							(10000/WIFI_THREAD_LIFECYCLE)				// 自动上传 时间
 
 //wifi 故障 判断值
 #define WIFI_RSSI_ERROR_VAULE										(60)

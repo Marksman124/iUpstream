@@ -136,11 +136,6 @@ extern uint16_t* p_PMode_Now;									// 当前模式
 extern uint16_t* p_OP_ShowNow_Speed;					// 当前速度
 extern uint16_t* p_OP_ShowNow_Time;						// 当前时间
 
-extern uint32_t* p_System_Runing_Second_Cnt;		// 系统时间
-
-extern uint32_t* p_System_Sleeping_Second_Cnt;		// 系统时间
-
-
 extern System_Ctrl_Mode_Type_enum Ctrl_Mode_Type;				// 控制方式  0:按键   1:wifi 2:bt
 // 各模式 属性
 extern Operating_Parameters* p_OP_Free_Mode;
@@ -157,6 +152,8 @@ extern uint16_t* p_Mos_Temperature;					//mos 温度
 extern uint16_t* p_Box_Temperature;				//电机 温度
 extern uint32_t* p_Motor_Current;						//电机 电流
 extern uint32_t* p_Motor_Reality_Speed;			//电机 实际 转速
+extern uint32_t* p_Send_Reality_Speed;			//下发 实际 转速
+
 extern uint16_t* p_Motor_Bus_Voltage;				//母线 电压
 
 extern uint16_t* p_Modbus_Node_Addr;
@@ -177,6 +174,13 @@ extern uint16_t Temp_Data_P5_0_Time;						//P5 0% 	时间	秒
 extern uint8_t WIFI_Rssi;
 
 extern uint16_t* p_Analog_key_Value;					// 虚拟按键
+
+//================= 调试使用  时间 ================================
+
+extern uint32_t* p_System_Runing_Second_Cnt;			// 系统时间
+extern uint32_t* p_No_Operation_Second_Cnt;			// 无人操作时间
+extern uint32_t* p_System_Sleeping_Second_Cnt;		// 休眠时间
+
 
 #ifdef __cplusplus
 }

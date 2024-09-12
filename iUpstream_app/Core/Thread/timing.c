@@ -446,10 +446,15 @@ void Running_State_Handler(void)
 	//减速界面 2秒1刷
 	if(((Temp_Slow_Down_Timing_Cnt % 4)==2)||((Temp_Slow_Down_Timing_Cnt % 4)==3))
 	{
+		LCD_Refresh_Set(1);
 		Lcd_Show_Slow_Down(Get_Temp_Slow_Down_State());
 	}
 	else
+	{
 		Lcd_Show();
+		LCD_Refresh_Set(0);
+	}
+	
 }
 
 // 暂停 状态基  1秒进一次
@@ -593,7 +598,12 @@ void App_Timing_Task(void)
 		{
 			half_second_state = 0;
 			*p_System_Runing_Second_Cnt += 1;
-			*p_System_Sleeping_Second_Cnt += 1;
+			*p_No_Operation_Second_Cnt += 1;
+			
+			if(System_is_Pause() || System_is_Stop())
+				*p_System_Sleeping_Second_Cnt += 1;
+			else
+				*p_System_Sleeping_Second_Cnt = 0;
 			
 			// 时间 : 闪烁  半秒
 			if(System_is_Normal_Operation())

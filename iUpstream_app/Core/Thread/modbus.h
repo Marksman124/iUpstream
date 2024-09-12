@@ -136,7 +136,8 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 #define MB_BOX_TEMPERATURE					          		( 0x0B )	//	电箱	温度
 #define MB_MOTOR_CURRENT					          			( 0x0C )	// 	电机 	电流
 #define MB_MOTOR_REALITY_SPEED					          ( 0x0E )	//	电机 	实际 转速
-#define MB_MOTOR_BUS_VOLTAGE					          	( 0x10 )	//	母线 	电压
+#define MB_SEND_REALITY_SPEED					          	( 0x10 )	//	电机 	实际 转速  下发
+#define MB_MOTOR_BUS_VOLTAGE					          	( 0x12 )	//	母线 	电压
 
 // ----------------------------------------------------------------------------------------------
 
@@ -151,8 +152,8 @@ extern UART_HandleTypeDef* p_huart_mb;		 //UART句柄
 
 // ----------------------------------------------------------------------------------------------
 #define MB_SYSTEM_RUNNING_TIME        			( 0x40 )	//	运行时间
-#define MB_SYSTEM_SLEEP_TIME        				( 0x42 )	//	无人操作时间
-
+#define MB_NO_OPERATION_TIME        				( 0x42 )	//	无人操作时间
+#define MB_SYSTEM_SLEEP_TIME        				( 0x44 )	//	休眠时间
 // ----------------------------------------------------------------------------------------------
 #define MB_INPUT_BUFFER_SIZE_MAX        					( 0xFF )	//	
 /*

@@ -76,6 +76,17 @@ void Usart_IRQ_CallBack(uint8_t data)
 	MsSerialRead(&Ms_BT_Modbus,&BT_Uart_Read_Buffer,1);
 }
 
+
+// AT 指令 设 MAC
+void BT_Set_MAC(void)
+{
+	char buff[32]={"AT+BLEMAC=123456789012\r\n"};
+	
+	//sprintf(buff,"AT+BLENAME=inverjet\r\n");
+	
+	SerialWrite((uint8_t*)buff,strlen(buff));
+}
+
 // AT 指令 设 名称
 void BT_Set_Name(void)
 {
@@ -85,6 +96,7 @@ void BT_Set_Name(void)
 	
 	SerialWrite((uint8_t*)buff,strlen(buff));
 }
+
 // AT 指令 设 从机模式
 void BT_Set_Mode(uint8_t data)
 {
@@ -131,9 +143,18 @@ void BT_Module_AT_Init(void)
 //
 void BT_Module_AT_ReInit(void)
 {
+	// 拉低复位
+	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);
+	//osDelay(2000);
+	//不复位
 	SerialWrite((uint8_t*)"+++",3);
 	osDelay(1000);
+	
+	
+	
 	BT_Set_Name();
+	osDelay(1000);
+	BT_Set_MAC();
 	osDelay(1000);
 	BT_Set_Mode(0);
 	osDelay(5000);

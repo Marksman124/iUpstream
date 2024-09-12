@@ -85,12 +85,17 @@ unsigned char pack_sum=0;
 ******************************************************************************/
 const DOWNLOAD_CMD_S download_cmd[] =
 {
+    {DPID_DEVICE_ERROR_CODE, DP_TYPE_VALUE},
     {DPID_GET_SYSTEM_FAULT_STATUS, DP_TYPE_BITMAP},
     {DPID_GET_MOS_TEMPERATURE, DP_TYPE_VALUE},
     {DPID_GET_BOX_TEMPERATURE, DP_TYPE_VALUE},
     {DPID_GET_MOTOR_CURRENT, DP_TYPE_VALUE},
     {DPID_MOTOR_REALITY_SPEED, DP_TYPE_VALUE},
     {DPID_MOTOR_BUS_VOLTAGE, DP_TYPE_VALUE},
+    {DPID_SEND_REALITY_SPEED, DP_TYPE_VALUE},
+    {DPID_SYSTEM_RUNNING_TIME, DP_TYPE_VALUE},
+    {DPID_NO_OPERATION_TIME, DP_TYPE_VALUE},
+    {DPID_SYSTEM_SLEEPING_TIME, DP_TYPE_VALUE},
     {DPID_SYSTEM_WORKING_MODE, DP_TYPE_ENUM},
     {DPID_SYSTEM_WORKING_STATUS, DP_TYPE_ENUM},
     {DPID_MOTOR_CURRENT_SPEED, DP_TYPE_VALUE},
@@ -156,16 +161,17 @@ void all_data_update(void)
     //#error "请在此处理可下发可上报数据及只上报数据示例,处理完成后删除该行"
     /*
     //此代码为平台自动生成，请按照实际数据修改每个可下发可上报函数和只上报函数
-    mcu_dp_string_update(DPID_GET_SOFTWARE_VERSION,当前显示板软件版本指针,当前显示板软件版本数据长度); //STRING型数据上报;
-    mcu_dp_string_update(DPID_GET_HARDWARE_VERSION,当前显示板硬件版本指针,当前显示板硬件版本数据长度); //STRING型数据上报;
-    mcu_dp_string_update(DPID_GET_DRIVE_SOFTWARE_VERSION,当前驱动板软件版本指针,当前驱动板软件版本数据长度); //STRING型数据上报;
-    mcu_dp_string_update(DPID_GET_DRIVE_HARDWARE_VERSION,当前驱动板硬件版本指针,当前驱动板硬件版本数据长度); //STRING型数据上报;
+    mcu_dp_value_update(DPID_DEVICE_ERROR_CODE,当前驱动板故障); //VALUE型数据上报;
     mcu_dp_fault_update(DPID_GET_SYSTEM_FAULT_STATUS,当前读系统故障); //故障型数据上报;
     mcu_dp_value_update(DPID_GET_MOS_TEMPERATURE,当前MOS温度); //VALUE型数据上报;
     mcu_dp_value_update(DPID_GET_BOX_TEMPERATURE,当前电箱温度); //VALUE型数据上报;
     mcu_dp_value_update(DPID_GET_MOTOR_CURRENT,当前电机电流); //VALUE型数据上报;
     mcu_dp_value_update(DPID_MOTOR_REALITY_SPEED,当前电机实际转速); //VALUE型数据上报;
     mcu_dp_value_update(DPID_MOTOR_BUS_VOLTAGE,当前母线电压); //VALUE型数据上报;
+    mcu_dp_value_update(DPID_SEND_REALITY_SPEED,当前下发实际转速); //VALUE型数据上报;
+    mcu_dp_value_update(DPID_SYSTEM_RUNNING_TIME,当前系统运行时间); //VALUE型数据上报;
+    mcu_dp_value_update(DPID_NO_OPERATION_TIME,当前无操作时间); //VALUE型数据上报;
+    mcu_dp_value_update(DPID_SYSTEM_SLEEPING_TIME,当前休眠时间); //VALUE型数据上报;
     mcu_dp_enum_update(DPID_SYSTEM_WORKING_MODE,当前工作模式); //枚举型数据上报;
     mcu_dp_enum_update(DPID_SYSTEM_WORKING_STATUS,当前系统状态机); //枚举型数据上报;
     mcu_dp_value_update(DPID_MOTOR_CURRENT_SPEED,当前当前转速); //VALUE型数据上报;
@@ -184,6 +190,7 @@ void all_data_update(void)
     */
 
 	//故障上传
+	mcu_dp_value_update(DPID_DEVICE_ERROR_CODE,*p_Motor_Fault_Static); //VALUE型数据上报;
 	mcu_dp_fault_update(DPID_GET_SYSTEM_FAULT_STATUS,*p_System_Fault_Static); //故障型数据上报;
 	
 	//暂定不传
@@ -192,6 +199,8 @@ void all_data_update(void)
 	mcu_dp_value_update(DPID_GET_MOTOR_CURRENT,*p_Motor_Current); //VALUE型数据上报;
 	mcu_dp_value_update(DPID_MOTOR_REALITY_SPEED,*p_Motor_Reality_Speed); //VALUE型数据上报;
 	mcu_dp_value_update(DPID_MOTOR_BUS_VOLTAGE,*p_Motor_Bus_Voltage); //VALUE型数据上报;
+	mcu_dp_value_update(DPID_MOTOR_REALITY_SPEED,*p_Send_Reality_Speed); //VALUE型数据上报;
+	
 	
 	// 系统状态 (重要)
 	mcu_dp_enum_update(DPID_SYSTEM_WORKING_MODE,*p_PMode_Now); //VALUE型数据上报;
@@ -203,6 +212,11 @@ void all_data_update(void)
 	mcu_dp_value_update(DPID_FREE_MODE_SPEEN,p_OP_Free_Mode->speed); //VALUE型数据上报;
   mcu_dp_value_update(DPID_TIMING_MODE_SPEEN,p_OP_Timing_Mode->speed); //VALUE型数据上报;
   mcu_dp_value_update(DPID_TIMING_MODE_TIME,p_OP_Timing_Mode->time); //VALUE型数据上报;
+
+	// debug 用
+	mcu_dp_value_update(DPID_SYSTEM_RUNNING_TIME,		*p_System_Runing_Second_Cnt); //VALUE型数据上报;
+  mcu_dp_value_update(DPID_NO_OPERATION_TIME,			*p_No_Operation_Second_Cnt); //VALUE型数据上报;
+  mcu_dp_value_update(DPID_SYSTEM_SLEEPING_TIME,	*p_System_Sleeping_Second_Cnt); //VALUE型数据上报;
 }
 
 

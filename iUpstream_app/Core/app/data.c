@@ -14,6 +14,7 @@
 #include "modbus.h"
 #include <stdlib.h>
 #include <string.h>
+#include "dev.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -55,9 +56,6 @@ uint16_t* p_PMode_Now;								// 当前模式
 uint16_t* p_OP_ShowNow_Speed;					// 当前速度
 uint16_t* p_OP_ShowNow_Time;					// 当前时间
 
-uint32_t* p_System_Runing_Second_Cnt;		// 系统时间
-
-uint32_t* p_System_Sleeping_Second_Cnt;		// 无人操作时间
 
 System_Ctrl_Mode_Type_enum Ctrl_Mode_Type = CTRL_FROM_KEY;				// 控制方式
 
@@ -76,6 +74,8 @@ uint16_t* p_Mos_Temperature;					//mos 温度
 uint16_t* p_Box_Temperature;					//电箱 温度
 uint32_t* p_Motor_Current;						//电机 电流
 uint32_t* p_Motor_Reality_Speed;			//电机 实际 转速
+uint32_t* p_Send_Reality_Speed;				//下发 实际 转速
+
 uint16_t* p_Motor_Bus_Voltage;				//母线 电压
 	
 uint16_t* p_Modbus_Node_Addr;					//地址
@@ -94,6 +94,13 @@ uint16_t Temp_Data_P5_0_Time = 15;						//P5 0% 	时间	秒
 uint8_t WIFI_Rssi = 0xFF;
 
 uint16_t* p_Analog_key_Value;					// 虚拟按键
+
+//================= 调试使用  时间 ================================
+
+uint32_t* p_System_Runing_Second_Cnt;			// 系统时间
+uint32_t* p_No_Operation_Second_Cnt;			// 无人操作时间
+uint32_t* p_System_Sleeping_Second_Cnt;		// 休眠时间
+
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -145,7 +152,8 @@ void Check_Data_Init(void)
 	}
 	
 	*p_System_Runing_Second_Cnt = 0; //运行时间
-	*p_System_Sleeping_Second_Cnt = 0;// 无人操作时间
+	*p_No_Operation_Second_Cnt = 0;	//无人操作时间
+	*p_System_Sleeping_Second_Cnt = 0;// 休眠时间
 	*p_Analog_key_Value = 0;	//虚拟按键
 }
 
@@ -181,6 +189,12 @@ void App_Data_Init(void)
 // 恢复 初始化
 void App_Data_ReInit(void)
 {
+	
+	*p_Local_Address = MODBUS_LOCAL_ADDRESS;
+	*p_Baud_Rate = MODBUS_BAUDRATE_DEFAULT;
+	*p_Support_Control_Methods = 0;
+	
+	
 	// 训练模式 当前状态
 	*p_PMode_Now = 0;
 	Period_Now = 0;

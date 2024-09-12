@@ -93,6 +93,8 @@ void WIFI_Update_State_Upload(void)
 	static int	 Wifi_Mos_Temperature = 0;
 	static uint16_t Wifi_Motor_Current = 0;
 	static uint16_t Wifi_Motor_Reality_Speed = 0;
+	static uint16_t Wifi_Send_Reality_Speed = 0;
+	
 	static uint16_t Wifi_Motor_Bus_Voltage = 0;
 	
 	static uint16_t Wifi_OP_Free_Mode_Speed = 0;
@@ -102,6 +104,8 @@ void WIFI_Update_State_Upload(void)
 	short int box_temperature = 0;
 	short int mos_temperature = 0;
 		
+	static uint16_t State_Upload_Cnt=0;
+	
 	//故障上传
 	if(Wifi_System_Fault_Static != *p_System_Fault_Static)
 	{
@@ -162,7 +166,14 @@ void WIFI_Update_State_Upload(void)
 		mcu_dp_value_update(DPID_MOTOR_REALITY_SPEED,*p_Motor_Reality_Speed); //VALUE型数据上报;
 		Wifi_Motor_Reality_Speed = *p_Motor_Reality_Speed;
 	}
-
+	
+	// 下发 实际转速
+	if(Wifi_Send_Reality_Speed != *p_Send_Reality_Speed)
+	{
+		mcu_dp_value_update(DPID_SEND_REALITY_SPEED,*p_Send_Reality_Speed); //VALUE型数据上报;
+		Wifi_Send_Reality_Speed = *p_Send_Reality_Speed;
+	}
+	
 	// 默认参数
 	if(Wifi_OP_Free_Mode_Speed != p_OP_Free_Mode->speed)
 	{
@@ -180,6 +191,14 @@ void WIFI_Update_State_Upload(void)
 		Wifi_OP_Time_Mode_Time = p_OP_Timing_Mode->time;
 	}
 	
+	if(State_Upload_Cnt++ > WIFI_DATE_UPLOAD_TIME)
+	{
+		State_Upload_Cnt = 0;
+		// debug 用
+		mcu_dp_value_update(DPID_SYSTEM_RUNNING_TIME,		*p_System_Runing_Second_Cnt); //VALUE型数据上报;
+		mcu_dp_value_update(DPID_NO_OPERATION_TIME,			*p_No_Operation_Second_Cnt); //VALUE型数据上报;
+		mcu_dp_value_update(DPID_SYSTEM_SLEEPING_TIME,	*p_System_Sleeping_Second_Cnt); //VALUE型数据上报;
+	}
 }
 
 //------------------- 上传状态更新 ----------------------------
