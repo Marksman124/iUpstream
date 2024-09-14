@@ -13,6 +13,7 @@
 #include "wifi_thread.h"
 #include "wifi.h"
 #include "data.h"
+#include "debug_protocol.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -84,6 +85,8 @@ void WIFI_Get_In_Error(void)
 //------------------- 上传状态更新 ----------------------------
 void WIFI_Update_State_Upload(void)
 {
+
+	static uint16_t Wifi_Motor_Fault_Static = 0;
 	static uint16_t Wifi_System_Fault_Static = 0;
 	static uint16_t Wifi_PMode_Now = 0;
 	static uint16_t Wifi_System_State_Machine = 0;
@@ -105,6 +108,13 @@ void WIFI_Update_State_Upload(void)
 	short int mos_temperature = 0;
 		
 	static uint16_t State_Upload_Cnt=0;
+	
+	//故障上传
+	if(Wifi_Motor_Fault_Static != *p_Motor_Fault_Static)
+	{
+		mcu_dp_fault_update(DPID_DEVICE_ERROR_CODE,*p_Motor_Fault_Static); //故障型数据上报;
+		Wifi_Motor_Fault_Static = *p_Motor_Fault_Static;
+	}
 	
 	//故障上传
 	if(Wifi_System_Fault_Static != *p_System_Fault_Static)
@@ -216,7 +226,8 @@ void WIFI_Get_Work_State(void)
 		break;
 		case WIFI_NOT_CONNECTED:
 		//Wi-Fi 配置完成，正在连接路由器，即 LED 常暗
-		WIFI_Set_Machine_State( WIFI_NO_CONNECT );
+		//if(WIFI_Get_Machine_State() != WIFI_ERROR)
+		WIFI_Set_Machine_State( WIFI_ERROR );
 		break;
 		case WIFI_CONNECTED:
 		//路由器连接成功，即 LED 常亮
@@ -228,13 +239,16 @@ void WIFI_Get_Work_State(void)
 		break;
 		case WIFI_LOW_POWER:
 		//低功耗模式， 即 LED 常暗
-		WIFI_Set_Machine_State(WIFI_NO_CONNECT);
+		WIFI_Set_Machine_State(WIFI_WORKING);
 		break;
 		case SMART_AND_AP_STATE:
 		//快连和热点模式共存配置状态， 即 LED 常亮
 		WIFI_Set_Machine_State(WIFI_WORKING);
 		break;
-		default:break;
+		default:
+			//if(WIFI_Get_Machine_State() != WIFI_ERROR)
+				WIFI_Set_Machine_State(WIFI_NO_CONNECT);
+		break;
 	}
 }
 

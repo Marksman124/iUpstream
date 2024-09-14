@@ -61,8 +61,6 @@ static uint32_t Motor_Rx_Timer_cnt= 0;
 static uint32_t Motor_Fault_Timer_cnt= 0;	//故障计数器
 static uint32_t Motor_TEMP_Timer_cnt= 0;	//高温 计数器
 
-uint8_t debug_send_buffer[DEBUG_PROTOCOL_TX_MAX]={0};
-
 /* Private user code ---------------------------------------------------------*/
 
 // 初始化
@@ -119,8 +117,7 @@ void App_Motor_Handler(void)
 	// ===================  尝试重启串口
 	if( ((Motor_Rx_Timer_cnt % FAULT_MOTOR_TRY_RESTAR_TIME)==0) && (Motor_Rx_Timer_cnt >= FAULT_MOTOR_TRY_RESTAR_TIME))
 	{
-		sprintf((char*)debug_send_buffer,"[ERROR]\t驱动板通讯故障 cnt:\t%d\t重启串口\n",Motor_Rx_Timer_cnt);
-		UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
+		DEBUG_PRINT("[ERROR]\t驱动板通讯故障 cnt:\t%d\t重启串口\n",Motor_Rx_Timer_cnt);
 		Motor_Usart_Restar();
 	}
 	// ===================  设置转速
@@ -193,7 +190,7 @@ uint8_t Motor_Speed_Update(void)
 	if(result == 1)
 	{
 		//测试发送串口
-		DEBUG_PRINT("电极转速:\t%d\t\t转速:\t%d\t档位:\t%d%%\n",rpm,rpm/5,Motor_Speed_Now);
+		DEBUG_PRINT("电极转速:\t%d\t\t转速:\t%d\t档位:\t%d%%\n",*p_Send_Reality_Speed,*p_Send_Reality_Speed/5,Motor_Speed_Now);
 	}
 	
 	return result;
@@ -281,12 +278,15 @@ uint8_t Change_Faule_To_Upper(uint8_t type)
 		//-----------过流
 		else if(type == 0x04)
 			change_fault = FAULT_BUS_CURRENT_ABNORMAL;
-		//-----------电流传感器1\2\3 偏置故障-硬件误差过大
-		else if((type == 0x0F)||(type == 0x10)||(type == 0x11))
-			change_fault = FAULT_BUS_CURRENT_BIAS;
-		//----------- mos管 过热
-		else if(type == 0x06)
+		//----------- MOS 过热
+		else if(type == 0x05)
 			change_fault = FAULT_TEMPERATURE_MOS;
+		//-----------电流传感器1\2\3 偏置故障-硬件误差过大
+		else if(type == 0x12)
+			change_fault = FAULT_BUS_CURRENT_BIAS;
+//		//----------- mos管 过热
+//		else if(type == 0x06)
+//			change_fault = FAULT_TEMPERATURE_MOS;
 		//----------- 其它 故障
 		else
 			change_fault = FAULT_MOTOR_DRIVER;
@@ -350,6 +350,8 @@ void Motor_State_Analysis(void)
 	uint16_t result_fault=0;
 	short int Temperature=0;
 	Motor_Rx_Timer_cnt = 0;
+	uint16_t ntc_tmp[3]={0};
+	
 	//驱动板 通讯故障 恢复
 	Motor_Fault_State &= ~FAULT_MOTOR_LOSS;
 
@@ -371,17 +373,15 @@ void Motor_State_Analysis(void)
 	*p_Motor_Fault_Static = Motor_State_Storage[MOTOR_ADDR_MOTOR_FAULT_OFFSET];
 	
 	// 10KNTC温度1 2 3
-	uint16_t ntc_tmp[3] = {Motor_State_Storage[MOTOR_ADDR_NTC1_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC1_TEMP_OFFSET+1],
-	Motor_State_Storage[MOTOR_ADDR_NTC2_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC2_TEMP_OFFSET+1],
-	Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET+1]};
+	ntc_tmp[0] = Motor_State_Storage[MOTOR_ADDR_NTC1_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC1_TEMP_OFFSET+1];
+	ntc_tmp[1] = Motor_State_Storage[MOTOR_ADDR_NTC2_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC2_TEMP_OFFSET+1];
+	ntc_tmp[2] = Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET]<<8 | Motor_State_Storage[MOTOR_ADDR_NTC3_TEMP_OFFSET+1];
 	
-	sprintf((char*)debug_send_buffer,"\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t\t\t%d\n母线电压:\t%d.%d\n电机故障:\t\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
+	DEBUG_PRINT("\n\n\nmosfet温度:\t%d.%d\n电机温度:\t%d.%d\n电机电流:\t%d.%d\n转速:\t\t\t\t%d\n母线电压:\t%d.%d\n电机故障:\t\t%d\n10KNTC温度1 2 3:\t%d.%d\t%d.%d\t%d.%d\n\n",
 			Temperature/10,Temperature%10,*p_Driver_Software_Version/10,*p_Driver_Software_Version%10,*p_Motor_Current/100,*p_Motor_Current%100,
 			*p_Motor_Reality_Speed,*p_Motor_Bus_Voltage/10,*p_Motor_Bus_Voltage%10,*p_Motor_Fault_Static,
 			ntc_tmp[0]/10,ntc_tmp[0]%10,ntc_tmp[1]/10,ntc_tmp[1]%10,ntc_tmp[2]/10,ntc_tmp[2]%10);
-	
-	UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
-	
+		
 	CLEAN_MOTOR_FAULT(Motor_Fault_State);
 	if(*p_Motor_Fault_Static > 0)
 	{
@@ -459,8 +459,7 @@ void Motor_RxData(uint8_t len)
 	// 检查 长度
 	if((Motor_DMABuff[1]+5) != len)
 	{
-		sprintf((char*)debug_send_buffer,"[ERROR]\t接收长度错误:\t收到:\t%d   实际:\t%d\n",Motor_DMABuff[1]+5, len);
-		UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
+		DEBUG_PRINT("[ERROR]\t接收长度错误:\t收到:\t%d   实际:\t%d\n",Motor_DMABuff[1]+5, len);
 		return;
 	}
 	
@@ -469,8 +468,7 @@ void Motor_RxData(uint8_t len)
 	//crc_read = ((Motor_DMABuff[len-2]<<8) & Motor_DMABuff[len-1]);
 	if(crc_value != ((Motor_DMABuff[len-3]<<8) | Motor_DMABuff[len-2]))
 	{
-		sprintf((char*)debug_send_buffer,"[ERROR]\tcrc校验错误:\t计算得到:\t%d   收到的:\t%d\n",crc_value, ((Motor_DMABuff[len-3]<<8) & Motor_DMABuff[len-2]));
-		UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
+		DEBUG_PRINT("[ERROR]\tcrc校验错误:\t计算得到:\t%d   收到的:\t%d\n",crc_value, ((Motor_DMABuff[len-3]<<8) & Motor_DMABuff[len-2]));
 		return;
 	}
 	

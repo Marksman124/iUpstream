@@ -150,7 +150,7 @@ void MX_FREERTOS_Init(void) {
   Rs485_Modbus_TaHandle = osThreadCreate(osThread(Rs485_Modbus_Ta), NULL);
 
   /* definition and creation of Main_Task */
-  osThreadDef(Main_Task, Main_Handler, osPriorityBelowNormal, 0, 128);
+  osThreadDef(Main_Task, Main_Handler, osPriorityRealtime, 0, 128);
   Main_TaskHandle = osThreadCreate(osThread(Main_Task), NULL);
 
   /* definition and creation of Key_Button_Task */

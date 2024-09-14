@@ -233,7 +233,7 @@ eMBRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength )
 		if( eRcvState == STATE_RX_IDLE )
 		{
 			// 转发至串口  用于调试
-			UART_Send_Debug((UCHAR *)ucRTUBuf, usLength+3); //发送
+			//UART_Send_Debug((UCHAR *)ucRTUBuf, usLength+3); //发送
 		}
     return eStatus;
 }

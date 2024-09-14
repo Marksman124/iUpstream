@@ -152,13 +152,16 @@ uint8_t If_System_Is_Error(void)
 #endif
 	if(*p_Box_Temperature != vaule)
 	{
+		DEBUG_PRINT("机箱温度：%0.3f °C \n",Temperature);
 		memcpy(p_Box_Temperature, &vaule, 2);
 	}
-	DEBUG_PRINT("机箱温度：%0.3f °C \n",Temperature);
+	
 	// wifi故障 
 	if(WIFI_Rssi < WIFI_RSSI_ERROR_VAULE)
 	{
-		system_fault |= FAULT_WIFI_TEST_ERROR;
+		DEBUG_PRINT("wifi模组故障: 信号强度 %d dBm   ( 合格: %d dBm)\n",WIFI_Rssi, WIFI_RSSI_ERROR_VAULE);
+		system_fault |= FAULT_WIFI_TEST_ERROR;  //不报故障了
+		//WIFI_Set_Machine_State(WIFI_ERROR);
 	}
 	
 	// 机箱 温度

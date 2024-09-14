@@ -349,12 +349,12 @@ void on_pushButton_4_Long_Press(void)
 {
 	if(*p_System_State_Machine == POWER_OFF_STATUS)//关机中 执行开机
 	{
-			Buzzer_Click_Long_On();
+			Buzzer_Click_Long_On(1);
 			System_Power_On();
 	}
 	else
 	{
-		Buzzer_Click_Long_On();
+		Buzzer_Click_Long_On(1);
     System_Power_Off();
 	}
 	
@@ -409,9 +409,11 @@ void on_pushButton_2_4_Long_Press(void)
 void App_Key_Init(void)
 {
 	Led_Button_On(0x0F);	// 按键
+	Buzzer_Click_Long_On(2);// 开机长响
 	
 	System_Boot_Screens();
 	System_Power_Off();
+	
 }
 
 //------------------- 按键灯 ----------------------------
@@ -461,20 +463,20 @@ void Special_Button_Rules(uint8_t key_value)
 			// 自测
 			if(key_value == KEY_VALUE_BIT_BUTTON_1)
 			{
-				Buzzer_Click_Long_On();
+				Buzzer_Click_Long_On(1);
 				System_Self_Testing_State = 0xAA;
 				Breath_light_Max();
 			}
 			// 菜单
 			else if(key_value == KEY_VALUE_BIT_BUTTON_2)
 			{
-				Buzzer_Click_Long_On();
+				Buzzer_Click_Long_On(1);
 				To_Operation_Menu();
 			}
 			// 恢复出厂
 			else if(key_value == KEY_VALUE_BIT_BUTTON_3)
 			{
-				Buzzer_Click_Long_On();
+				Buzzer_Click_Long_On(1);
 				Restore_Factory_Settings();
 			}
 		}
@@ -496,9 +498,9 @@ void Buzzer_Click_On(void)
 }
 
 
-void Buzzer_Click_Long_On(void)
+void Buzzer_Click_Long_On(uint8_t type)
 {
-	Key_Buzzer_Type = 1;
+	Key_Buzzer_Type = type;
 	Key_Buzzer_cnt = 1;
 }
 
@@ -519,9 +521,18 @@ void Buzzer_Click_Handler(void)
 				TM1621_Buzzer_Off();
 				Key_Buzzer_cnt = 0;
 			}
-			else
+			else if(Key_Buzzer_Type == 1)
 			{
 				if(Key_Buzzer_cnt > (KEY_BUZZER_TIME_LONG+2))
+				{
+					TM1621_Buzzer_Off();
+					Key_Buzzer_cnt = 0;
+					Key_Buzzer_Type = 0;
+				}
+			}
+			else if(Key_Buzzer_Type == 2)
+			{
+				if(Key_Buzzer_cnt > (KEY_BUZZER_TIME_LONG_32+2))
 				{
 					TM1621_Buzzer_Off();
 					Key_Buzzer_cnt = 0;
@@ -665,7 +676,7 @@ void App_Key_Handler(void)
 				{
 					if(Key_IO_Hardware > 0)
 					{
-						Buzzer_Click_Long_On();
+						Buzzer_Click_Long_On(1);
 						
 						Key_IO_Old |= Key_IO_Hardware;
 						Led_Button_On(Key_IO_Old);	// 按键

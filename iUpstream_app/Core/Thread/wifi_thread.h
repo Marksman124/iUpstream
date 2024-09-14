@@ -44,7 +44,7 @@ typedef enum
 
 #define WIFI_DISTRIBUTION_BLINK_TIME				2				// 2.5 S
 
-#define WIFI_ERROR_BLINK_TIME								1				// 1 S
+#define WIFI_ERROR_BLINK_TIME								8				// 1 S
 
 
 #define WIFI_DISTRIBUTION_TIME_OUT				180				// 3 min

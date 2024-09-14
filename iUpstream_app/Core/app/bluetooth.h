@@ -83,6 +83,8 @@ extern void BT_Read_Handler(void);
 extern void BT_Get_In_Distribution(void);
 //------------------- 进入故障 ----------------------------
 extern void BT_Get_In_Error(void);
+//------------------- 配网处理 0.5秒进一次----------------------------
+extern void BT_Distribution_Halder(void);
 
 /* Private defines -----------------------------------------------------------*/
 

@@ -181,7 +181,7 @@ void App_Data_Init(void)
 	
 	TM1621_Buzzer_Init();
 	
-	//测试代码 记得删
+	//test 测试关屏幕背光pwm 记得删  wuqingguang 2024-09-09
 	TM1621_light_Off();
 }
 

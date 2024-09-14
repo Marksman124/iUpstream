@@ -34,6 +34,8 @@ static BT_STATE_MODE_E BT_State_Machine = BT_NO_CONNECT;
 uint8_t BT_Uart_Read_Buffer;
 //声明一个对象
 ModbusSlaveObj_t Ms_BT_Modbus;
+
+static uint16_t BT_Halder_cnt = 0;
 /* Private function prototypes -----------------------------------------------*/
 
 
@@ -211,7 +213,8 @@ void BT_Get_In_Distribution(void)
 {
 	BT_Set_Machine_State( BT_DISTRIBUTION );
 	
-	BT_Module_AT_ReInit();
+	BT_Halder_cnt = 0;
+	//BT_Module_AT_ReInit();
 }
 
 //------------------- 进入故障 ----------------------------
@@ -221,5 +224,21 @@ void BT_Get_In_Error(void)
 	
 }
 
+//------------------- 配网处理 0.5秒进一次----------------------------
+void BT_Distribution_Halder(void)
+{	
+	if(BT_Halder_cnt == 0)
+		SerialWrite((uint8_t*)"+++",3);
+	else if(BT_Halder_cnt == 2)
+		BT_Set_Name();
+	else if(BT_Halder_cnt == 4)
+		BT_Set_MAC();
+	else if(BT_Halder_cnt == 6)
+		BT_Set_Mode(0);
+	else if(BT_Halder_cnt == 16)
+		BT_Set_MTU(243);
+	
+	BT_Halder_cnt ++;
+}
 
 

@@ -119,7 +119,7 @@ extern uint8_t Key_Get_IO_Input(void);
 
 extern void Buzzer_Click_On(void);
 
-extern void Buzzer_Click_Long_On(void);
+extern void Buzzer_Click_Long_On(uint8_t type);
 
 //	开机 进入自由模式
 extern void System_Power_On(void);

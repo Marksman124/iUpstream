@@ -45,7 +45,7 @@ uint8_t Debug_Protocol_Mode	=	0;
 uint8_t Debug_Send_Buffer[DEBUG_PROTOCOL_TX_MAX];
 uint8_t Debug_Read_Buffer[DEBUG_PROTOCOL_RX_MAX];
 
-uint8_t debug_buffer[128]={0};
+uint8_t debug_buffer[DEBUG_PROTOCOL_TX_MAX]={0};
 
 /* USER CODE END PV */
 
@@ -191,4 +191,5 @@ void Debug_Usart_Restar(void)
   MX_UART4_Init();
 	Debug_Protocol_Init();
 }
+
 

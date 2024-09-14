@@ -43,7 +43,7 @@
 #define CONFIG_MODE     CONFIG_MODE_SPECIAL             //防误触模式(特殊配网方式)
 
 /*  设置低功耗配网方式和特殊配网方式的配网模式打开时间,该宏处于注释状态将按三分钟处理,可以支持的设置数据范围: 3~10 分钟  */
-//#define CONFIG_MODE_DELAY_TIME    10         //配网模式打开时间 单位:分钟
+#define CONFIG_MODE_DELAY_TIME    3         //配网模式打开时间 单位:分钟
 
 /*  选择smart模式和AP模式,该宏都注释将保持smart模式和AP模式互相切换  */
 //#define CONFIG_MODE_CHOOSE        0         //模块同时支持AP连接配网和EZ配网无需用户切换,对应的配网状态0x06

@@ -116,13 +116,13 @@ extern "C" {
 //-------------- 蜂鸣器 长度 -------------------
 #define KEY_BUZZER_TIME								(8)					//周期  KEY_THREAD_LIFECYCLE 倍数
 #define KEY_BUZZER_TIME_LONG					(16)					//周期  KEY_THREAD_LIFECYCLE 倍数
-
+#define KEY_BUZZER_TIME_LONG_32					(32)					//周期  KEY_THREAD_LIFECYCLE 倍数
 /* 蜂鸣器 音量  50最大  ------------------------------------------------------------*/
 //******************  调试模式 **************************
 #ifdef SYSTEM_DEBUG_MODE
 #define BUZZER_FREQUENCY					1
 #else
-#define BUZZER_FREQUENCY					50					//50
+#define BUZZER_FREQUENCY					3					//50
 #endif
 //*******************************************************
 
@@ -148,10 +148,10 @@ extern "C" {
 #define TIMING_THREAD_TURN_ON					1
 
 #if(TIMING_THREAD_TURN_ON)
-#define TIMING_THREAD_LIFECYCLE				(29)				// ms
+#define TIMING_THREAD_LIFECYCLE				(49)				// ms
 
 //半秒周期数
-#define TIMING_THREAD_HALF_SECOND			(476/TIMING_THREAD_LIFECYCLE)				// 0.5 s
+#define TIMING_THREAD_HALF_SECOND			(500/TIMING_THREAD_LIFECYCLE)				// 0.5 s   16
 //1秒周期数
 #define TIMING_THREAD_ONE_SECOND			(2)				// 1 s
 //******************  调试模式 **************************
@@ -305,10 +305,10 @@ extern "C" {
 #if(WIFI_THREAD_TURN_ON)
 #define WIFI_THREAD_LIFECYCLE							(20)				// ms 暂时不用
 
-#define WIFI_DATE_UPLOAD_TIME							(10000/WIFI_THREAD_LIFECYCLE)				// 自动上传 时间
+#define WIFI_DATE_UPLOAD_TIME							(10000/WIFI_THREAD_LIFECYCLE)				// 自动上传 时间 10s
 
 //wifi 故障 判断值
-#define WIFI_RSSI_ERROR_VAULE										(60)
+#define WIFI_RSSI_ERROR_VAULE										(50)
 
 #endif
 /*==============================================================================================================*/

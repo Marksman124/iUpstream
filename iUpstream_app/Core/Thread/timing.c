@@ -17,7 +17,7 @@
 #include "display.h"
 #include "key.h"
 #include "debug_protocol.h"
-
+#include "wifi.h"
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -106,100 +106,134 @@ void Speed_Save_Flash(Operating_Parameters op_node,uint8_t system_state)
 	}
 }
 
-// wifi 状态基  0.5秒进一次
+// wifi 状态基    TIMING_THREAD_LIFECYCLE
 void WIFI_State_Handler(void)
 {
-	if(WIFI_Get_Machine_State() == WIFI_DISTRIBUTION)
+	static uint8_t wifi_state = 0;
+	
+	if(WIFI_Get_Machine_State() == WIFI_ERROR)
 	{
-		if(( WIFI_Distribution_Timing_Cnt == 0)||(WIFI_Distribution_Timing_Cnt > Timing_Half_Second_Cnt))
-		{
-			WIFI_Distribution_Timing_Cnt = Timing_Half_Second_Cnt;
-		}
-		
-		if((Timing_Half_Second_Cnt % WIFI_DISTRIBUTION_BLINK_TIME) == 0)
-		{
-			if((LCD_Show_Bit & STATUS_BIT_WIFI) == 0)
-				LCD_Show_Bit |= STATUS_BIT_WIFI;
-			else
-				LCD_Show_Bit &= ~STATUS_BIT_WIFI;
-		}
-		
-		//超时配网恢复
-		if( (Timing_Half_Second_Cnt - WIFI_Distribution_Timing_Cnt) > WIFI_DISTRIBUTION_TIME_CALLOUT)
+		if((Timing_Thread_Task_Cnt % WIFI_ERROR_BLINK_TIME) == 0)
 		{
 			WIFI_Distribution_Timing_Cnt = 0;
-			WIFI_Set_Machine_State(WIFI_NO_CONNECT);
-			LCD_Show_Bit &= ~STATUS_BIT_WIFI;
-		}
-		Lcd_Show();
-	}
-	else if(WIFI_Get_Machine_State() == WIFI_ERROR)
-	{
-		if((Timing_Half_Second_Cnt % WIFI_ERROR_BLINK_TIME) == 0)
-		{
 			if((LCD_Show_Bit & STATUS_BIT_WIFI) == 0)
 				LCD_Show_Bit |= STATUS_BIT_WIFI;
 			else
 				LCD_Show_Bit &= ~STATUS_BIT_WIFI;
 		}
-		Lcd_Show();
-	}
-	else if(WIFI_Get_Machine_State() == WIFI_WORKING)
-	{
-		LCD_Show_Bit |= STATUS_BIT_WIFI;
 	}
 	else
 	{
-		LCD_Show_Bit &= ~STATUS_BIT_WIFI;
+		if(Timing_Thread_Task_Cnt >= TIMING_THREAD_HALF_SECOND) //半秒
+		{
+			if( mcu_get_wifi_work_state() != wifi_state )
+			{
+				wifi_state = mcu_get_wifi_work_state();
+				DEBUG_PRINT("wifi状态: %d\n",wifi_state);
+			}
+			
+			if(WIFI_Get_Machine_State() == WIFI_DISTRIBUTION)
+			{
+				if(( WIFI_Distribution_Timing_Cnt == 0)||(WIFI_Distribution_Timing_Cnt > Timing_Half_Second_Cnt))
+				{
+					WIFI_Distribution_Timing_Cnt = Timing_Half_Second_Cnt;
+				}
+				
+				if((Timing_Half_Second_Cnt % WIFI_DISTRIBUTION_BLINK_TIME) == 0)
+				{
+					if((LCD_Show_Bit & STATUS_BIT_WIFI) == 0)
+						LCD_Show_Bit |= STATUS_BIT_WIFI;
+					else
+						LCD_Show_Bit &= ~STATUS_BIT_WIFI;
+				}
+				
+				//超时配网恢复
+		//		if( (Timing_Half_Second_Cnt - WIFI_Distribution_Timing_Cnt) > WIFI_DISTRIBUTION_TIME_CALLOUT)
+		//		{
+		//			WIFI_Distribution_Timing_Cnt = 0;
+		//			WIFI_Set_Machine_State(WIFI_NO_CONNECT);
+		//			LCD_Show_Bit &= ~STATUS_BIT_WIFI;
+		//		}
+			}
+			else if(WIFI_Get_Machine_State() == WIFI_ERROR)
+			{
+				if((Timing_Thread_Task_Cnt % WIFI_ERROR_BLINK_TIME) == 0)
+				{
+					WIFI_Distribution_Timing_Cnt = 0;
+					if((LCD_Show_Bit & STATUS_BIT_WIFI) == 0)
+						LCD_Show_Bit |= STATUS_BIT_WIFI;
+					else
+						LCD_Show_Bit &= ~STATUS_BIT_WIFI;
+				}
+			}
+			else if(WIFI_Get_Machine_State() == WIFI_WORKING)
+			{
+				WIFI_Distribution_Timing_Cnt = 0;
+				LCD_Show_Bit |= STATUS_BIT_WIFI;
+			}
+			else
+			{
+				WIFI_Distribution_Timing_Cnt = 0;
+				LCD_Show_Bit &= ~STATUS_BIT_WIFI;
+			}
+		}
 	}
 }
 
-// 蓝牙 状态基  0.5秒进一次
+// 蓝牙 状态基  TIMING_THREAD_LIFECYCLE
 void BT_State_Handler(void)
 {
-	if(BT_Get_Machine_State() == BT_DISTRIBUTION)
+	if(BT_Get_Machine_State() == BT_ERROR)
 	{
-		if(( BT_Distribution_Timing_Cnt == 0)||(BT_Distribution_Timing_Cnt > Timing_Half_Second_Cnt))
-		{
-			BT_Distribution_Timing_Cnt = Timing_Half_Second_Cnt;
-		}
-		
-		if((Timing_Half_Second_Cnt % BT_DISTRIBUTION_BLINK_TIME) == 0)
+		BT_Distribution_Timing_Cnt = 0;
+		if((Timing_Thread_Task_Cnt % BT_ERROR_BLINK_TIME) == 0)
 		{
 			if((LCD_Show_Bit & STATUS_BIT_BLUETOOTH) == 0)
 				LCD_Show_Bit |= STATUS_BIT_BLUETOOTH;
 			else
 				LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
 		}
-		
-		//超时配网恢复
-		if( (Timing_Half_Second_Cnt - BT_Distribution_Timing_Cnt) > BT_DISTRIBUTION_TIME_CALLOUT)
-		{
-			BT_Distribution_Timing_Cnt = 0;
-			BT_Set_Machine_State(BT_NO_CONNECT);
-			LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
-		}
-		
-		Lcd_Show();
-	}
-	else if(BT_Get_Machine_State() == BT_ERROR)
-	{
-		if((Timing_Half_Second_Cnt % BT_ERROR_BLINK_TIME) == 0)
-		{
-			if((LCD_Show_Bit & STATUS_BIT_BLUETOOTH) == 0)
-				LCD_Show_Bit |= STATUS_BIT_BLUETOOTH;
-			else
-				LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
-		}
-		Lcd_Show();
-	}
-	else if(BT_Get_Machine_State() == BT_WORKING)
-	{
-		LCD_Show_Bit |= STATUS_BIT_BLUETOOTH;
 	}
 	else
 	{
-		LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
+		if(Timing_Thread_Task_Cnt >= TIMING_THREAD_HALF_SECOND) //半秒
+		{
+			if(BT_Get_Machine_State() == BT_DISTRIBUTION)
+			{
+				BT_Distribution_Halder();
+				
+				if(( BT_Distribution_Timing_Cnt == 0)||(BT_Distribution_Timing_Cnt > Timing_Half_Second_Cnt))
+				{
+					BT_Distribution_Timing_Cnt = Timing_Half_Second_Cnt;
+				}
+				
+				if((Timing_Half_Second_Cnt % BT_DISTRIBUTION_BLINK_TIME) == 0)
+				{
+					if((LCD_Show_Bit & STATUS_BIT_BLUETOOTH) == 0)
+						LCD_Show_Bit |= STATUS_BIT_BLUETOOTH;
+					else
+						LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
+				}
+				
+				//超时配网恢复
+				if( (Timing_Half_Second_Cnt - BT_Distribution_Timing_Cnt) > BT_DISTRIBUTION_TIME_CALLOUT)
+				{
+					BT_Distribution_Timing_Cnt = 0;
+					BT_Set_Machine_State(BT_NO_CONNECT);
+					LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
+				}
+			}
+			else if(BT_Get_Machine_State() == BT_WORKING)
+			{
+				BT_Distribution_Timing_Cnt = 0;
+				LCD_Show_Bit |= STATUS_BIT_BLUETOOTH;
+			}
+			else
+			{
+				BT_Distribution_Timing_Cnt = 0;
+				LCD_Show_Bit &= ~STATUS_BIT_BLUETOOTH;
+			}
+		}
 	}
 }
 
@@ -230,10 +264,7 @@ void Fault_State_Handler(void)
 			// 3次以内 退出故障, 超过3次只能重启
 			if((Timing_Half_Second_Cnt - Fault_Recovery_Timing_Cnt) > SYSTEM_FAULT_RECOVERY_TIME)
 			{
-				uint8_t debug_send_buffer[DEBUG_PROTOCOL_TX_MAX]={0};
-				sprintf((char*)debug_send_buffer,"故障恢复计时超过1小时,清除计数器:\t%d\n",System_Fault_Recovery_Cnt);
-				UART_Send_Debug(debug_send_buffer,strlen((char*)debug_send_buffer));
-				
+				DEBUG_PRINT("故障恢复计时超过1小时,清除计数器:\t%d\n",System_Fault_Recovery_Cnt);
 				//超过 1 小时 清除计数器
 				Clean_Fault_Recovery_Cnt();
 				Fault_Recovery_Timing_Cnt = Timing_Half_Second_Cnt; // 重新计时
@@ -460,7 +491,7 @@ void Running_State_Handler(void)
 // 暂停 状态基  1秒进一次
 void Pause_State_Handler(void)
 {
-	if((Timing_Half_Second_Cnt - Automatic_Shutdown_Timing_Cnt) > AUTOMATIC_SHUTDOWN_TIME)
+	if(((Timing_Half_Second_Cnt - Automatic_Shutdown_Timing_Cnt) > AUTOMATIC_SHUTDOWN_TIME)&&(Timing_Half_Second_Cnt > Automatic_Shutdown_Timing_Cnt))
 	{
 		System_Power_Off();
 	}
@@ -510,7 +541,7 @@ void Initial_State_Handler(void)
 {
 	if(Special_Status_Get( SPECIAL_BIT_SKIP_INITIAL))// 跳过 自动启动
 	{
-		if((Timing_Half_Second_Cnt - Automatic_Shutdown_Timing_Cnt) > AUTOMATIC_SHUTDOWN_TIME)
+		if(((Timing_Half_Second_Cnt - Automatic_Shutdown_Timing_Cnt) > AUTOMATIC_SHUTDOWN_TIME) && (Timing_Half_Second_Cnt > Automatic_Shutdown_Timing_Cnt))
 		{
 			System_Power_Off();
 		}
@@ -582,6 +613,9 @@ void App_Timing_Task(void)
 	
 	Timing_Thread_Task_Cnt++;
 	
+	WIFI_State_Handler();
+	BT_State_Handler();
+	
 	if(Timing_Thread_Task_Cnt >= TIMING_THREAD_HALF_SECOND) //半秒
 	{
 		Timing_Thread_Task_Cnt = 0;
@@ -589,8 +623,8 @@ void App_Timing_Task(void)
 //		if(Timing_Half_Second_Cnt > 10000)
 //		Timing_Half_Second_Cnt = 0;
 		
-		WIFI_State_Handler();
-		BT_State_Handler();
+//		WIFI_State_Handler();
+//		BT_State_Handler();
 		
 		
 		static uint8_t half_second_state=0;
