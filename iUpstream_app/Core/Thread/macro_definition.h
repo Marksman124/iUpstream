@@ -25,8 +25,21 @@ extern "C" {
 
 /*========================================== <main.h> macro ====================================================*/
 
+//******************  型号选择 **************************
+#define PRODUCT_MODEL_CODE_SJ230					(230)
+#define PRODUCT_MODEL_CODE_SJ200					(200)
+#define PRODUCT_MODEL_CODE_SJ160					(160)
+//*******************************************************
+
+// 产品机型码
+#define	MACRO_SYSTEM_PRODUCT_MODEL_CODE								PRODUCT_MODEL_CODE_SJ230		//
+
+// 软件版本
+#define	MACRO_SOFTWARE_VERSION_UINT32									"1.0.2"
+
+
 //******************  调试模式 **************************
-//#define SYSTEM_DEBUG_MODE					1
+#define SYSTEM_DEBUG_MODE					1
 //#define UART_PRINTF_LOG						1
 //#define UART_DEBUG_SEND_CTRL			1
 //*******************************************************
@@ -49,12 +62,6 @@ extern "C" {
 
 
 #define MACRO_POWER_ON_WAITE_TIME_TASK								(4000)			//上电等待时间 （等显示开机界面 机型码）
-
-// 产品机型码
-#define	MACRO_SYSTEM_PRODUCT_MODEL_CODE								(1200)		//
-
-// 软件版本
-#define	MACRO_SOFTWARE_VERSION_UINT32									"1.0.1"
 
 // 硬件版本
 //#define	MACRO_HARDWAR_VERSION_UINT32								0x00030000		//3.0
@@ -114,15 +121,15 @@ extern "C" {
 #define KEY_LONG_PRESS_TIME									(2000/KEY_THREAD_LIFECYCLE)			//长按时间 2s
 #define KEY_LONG_PRESS_TIME_SHORT						(1000/KEY_THREAD_LIFECYCLE)			//短一点的 长按时间  1s
 //-------------- 蜂鸣器 长度 -------------------
-#define KEY_BUZZER_TIME								(8)					//周期  KEY_THREAD_LIFECYCLE 倍数
-#define KEY_BUZZER_TIME_LONG					(16)					//周期  KEY_THREAD_LIFECYCLE 倍数
-#define KEY_BUZZER_TIME_LONG_32					(32)					//周期  KEY_THREAD_LIFECYCLE 倍数
+#define KEY_BUZZER_TIME								((200/KEY_THREAD_LIFECYCLE)-2)					//周期  KEY_THREAD_LIFECYCLE 倍数
+#define KEY_BUZZER_TIME_LONG					((400/KEY_THREAD_LIFECYCLE)-2)					//周期  KEY_THREAD_LIFECYCLE 倍数
+#define KEY_BUZZER_TIME_LONG_32				((800/KEY_THREAD_LIFECYCLE)-2)					//周期  KEY_THREAD_LIFECYCLE 倍数
 /* 蜂鸣器 音量  50最大  ------------------------------------------------------------*/
 //******************  调试模式 **************************
 #ifdef SYSTEM_DEBUG_MODE
 #define BUZZER_FREQUENCY					1
 #else
-#define BUZZER_FREQUENCY					3					//50
+#define BUZZER_FREQUENCY					50					//50
 #endif
 //*******************************************************
 
@@ -148,10 +155,10 @@ extern "C" {
 #define TIMING_THREAD_TURN_ON					1
 
 #if(TIMING_THREAD_TURN_ON)
-#define TIMING_THREAD_LIFECYCLE				(49)				// ms
+#define TIMING_THREAD_LIFECYCLE				(24)				// ms
 
 //半秒周期数
-#define TIMING_THREAD_HALF_SECOND			(500/TIMING_THREAD_LIFECYCLE)				// 0.5 s   16
+#define TIMING_THREAD_HALF_SECOND			(480/TIMING_THREAD_LIFECYCLE)				// 0.5 s   16
 //1秒周期数
 #define TIMING_THREAD_ONE_SECOND			(2)				// 1 s
 //******************  调试模式 **************************
@@ -214,7 +221,7 @@ extern "C" {
 #define MODBUS_THREAD_TURN_ON					1
 
 #if(MODBUS_THREAD_TURN_ON)
-#define MODBUS_THREAD_LIFECYCLE							(20)				// ms 暂时不用
+#define MODBUS_THREAD_LIFECYCLE							(40)				// ms 暂时不用
 
 #endif
 /*==============================================================================================================*/
@@ -242,11 +249,25 @@ extern "C" {
 //电机极数
 #define	MOTOR_POLE_NUMBER									(5)
 
+#if(MACRO_SYSTEM_PRODUCT_MODEL_CODE == PRODUCT_MODEL_CODE_SJ230)
 //最大转速 100%
-#define	MOTOR_RPM_SPEED_MAX								(1950*MOTOR_POLE_NUMBER)		//9750
+#define	MOTOR_RPM_SPEED_MAX								(1950*MOTOR_POLE_NUMBER)
 //最低转速 100%
-#define	MOTOR_RPM_SPEED_MIX								(700*MOTOR_POLE_NUMBER)			//3500
+#define	MOTOR_RPM_SPEED_MIX								(700*MOTOR_POLE_NUMBER)
 
+#elif (MACRO_SYSTEM_PRODUCT_MODEL_CODE == PRODUCT_MODEL_CODE_SJ200)
+//最大转速 100%
+#define	MOTOR_RPM_SPEED_MAX								(1700*MOTOR_POLE_NUMBER)
+//最低转速 100%
+#define	MOTOR_RPM_SPEED_MIX								(700*MOTOR_POLE_NUMBER)
+
+#elif (MACRO_SYSTEM_PRODUCT_MODEL_CODE == PRODUCT_MODEL_CODE_SJ160)
+//最大转速 100%
+#define	MOTOR_RPM_SPEED_MAX								(1470*MOTOR_POLE_NUMBER)
+//最低转速 100%
+#define	MOTOR_RPM_SPEED_MIX								(700*MOTOR_POLE_NUMBER)
+
+#endif
 // 700  1012   1324  1637   1950
 //每 1% 转速
 #define	MOTOR_RPM_CONVERSION_COEFFICIENT				((MOTOR_RPM_SPEED_MAX - MOTOR_RPM_SPEED_MIX) /80)			//15.6
@@ -303,7 +324,7 @@ extern "C" {
 #define WIFI_THREAD_TURN_ON					1
 
 #if(WIFI_THREAD_TURN_ON)
-#define WIFI_THREAD_LIFECYCLE							(20)				// ms 暂时不用
+#define WIFI_THREAD_LIFECYCLE							(40)				// ms 暂时不用
 
 #define WIFI_DATE_UPLOAD_TIME							(10000/WIFI_THREAD_LIFECYCLE)				// 自动上传 时间 10s
 

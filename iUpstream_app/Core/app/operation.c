@@ -13,6 +13,7 @@
 #include "operation.h"
 #include "tm1621.h"
 #include "key.h"
+
 /* Private includes ----------------------------------------------------------*/
 
 
@@ -105,6 +106,11 @@ extern TIM_HandleTypeDef htim1;
 void App_Operation_Init(void)
 {
 	Operation_Addr_Value = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS );
+	if((Operation_Addr_Value > MODBUS_LOCAL_ADDRESS_MAX) || (Operation_Addr_Value < MODBUS_LOCAL_ADDRESS_MIX))
+	{
+		Operation_Addr_Value = MODBUS_LOCAL_ADDRESS;
+		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
+	}
 	
 	Operation_Baud_Rate = Get_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE );
 	if(Operation_Baud_Rate > (OPERATION_BAUD_MAX-1))
@@ -318,10 +324,10 @@ static void on_Button_1_clicked(void)
 	//------- 地址
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
-		if(Operation_Addr_Value < 255)
+		if(Operation_Addr_Value < MODBUS_LOCAL_ADDRESS_MAX)
 			(Operation_Addr_Value)++;
 		else
-			Operation_Addr_Value = 0;
+			Operation_Addr_Value = MODBUS_LOCAL_ADDRESS_MIX;
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 	}
@@ -420,10 +426,10 @@ static void on_Button_2_clicked(void)
 	//------- 地址
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
-		if(Operation_Addr_Value > 0)
+		if(Operation_Addr_Value > MODBUS_LOCAL_ADDRESS_MIX)
 			(Operation_Addr_Value)--;
 		else
-			Operation_Addr_Value = 255;
+			Operation_Addr_Value = MODBUS_LOCAL_ADDRESS_MAX;
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 	}
@@ -446,7 +452,6 @@ static void on_Button_2_clicked(void)
 		else
 			Operation_Speed_Mode = 0;
 		
-		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
 		Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
 	}
 #endif
@@ -459,7 +464,6 @@ static void on_Button_2_clicked(void)
 		else
 			Operation_Motor_Poles = OPERATION_POLES_MAX;
 		
-		Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 	}
 #endif
@@ -501,7 +505,6 @@ static void on_Button_3_clicked(void)
 			Lcd_Show_Operation( Operation_State_Machine, (Temp_Data_P5_100_Time));
 		break;
 		case OPERATION_P5_100_TIME:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
 			Operation_State_Machine += 1;
 			Lcd_Show_Operation( Operation_State_Machine, (Temp_Data_P5_0_Time));
 		break;
@@ -511,32 +514,27 @@ static void on_Button_3_clicked(void)
 		break;
 #endif
 		case OPERATION_ADDR_SET:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
 			Operation_State_Machine = OPERATION_BAUD_RATE;
 			Lcd_Show_Operation( Operation_State_Machine, Baud_Rate_Value[Operation_Baud_Rate]);
 		break;
 		case OPERATION_BAUD_RATE:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate );
 #ifdef OPERATION_SPEED_MODE
 			Operation_State_Machine = OPERATION_SPEED_MODE;
 			Lcd_Show_Operation( Operation_State_Machine, Speed_Mode_Value[Operation_Speed_Mode]);
 		break;
 		case OPERATION_SPEED_MODE:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
 #endif
 #ifdef OPERATION_MOTOR_POLES
 			Operation_State_Machine += OPERATION_MOTOR_POLES;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Motor_Poles);
 		break;
 		case OPERATION_MOTOR_POLES:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
 #endif
 			Operation_State_Machine = OPERATION_SHIELD_MENU;
 			Lcd_Show_Operation( Operation_State_Machine, Operation_Shield_Value);
 		break;
 
 		case OPERATION_SHIELD_MENU:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
 			Operation_State_Machine = OPERATION_DISPLAY_VERSION;
 			
 			Lcd_Show_Operation( Operation_State_Machine, ((*p_Software_Version_high)*100 + (*p_Software_Version_low)));
@@ -549,7 +547,6 @@ static void on_Button_3_clicked(void)
 		break;
 		
 		case OPERATION_BREATH_LIGHT_MAX:
-			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_BREATH_LIGHT_MAX, Operation_Breath_Light_Max );
 #endif
 			Operation_State_Machine = OPERATION_DEIVES_VERSION;
 			//Lcd_Show_Operation( Operation_State_Machine, (DEVICES_VERSION_HIGH*100 + DEVICES_VERSION_LOW));
@@ -571,9 +568,21 @@ static void on_Button_3_clicked(void)
 // ④ 开机键  短按
 static void on_Button_4_Short_Press(void)
 {
-	//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value);
-	
-	//Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate);
+#ifdef OPERATION_P5_ACCELERATION
+	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
+#endif
+#ifdef OPERATION_SPEED_MODE
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_SPEED_MODE, Operation_Speed_Mode );
+#endif
+#ifdef OPERATION_MOTOR_POLES
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_POLE_NUMBER, Operation_Motor_Poles );
+#endif
+#ifdef OPERATION_BREATH_LIGHT_MAX
+			Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_MOTOR_BREATH_LIGHT_MAX, Operation_Breath_Light_Max );
+#endif
+	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_NODE_ADDRESS, Operation_Addr_Value );
+	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SLAVE_BAUD_RATE, Operation_Baud_Rate );
+	Set_DataAddr_Value(MB_FUNC_READ_HOLDING_REGISTER, MB_SUPPORT_CONTROL_METHODS, Operation_Shield_Value );
 	//保存 flash
 	Memset_OPMode();//存flash
 	//退出
@@ -629,7 +638,7 @@ static void on_Button_1_Long_Press(void)
 #endif
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
-		if(Operation_Addr_Value < 255)
+		if(Operation_Addr_Value < MODBUS_LOCAL_ADDRESS_MAX)
 		{
 //			button_cnt++;
 //			if(button_cnt > 5)
@@ -641,11 +650,11 @@ static void on_Button_1_Long_Press(void)
 //			else
 				(Operation_Addr_Value)++;
 			
-			if(Operation_Addr_Value > 255)
-				Operation_Addr_Value = 255;
+			if(Operation_Addr_Value > MODBUS_LOCAL_ADDRESS_MAX)
+				Operation_Addr_Value = MODBUS_LOCAL_ADDRESS_MAX;
 		}
 		else
-			Operation_Addr_Value = 0;
+			Operation_Addr_Value = MODBUS_LOCAL_ADDRESS_MIX;
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 	}
@@ -725,7 +734,7 @@ static void on_Button_2_Long_Press(void)
 #endif
 	if(Operation_State_Machine == OPERATION_ADDR_SET)
 	{
-		if(Operation_Addr_Value > 0)
+		if(Operation_Addr_Value > MODBUS_LOCAL_ADDRESS_MIX)
 		{
 //			button_cnt++;
 //			if(button_cnt > 5)
@@ -741,7 +750,7 @@ static void on_Button_2_Long_Press(void)
 			
 		}
 		else
-			Operation_Addr_Value = 255;
+			Operation_Addr_Value = MODBUS_LOCAL_ADDRESS_MAX;
 		
 		Lcd_Show_Operation( Operation_State_Machine, Operation_Addr_Value);
 	}

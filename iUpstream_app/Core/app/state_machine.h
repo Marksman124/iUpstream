@@ -65,7 +65,7 @@ typedef enum
 //-------------- 特别状态 位 -------------------
 #define SPECIAL_BIT_SKIP_INITIAL				0x01		//跳过 初始化   不自动倒数3s
 #define SPECIAL_BIT_SKIP_STARTING				0x02		//跳过 软启动  直接进入 运行
-//#define SPECIAL_BIT_SKIP_STARTING				0x02		//跳过 软启动  直接进入 运行
+#define SPECIAL_BIT_SPEED_CHANGE				0x04		//运行中更改转速
 
 #define SPECIAL_BIT_SPEED_100_GEAR			0x10		//速度 100 档位
 #define SPECIAL_BIT_TIME_100_GEAR				0x20		//定时 100 档位

@@ -1,7 +1,7 @@
 /**
 ******************************************************************************
 * @file				motor.c
-* @brief			电机 相关协议  控制转速命令 200ms
+* @brief			电机 相关协议  控制转速命令 200ms  《老郭版》
 *
 * @author			WQG
 * @versions		v1.0
@@ -103,7 +103,11 @@ void Clean_Motor_OffLine_Timer(void)
 void App_Motor_Handler(void)
 {
 	//通信故障计数器
-	//Motor_Rx_Timer_cnt++;  //test 测试先不报故障 记得删  wuqingguang 2024-09-09
+//******************  调试模式 **************************
+#ifndef SYSTEM_DEBUG_MODE
+	Motor_Rx_Timer_cnt++;  //不报故障 记得删  wuqingguang 2024-09-09
+#endif
+	
 	if(Motor_Timer_Cnt < 10000)
 		Motor_Timer_Cnt ++;
 	else
@@ -280,7 +284,7 @@ uint8_t Change_Faule_To_Upper(uint8_t type)
 			change_fault = FAULT_BUS_CURRENT_ABNORMAL;
 		//----------- MOS 过热
 		else if(type == 0x05)
-			change_fault = FAULT_TEMPERATURE_MOS;
+			change_fault = FAULT_TEMPERATURE_AMBIENT;
 		//-----------电流传感器1\2\3 偏置故障-硬件误差过大
 		else if(type == 0x12)
 			change_fault = FAULT_BUS_CURRENT_BIAS;
@@ -406,7 +410,7 @@ void Motor_State_Analysis(void)
 			Motor_TEMP_Timer_cnt ++;
 		else
 		{
-			Motor_Fault_State |= FAULT_TEMPERATURE_MOS;
+			Motor_Fault_State |= FAULT_TEMPERATURE_AMBIENT;
 		}
 	}
 	else if(Temperature >= (MOS_TEMP_REDUCE_SPEED*10))				//-------------  降速

@@ -69,6 +69,11 @@ void App_Timing_Init(void)
 {
 	
 	LCD_Show_Bit = STATUS_BIT_PERCENTAGE;
+	
+	System_Boot_Screens();
+	System_Power_Off();
+	//开机完成
+	System_PowerUp_Finish = 0xAA;
 }
 
 void Clean_Timing_Timer_Cnt(void)
@@ -320,6 +325,7 @@ void Starting_State_Handler(void)
 // 运行 状态基  1秒进一次
 void Running_State_Handler(void)
 {
+	static uint8_t temp_time_cnt = 0;
 	uint8_t slow_down_speed;//高温降速使用
 	
 	if(*p_System_State_Machine == FREE_MODE_RUNNING)									// 自由
@@ -375,6 +381,19 @@ void Running_State_Handler(void)
 		}
 	}
 	
+	if(Special_Status_Get(SPECIAL_BIT_SPEED_CHANGE))
+	{
+		temp_time_cnt ++;
+		if(temp_time_cnt >= 3)
+		{
+			temp_time_cnt = 0;
+			Special_Status_Delete(SPECIAL_BIT_SPEED_CHANGE);
+			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
+			Motor_Speed_Target_Set(*p_OP_ShowNow_Speed);
+			Update_OP_Data();	// 保存最新转速
+		}
+	}
+	
 	// 转速达到目标值
 	if(Motor_Speed_Is_Reach())
 	{
@@ -382,6 +401,7 @@ void Running_State_Handler(void)
 		if(Special_Status_Get(SPECIAL_BIT_SKIP_STARTING))
 		{
 			Special_Status_Delete(SPECIAL_BIT_SKIP_STARTING);
+			Update_OP_Data();	// 保存最新转速
 		}
 //判断电机电流
 #ifdef MOTOR_CANNOT_START_TIME
@@ -701,7 +721,9 @@ void App_Timing_Task(void)
 		}
 	}
 	
-	if(LCD_Refresh_Get()== 0)
+	if(LCD_Refresh_Get()== 1)
+		Lcd_Speed_Off();
+	else
 		Lcd_Show();
 //	{
 //		if(Motor_is_Start()==0)

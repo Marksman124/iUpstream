@@ -46,7 +46,7 @@ typedef enum
 #define FAULT_BUS_CURRENT_ABNORMAL					0x2
 #define FAULT_BUS_CURRENT_BIAS							0x4
 #define FAULT_ABNORMAL_OUTPUT_VOLTAGE				0x8
-#define FAULT_TEMPERATURE_MOS								0x10
+#define FAULT_LACK_PHASE										0x10	//И±Па
 #define FAULT_TEMPERATURE_AMBIENT						0x20
 #define FAULT_TEMPERATURE_SENSOR						0x40
 #define FAULT_MOTOR_DRIVER									0x80

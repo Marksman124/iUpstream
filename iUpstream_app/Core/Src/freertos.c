@@ -239,7 +239,7 @@ void Main_Handler(void const * argument)
 	
 	Set_Software_Version();
 	App_Timing_Init();
-	osDelay(POWER_ON_WAITE_TIME_TASK);
+	//osDelay(POWER_ON_WAITE_TIME_TASK);
   /* Infinite loop */
   while(1)
   {

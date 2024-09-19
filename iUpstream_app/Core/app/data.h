@@ -175,6 +175,8 @@ extern uint8_t WIFI_Rssi;
 
 extern uint16_t* p_Analog_key_Value;					// 虚拟按键
 
+extern uint8_t System_PowerUp_Finish;					//开机完成标志
+
 //================= 调试使用  时间 ================================
 
 extern uint32_t* p_System_Runing_Second_Cnt;			// 系统时间

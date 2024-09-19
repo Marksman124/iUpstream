@@ -95,6 +95,7 @@ uint8_t WIFI_Rssi = 0xFF;
 
 uint16_t* p_Analog_key_Value;					// 虚拟按键
 
+uint8_t System_PowerUp_Finish = 0;
 //================= 调试使用  时间 ================================
 
 uint32_t* p_System_Runing_Second_Cnt;			// 系统时间

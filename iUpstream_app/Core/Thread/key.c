@@ -148,12 +148,12 @@ void on_pushButton_clicked(void)
 		else
 			*p_OP_ShowNow_Speed += 1;
 		
-		//if(Motor_is_Start())
-		//if(System_is_Running())
-			Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
-		//else if(System_is_Starting())
-			//*p_OP_ShowNow_Time = p_OP_ShowLater->time;
-		Arbitrarily_To_Initial();
+		if(Motor_is_Start())
+		{
+			Special_Status_Add(SPECIAL_BIT_SPEED_CHANGE);
+		}
+		else
+			Arbitrarily_To_Initial();
 		Lcd_Show();
 	}
 	else
@@ -165,9 +165,12 @@ void on_pushButton_clicked(void)
 		
 		if(*p_OP_ShowNow_Speed > 100)
 			*p_OP_ShowNow_Speed = 20;
-		
-		Special_Status_Add(SPECIAL_BIT_SKIP_STARTING);
-		Arbitrarily_To_Initial();
+		if(Motor_is_Start())
+		{
+			Special_Status_Add(SPECIAL_BIT_SPEED_CHANGE);
+		}
+		else
+			Arbitrarily_To_Initial();
 		Lcd_Show();
 	}
 }
@@ -409,10 +412,10 @@ void on_pushButton_2_4_Long_Press(void)
 void App_Key_Init(void)
 {
 	Led_Button_On(0x0F);	// 按键
-	Buzzer_Click_Long_On(2);// 开机长响
+	Buzzer_Click_Long_On(1);// 开机长响
 	
-	System_Boot_Screens();
-	System_Power_Off();
+//	System_Boot_Screens();
+//	System_Power_Off();
 	
 }
 
@@ -476,7 +479,7 @@ void Special_Button_Rules(uint8_t key_value)
 			// 恢复出厂
 			else if(key_value == KEY_VALUE_BIT_BUTTON_3)
 			{
-				Buzzer_Click_Long_On(1);
+				//Buzzer_Click_Long_On(1);
 				Restore_Factory_Settings();
 			}
 		}
@@ -552,6 +555,9 @@ void App_Key_Task(void)
 {
 	uint8_t i;	
 	Key_Handler_Timer ++;
+	
+	if(System_PowerUp_Finish == 0)
+		return;
 	
 		//进入睡眠
 		if(Key_Handler_Timer > (Key_For_Sleep_time + KEY_FOR_SLEEP_TIME_SHORT))
@@ -790,13 +796,16 @@ void System_Boot_Screens(void)
 //	恢复出厂设置
 void Restore_Factory_Settings(void)
 {
+	TM1621_Buzzer_Click();
 	// data 恢复
 	App_Data_ReInit();
 	
 	// wifi 恢复
 	
 	TM1621_Show_All();
-	osDelay(2000);
+	osDelay(500);
+	TM1621_Buzzer_Off();
+	osDelay(1500);
 	System_Power_Off();
 	// 返回 自由模式 初始状态
 	//To_Free_Mode(1);

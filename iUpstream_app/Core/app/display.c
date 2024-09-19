@@ -239,7 +239,16 @@ void Lcd_No_Speed(uint16_t time, uint8_t status_para, uint8_t mode)
 	// time
 	Display_Show_Min(GET_TIME_MINUTE_DIGIT(time));
 	Display_Show_Sec(GET_TIME_SECOND_DIGIT(time));
-
+	
+	// mode
+	if(System_Mode_Free())
+		Display_Show_Mode(0);
+	else if(System_Mode_Train())
+		Display_Show_Mode(mode);
+	else
+		Display_Hide_Mode(0xFF);
+	
+	Lcd_Display_Symbol(status_para);
 }
 
 //------------------- 外部接口  ----------------------------
